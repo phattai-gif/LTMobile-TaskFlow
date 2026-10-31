@@ -1,58 +1,70 @@
 package com.example.taskflow.ui.theme
 
-import android.app.Activity
-import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
-)
+private val TaskFlowLightColorScheme = lightColorScheme(
+    // Màu thương hiệu
+    primary = TaskFlowPrimary,
+    onPrimary = TaskFlowOnPrimary,
+    primaryContainer = TaskFlowPrimaryContainer,
+    onPrimaryContainer = TaskFlowOnPrimaryContainer,
 
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+    // Màu phụ
+    secondary = TaskFlowSecondary,
+    onSecondary = TaskFlowOnSecondary,
+    secondaryContainer = TaskFlowSecondaryContainer,
+    onSecondaryContainer = TaskFlowOnSecondaryContainer,
 
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    // Màu nhấn
+    tertiary = TaskFlowTertiary,
+    onTertiary = TaskFlowOnTertiary,
+    tertiaryContainer = TaskFlowTertiaryContainer,
+    onTertiaryContainer = TaskFlowOnTertiaryContainer,
+
+    // Nền và nội dung
+    background = TaskFlowBackground,
+    onBackground = TaskFlowOnBackground,
+    surface = TaskFlowSurface,
+    onSurface = TaskFlowOnSurface,
+    surfaceVariant = TaskFlowSurfaceVariant,
+    onSurfaceVariant = TaskFlowOnSurfaceVariant,
+
+    // Các cấp độ nền cho thành phần Material
+    surfaceContainerLowest = TaskFlowSurfaceContainerLowest,
+    surfaceContainerLow = TaskFlowSurfaceContainerLow,
+    surfaceContainer = TaskFlowSurfaceContainer,
+    surfaceContainerHigh = TaskFlowSurfaceContainerHigh,
+    surfaceContainerHighest = TaskFlowSurfaceContainerHighest,
+    surfaceDim = TaskFlowSurfaceDim,
+    surfaceBright = TaskFlowSurface,
+    surfaceTint = TaskFlowSurfaceTint,
+
+    // Màu đảo
+    inverseSurface = TaskFlowInverseSurface,
+    inverseOnSurface = TaskFlowInverseOnSurface,
+    inversePrimary = TaskFlowInversePrimary,
+
+    // Đường viền
+    outline = TaskFlowOutline,
+    outlineVariant = TaskFlowOutlineVariant,
+
+    // Báo lỗi
+    error = TaskFlowError,
+    onError = TaskFlowOnError,
+    errorContainer = TaskFlowErrorContainer,
+    onErrorContainer = TaskFlowOnErrorContainer
 )
 
 @Composable
 fun TaskFLowTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
-
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = TaskFlowLightColorScheme,
         typography = Typography,
+        shapes = TaskFlowShapes,
         content = content
     )
 }

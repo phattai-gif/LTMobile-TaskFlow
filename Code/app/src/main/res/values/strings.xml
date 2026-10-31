@@ -1,3 +1,21 @@
 <resources>
     <string name="app_name">TaskFLow</string>
+    <string name="action_confirm">Xác nhận</string>
+    <string name="action_cancel">Hủy</string>
+
+    <string name="nav_tasks">Công việc</string>
+    <string name="nav_calendar">Lịch</string>
+    <string name="nav_settings">Cài đặt</string>
+    <string name="theme_demo_title">Bộ giao diện TaskFlow</string>
+    <string name="theme_demo_description">Kiểm tra các thành phần giao diện dùng chung.</string>
+
+    <string name="theme_demo_input_label">Tên công việc mẫu</string>
+    <string name="theme_demo_input_error">Vui lòng nhập tên công việc.</string>
+
+    <string name="theme_demo_open_dialog">Kiểm tra hộp thoại</string>
+    <string name="theme_demo_disabled_button">Nút đang vô hiệu hóa</string>
+
+    <string name="theme_demo_dialog_title">Xác nhận kiểm tra</string>
+    <string name="theme_demo_dialog_message">Bạn muốn xác nhận thao tác mẫu này?</string>
+    <string name="theme_demo_confirmed">Đã xác nhận thao tác mẫu.</string>
 </resources>

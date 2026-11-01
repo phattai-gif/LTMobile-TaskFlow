@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">TaskFLow</string>
+    <!-- Điều hướng chính -->
+    <string name="nav_home">Trang chủ</string>
+    <string name="nav_stats">Thống kê</string>
+    <string name="nav_streak">Chuỗi</string>
+    <string name="nav_rewards">Huy hiệu</string>
+
+    <!-- Thao tác tạo công việc -->
+    <string name="action_create_task">Tạo công việc</string>
 </resources>

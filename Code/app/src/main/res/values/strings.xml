@@ -30,4 +30,6 @@
     <string name="theme_demo_dialog_title">Xác nhận kiểm tra</string>
     <string name="theme_demo_dialog_message">Bạn muốn xác nhận thao tác mẫu này?</string>
     <string name="theme_demo_confirmed">Đã xác nhận thao tác mẫu.</string>
+    <string name="task_title_label">Tiêu đề công việc</string>
+    <string name="task_description_label">Mô tả</string>
 </resources>

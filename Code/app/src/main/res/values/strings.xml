@@ -32,4 +32,29 @@
     <string name="theme_demo_confirmed">Đã xác nhận thao tác mẫu.</string>
     <string name="task_title_label">Tiêu đề công việc</string>
     <string name="task_description_label">Mô tả</string>
+    <!-- Màn hình Home -->
+    <string name="home_today_tasks">Công việc hôm nay</string>
+    <string name="home_upcoming_tasks">Công việc sắp tới</string>
+    <string name="home_loading">Đang tải công việc…</string>
+    <string name="home_empty">Chưa có công việc để hiển thị.</string>
+    <string name="home_today_empty">Không có công việc đến hạn hôm nay.</string>
+    <string name="home_upcoming_empty">Không có công việc sắp tới.</string>
+    <string name="home_load_error">Không tải được danh sách công việc.</string>
+    <string name="action_retry">Thử lại</string>
+
+    <!-- Thông tin trên thẻ công việc -->
+    <string name="home_task_due">Hạn: %1$s · %2$s</string>
+    <string name="home_no_date">Chưa đặt ngày</string>
+    <string name="home_no_time">Chưa đặt giờ</string>
+    <string name="home_task_priority">Ưu tiên: %1$s</string>
+    <string name="home_task_status">Trạng thái: %1$s</string>
+
+    <string name="task_priority_low">Thấp</string>
+    <string name="task_priority_medium">Trung bình</string>
+    <string name="task_priority_high">Cao</string>
+
+    <string name="task_status_pending">Chờ thực hiện</string>
+    <string name="task_status_in_progress">Đang thực hiện</string>
+    <string name="task_status_completed">Hoàn thành</string>
+    <string name="task_status_overdue">Quá hạn</string>
 </resources>

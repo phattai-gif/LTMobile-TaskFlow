@@ -1,16 +1,18 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+
+    id("com.google.gms.google-services")
 }
 
 android {
-    namespace = "com.example.taskflow"
+    namespace = "com.team.taskmanagementapp"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.example.taskflow"
+        applicationId = "com.team.taskmanagementapp"
         minSdk = 24
         targetSdk = 37
         versionCode = 1
@@ -45,6 +47,16 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+
+    // Firebase BoM
+    implementation(platform("com.google.firebase:firebase-bom:35.1.0"))
+    // Firebase Analytics
+    implementation("com.google.firebase:firebase-analytics")
+    // Firebase Realtime Database
+    implementation("com.google.firebase:firebase-database")
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.android.gms:play-services-auth:21.1.1")
+
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

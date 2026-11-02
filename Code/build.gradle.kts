@@ -5,6 +5,7 @@ plugins {
 
     id("com.google.gms.google-services") version "4.5.0" apply false
     id("com.google.devtools.ksp") version "2.0.21-1.0.27" apply false
+    alias(libs.plugins.kotlin.android) apply false
 }
 
 // Đổi thư mục build ra ngoài C:/AndroidBuildCache để tránh lỗi OneDrive khóa file

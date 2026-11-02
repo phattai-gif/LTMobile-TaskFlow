@@ -1,32 +1,177 @@
 package com.team.taskmanagementapp.data.local.dao
 
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
-import androidx.room.Update
+import androidx.room.*
 import com.team.taskmanagementapp.data.local.entity.Task
+import com.team.taskmanagementapp.data.model.enums.Priority
+import com.team.taskmanagementapp.data.model.enums.RecurrenceType
+import com.team.taskmanagementapp.data.model.enums.TaskStatus
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TaskDao {
 
+    // 1. Thêm công việc mới
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTask(task: Task): Long
 
+    // 2. Cập nhật công việc
     @Update
     suspend fun updateTask(task: Task)
 
+    // 3. Xóa công việc
     @Delete
     suspend fun deleteTask(task: Task)
 
+    // 4. Lấy tất cả công việc
     @Query("SELECT * FROM tasks ORDER BY dueDate ASC")
     fun getAllTasks(): Flow<List<Task>>
 
+    @Query("SELECT * FROM tasks WHERE isComplete = 0")
+    suspend fun getActiveTasksSync(): List<Task>
+
+    /** Synchronous snapshot of ALL tasks – used for JSON export. */
+    @Query("SELECT * FROM tasks ORDER BY dueDate ASC")
+    suspend fun getAllTasksSync(): List<Task>
+
+    /** Count of completed tasks – used for export stats chip. */
+    @Query("SELECT COUNT(*) FROM tasks WHERE isComplete = 1")
+    suspend fun getCompletedTasksCount(): Int
+
+    /** Bulk insert for restore – replaces on conflict so IDs are preserved. */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAllTasks(tasks: List<Task>)
+
+    // 5. Lấy 1 công việc theo ID
     @Query("SELECT * FROM tasks WHERE id = :taskId")
     suspend fun getTaskById(taskId: Long): Task?
 
     @Query("SELECT * FROM tasks WHERE id = :taskId")
     fun observeTaskById(taskId: Long): Flow<Task?>
+
+    // 6. Lọc công việc theo Trạng thái
+    @Query("SELECT * FROM tasks WHERE status = :status ORDER BY dueDate ASC")
+    fun getTasksByStatus(status: TaskStatus): Flow<List<Task>>
+
+    // 7. Lọc công việc theo Mức độ ưu tiên
+    @Query("SELECT * FROM tasks WHERE priority = :priority ORDER BY dueDate ASC")
+    fun getTasksByPriority(priority: Priority): Flow<List<Task>>
+
+    // 8. Lấy công việc theo khoảng ngày
+    @Query("SELECT * FROM tasks WHERE dueDate BETWEEN :startDate AND :endDate ORDER BY dueDate ASC")
+    fun getTasksByDateRange(startDate: Long, endDate: Long): Flow<List<Task>>
+
+    // 9. Lấy danh sách công việc đã quá hạn
+    @Query("SELECT * FROM tasks WHERE dueDate < :currentTime AND status != 'COMPLETED' AND status != 'OVERDUE' ORDER BY dueDate ASC")
+    fun getOverdueTasks(currentTime: Long): Flow<List<Task>>
+
+    @Query("SELECT * FROM tasks WHERE dueDate < :currentTime AND status != 'COMPLETED' AND status != 'OVERDUE' ORDER BY dueDate ASC")
+    suspend fun getOverdueTasksSync(currentTime: Long): List<Task>
+
+    // 9b. Tự động cập nhật trạng thái sang OVERDUE
+    @Query("UPDATE tasks SET status = 'OVERDUE' WHERE dueDate < :now AND status != 'COMPLETED'")
+    suspend fun markOverdueTasks(now: Long)
+
+    // 10. Tìm kiếm công việc theo Tiêu đề
+    @Query("SELECT * FROM tasks WHERE title LIKE '%' || :query || '%' ORDER BY dueDate ASC")
+    fun searchTasksByTitle(query: String): Flow<List<Task>>
+
+    // 11. Lọc công việc nâng cao
+    @Query("""
+        SELECT * FROM tasks 
+        WHERE (:status IS NULL OR status = :status OR (:status = 'OVERDUE' AND dueDate < :currentTime AND status != 'COMPLETED'))
+          AND (:priority IS NULL OR priority = :priority)
+          AND (
+              (:isOverdueOnly = 0 AND (:startDate IS NULL OR dueDate >= :startDate) AND (:endDate IS NULL OR dueDate <= :endDate))
+              OR
+              (:isOverdueOnly = 1 AND dueDate < :currentTime AND status != 'COMPLETED')
+          )
+        ORDER BY dueDate ASC
+    """)
+    fun getFilteredTasks(
+        status: TaskStatus?,
+        priority: Priority?,
+        startDate: Long?,
+        endDate: Long?,
+        isOverdueOnly: Int,
+        currentTime: Long
+    ): Flow<List<Task>>
+
+    // 12. Xóa tất cả công việc
+    @Query("DELETE FROM tasks")
+    suspend fun deleteAllTasks()
+
+    // 13. Xóa các công việc tương lai cùng title và recurrenceType
+    @Query("DELETE FROM tasks WHERE title = :title AND recurrenceType = :recurrenceType AND dueDate >= :startDate AND isComplete = 0")
+    suspend fun deleteFutureRecurringTasks(
+        title: String,
+        recurrenceType: RecurrenceType,
+        startDate: Long
+    )
+
+    // 13b. Lấy các công việc tương lai chưa hoàn thành
+    @Query("SELECT * FROM tasks WHERE title = :title AND recurrenceType = :recurrenceType AND dueDate >= :startDate AND isComplete = 0")
+    suspend fun getFutureRecurringTasksSync(
+        title: String,
+        recurrenceType: RecurrenceType,
+        startDate: Long
+    ): List<Task>
+
+    // 13c. Lấy task chưa hoàn thành theo tiêu đề, trừ task hiện tại
+    @Query("SELECT * FROM tasks WHERE title = :title AND isComplete = 0 AND id != :excludeTaskId")
+    suspend fun getUncompletedTasksByTitleSync(
+        title: String,
+        excludeTaskId: Long
+    ): List<Task>
+
+    // 14. Cập nhật các công việc tương lai cùng title và recurrenceType
+    @Query("""
+        UPDATE tasks 
+        SET title = :newTitle, 
+            description = :newDescription, 
+            priority = :newPriority, 
+            recurrenceType = :newRecurrenceType, 
+            reminderMinutes = :newReminderMinutes,
+            updatedAt = :updatedAt
+        WHERE title = :originalTitle 
+          AND recurrenceType = :originalRecurrence 
+          AND dueDate >= :startDate 
+          AND isComplete = 0
+    """)
+    suspend fun updateFutureRecurringTasks(
+        originalTitle: String,
+        originalRecurrence: RecurrenceType,
+        startDate: Long,
+        newTitle: String,
+        newDescription: String,
+        newPriority: Priority,
+        newRecurrenceType: RecurrenceType,
+        newReminderMinutes: Int,
+        updatedAt: Long
+    )
+
+    // 15. Batch insert tasks cho import JSON
+    @Transaction
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertBatch(tasks: List<Task>): List<Long>
+
+    // 16. Tìm task xung đột theo title, dueDate và recurrenceType
+    @Query("""
+        SELECT * FROM tasks 
+        WHERE title = :title 
+          AND dueDate = :dueDate 
+          AND recurrenceType = :recurrenceType
+        LIMIT 1
+    """)
+    suspend fun getConflictingTask(
+        title: String,
+        dueDate: Long,
+        recurrenceType: RecurrenceType
+    ): Task?
+
+    // 17. Widget: lấy các task trong khoảng thời gian
+    @Query("SELECT * FROM tasks WHERE dueDate BETWEEN :startMillis AND :endMillis")
+    suspend fun getTasksForDateRangeSync(
+        startMillis: Long,
+        endMillis: Long
+    ): List<Task>
 }

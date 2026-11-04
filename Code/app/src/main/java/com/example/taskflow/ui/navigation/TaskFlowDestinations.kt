@@ -1,6 +1,6 @@
 package com.example.taskflow.ui.navigation
 
-import com.example.taskflow.R
+import com.team.taskmanagementapp.R
 import com.example.taskflow.ui.components.TaskFlowNavItem
 
 val taskFlowMainDestinations = listOf(

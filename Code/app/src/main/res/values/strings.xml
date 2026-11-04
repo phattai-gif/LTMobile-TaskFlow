@@ -57,4 +57,7 @@
     <string name="task_status_in_progress">Đang thực hiện</string>
     <string name="task_status_completed">Hoàn thành</string>
     <string name="task_status_overdue">Quá hạn</string>
+    <string name="task_priority_urgent">Khẩn cấp</string>
+    <string name="action_back">Quay lại</string>
+    <string name="task_detail_not_found">Công việc này không còn tồn tại.</string>
 </resources>

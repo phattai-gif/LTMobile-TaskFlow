@@ -17,7 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import com.example.taskflow.R
+import com.team.taskmanagementapp.R
 import com.example.taskflow.ui.components.TaskFlowButton
 import com.example.taskflow.ui.components.TaskFlowTextField
 import com.example.taskflow.ui.theme.TaskFlowDimensions

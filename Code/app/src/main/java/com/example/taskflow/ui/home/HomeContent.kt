@@ -1,6 +1,7 @@
 package com.example.taskflow.ui.home
 
 import androidx.annotation.StringRes
+import com.team.taskmanagementapp.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import com.example.taskflow.R
 import com.example.taskflow.ui.components.TaskFlowButton
 import com.example.taskflow.ui.theme.TaskFlowDimensions
 

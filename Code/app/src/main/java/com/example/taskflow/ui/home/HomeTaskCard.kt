@@ -1,5 +1,6 @@
 package com.example.taskflow.ui.home
 
+import com.example.taskflow.ui.home.HomeTaskCard
 import android.text.format.DateFormat
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,7 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
-import com.example.taskflow.R
+import com.team.taskmanagementapp.R
 import com.example.taskflow.ui.components.TaskFlowCard
 import com.example.taskflow.ui.theme.TaskFlowDimensions
 import java.util.Date
@@ -45,6 +46,7 @@ fun HomeTaskCard(
             HomeTaskPriority.LOW -> R.string.task_priority_low
             HomeTaskPriority.MEDIUM -> R.string.task_priority_medium
             HomeTaskPriority.HIGH -> R.string.task_priority_high
+            HomeTaskPriority.URGENT -> R.string.task_priority_urgent
         }
     )
 

@@ -3,7 +3,8 @@ package com.example.taskflow.ui.home
 enum class HomeTaskPriority {
     LOW,
     MEDIUM,
-    HIGH
+    HIGH,
+    URGENT
 }
 
 enum class HomeTaskStatus {

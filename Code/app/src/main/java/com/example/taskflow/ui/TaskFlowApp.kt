@@ -19,21 +19,35 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.taskflow.R
+import com.team.taskmanagementapp.R
 import com.example.taskflow.ui.components.TaskFlowBottomNavigation
 import com.example.taskflow.ui.navigation.TaskFlowRoutes
 import com.example.taskflow.ui.navigation.taskFlowMainDestinations
 import com.example.taskflow.ui.screens.CalendarScreen
 import com.example.taskflow.ui.screens.CreateTaskScreen
-import com.example.taskflow.ui.screens.HomeScreen
 import com.example.taskflow.ui.screens.RewardsScreen
 import com.example.taskflow.ui.screens.SettingsScreen
 import com.example.taskflow.ui.screens.StatsScreen
 import com.example.taskflow.ui.screens.StreakScreen
 import com.example.taskflow.ui.theme.TaskFlowDimensions
-
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.example.taskflow.ui.home.HomeRoute
+import com.example.taskflow.ui.home.RepositoryHomeTaskSource
+import com.team.taskmanagementapp.data.local.db.AppDatabase
+import com.team.taskmanagementapp.data.repository.TaskRepository
 @Composable
 fun TaskFlowApp(modifier: Modifier = Modifier) {
+    val appContext = LocalContext.current.applicationContext
+
+    val taskSource = remember(appContext) {
+        val database = AppDatabase.getInstance(appContext)
+        val repository = TaskRepository(database.taskDao())
+
+        RepositoryHomeTaskSource(repository)
+    }
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
 
@@ -107,7 +121,12 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
                 .consumeWindowInsets(innerPadding)
         ) {
             composable(TaskFlowRoutes.HOME) {
-                HomeScreen()
+                HomeRoute(
+                    taskSource = taskSource,
+                    onTaskClick = { _ ->
+                        // Nối điều hướng chi tiết Task ở nhánh tiếp theo.
+                    }
+                )
             }
 
             composable(TaskFlowRoutes.CALENDAR) {

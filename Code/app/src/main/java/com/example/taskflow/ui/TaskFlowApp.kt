@@ -23,7 +23,7 @@ import com.team.taskmanagementapp.R
 import com.example.taskflow.ui.components.TaskFlowBottomNavigation
 import com.example.taskflow.ui.navigation.TaskFlowRoutes
 import com.example.taskflow.ui.navigation.taskFlowMainDestinations
-import com.example.taskflow.ui.screens.CalendarScreen
+import com.example.taskflow.ui.calendar.CalendarRoute
 import com.example.taskflow.ui.screens.CreateTaskScreen
 import com.example.taskflow.ui.screens.RewardsScreen
 import com.example.taskflow.ui.screens.SettingsScreen
@@ -159,9 +159,15 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
                 )
             }
             composable(TaskFlowRoutes.CALENDAR) {
-                CalendarScreen()
+                CalendarRoute(
+                    taskSource = taskSource,
+                    onTaskClick = { taskId ->
+                        navController.navigate(TaskFlowRoutes.taskDetail(taskId)) {
+                            launchSingleTop = true
+                        }
+                    }
+                )
             }
-
             composable(TaskFlowRoutes.STATS) {
                 StatsScreen()
             }

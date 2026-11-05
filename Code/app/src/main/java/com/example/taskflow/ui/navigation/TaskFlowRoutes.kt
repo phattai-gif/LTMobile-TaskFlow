@@ -9,4 +9,8 @@ object TaskFlowRoutes {
     const val SETTINGS = "settings"
 
     const val CREATE_TASK = "create_task"
+    const val TASK_ID = "taskId"
+    const val TASK_DETAIL = "task_detail/{$TASK_ID}"
+
+    fun taskDetail(taskId: Long): String = "task_detail/$taskId"
 }

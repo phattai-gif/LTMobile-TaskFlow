@@ -38,15 +38,23 @@ import com.example.taskflow.ui.home.HomeRoute
 import com.example.taskflow.ui.home.RepositoryHomeTaskSource
 import com.team.taskmanagementapp.data.local.db.AppDatabase
 import com.team.taskmanagementapp.data.repository.TaskRepository
+import com.example.taskflow.ui.detail.RepositoryTaskDetailSource
+import com.example.taskflow.ui.detail.TaskDetailRoute
 @Composable
 fun TaskFlowApp(modifier: Modifier = Modifier) {
     val appContext = LocalContext.current.applicationContext
 
-    val taskSource = remember(appContext) {
+    val repository = remember(appContext) {
         val database = AppDatabase.getInstance(appContext)
-        val repository = TaskRepository(database.taskDao())
+        TaskRepository(database.taskDao())
+    }
 
+    val taskSource = remember(repository) {
         RepositoryHomeTaskSource(repository)
+    }
+
+    val detailSource = remember(repository) {
+        RepositoryTaskDetailSource(repository)
     }
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -123,12 +131,33 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
             composable(TaskFlowRoutes.HOME) {
                 HomeRoute(
                     taskSource = taskSource,
-                    onTaskClick = { _ ->
-                        // Nối điều hướng chi tiết Task ở nhánh tiếp theo.
+                    onTaskClick = { taskId ->
+                        navController.navigate(
+                            TaskFlowRoutes.taskDetail(taskId)
+                        ) {
+                            launchSingleTop = true
+                        }
                     }
                 )
             }
-
+            composable(
+                route = TaskFlowRoutes.TASK_DETAIL,
+                arguments = listOf(
+                    navArgument(TaskFlowRoutes.TASK_ID) {
+                        type = NavType.LongType
+                    }
+                )
+            ) { entry ->
+                TaskDetailRoute(
+                    taskId = entry.arguments
+                        ?.getLong(TaskFlowRoutes.TASK_ID)
+                        ?: -1L,
+                    taskSource = detailSource,
+                    onBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
             composable(TaskFlowRoutes.CALENDAR) {
                 CalendarScreen()
             }

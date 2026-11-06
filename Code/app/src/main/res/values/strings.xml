@@ -1,3 +1,63 @@
 <resources>
     <string name="app_name">TaskFLow</string>
+
+    <!-- Thao tác dùng chung -->
+    <string name="action_confirm">Xác nhận</string>
+    <string name="action_cancel">Hủy</string>
+    <string name="action_create_task">Tạo công việc</string>
+
+    <!-- Điều hướng chính -->
+    <string name="nav_home">Trang chủ</string>
+    <string name="nav_calendar">Lịch</string>
+    <string name="nav_stats">Thống kê</string>
+    <string name="nav_streak">Chuỗi</string>
+    <string name="nav_rewards">Huy hiệu</string>
+    <string name="nav_settings">Cài đặt</string>
+
+    <!-- Nhãn dùng trong màn hình demo -->
+    <string name="nav_tasks">Công việc</string>
+
+    <!-- Kiểm tra bộ giao diện -->
+    <string name="theme_demo_title">Bộ giao diện TaskFlow</string>
+    <string name="theme_demo_description">Kiểm tra các thành phần giao diện dùng chung.</string>
+
+    <string name="theme_demo_input_label">Tên công việc mẫu</string>
+    <string name="theme_demo_input_error">Vui lòng nhập tên công việc.</string>
+
+    <string name="theme_demo_open_dialog">Kiểm tra hộp thoại</string>
+    <string name="theme_demo_disabled_button">Nút đang vô hiệu hóa</string>
+
+    <string name="theme_demo_dialog_title">Xác nhận kiểm tra</string>
+    <string name="theme_demo_dialog_message">Bạn muốn xác nhận thao tác mẫu này?</string>
+    <string name="theme_demo_confirmed">Đã xác nhận thao tác mẫu.</string>
+    <string name="task_title_label">Tiêu đề công việc</string>
+    <string name="task_description_label">Mô tả</string>
+    <!-- Màn hình Home -->
+    <string name="home_today_tasks">Công việc hôm nay</string>
+    <string name="home_upcoming_tasks">Công việc sắp tới</string>
+    <string name="home_loading">Đang tải công việc…</string>
+    <string name="home_empty">Chưa có công việc để hiển thị.</string>
+    <string name="home_today_empty">Không có công việc đến hạn hôm nay.</string>
+    <string name="home_upcoming_empty">Không có công việc sắp tới.</string>
+    <string name="home_load_error">Không tải được danh sách công việc.</string>
+    <string name="action_retry">Thử lại</string>
+
+    <!-- Thông tin trên thẻ công việc -->
+    <string name="home_task_due">Hạn: %1$s · %2$s</string>
+    <string name="home_no_date">Chưa đặt ngày</string>
+    <string name="home_no_time">Chưa đặt giờ</string>
+    <string name="home_task_priority">Ưu tiên: %1$s</string>
+    <string name="home_task_status">Trạng thái: %1$s</string>
+
+    <string name="task_priority_low">Thấp</string>
+    <string name="task_priority_medium">Trung bình</string>
+    <string name="task_priority_high">Cao</string>
+
+    <string name="task_status_pending">Chờ thực hiện</string>
+    <string name="task_status_in_progress">Đang thực hiện</string>
+    <string name="task_status_completed">Hoàn thành</string>
+    <string name="task_status_overdue">Quá hạn</string>
+    <string name="task_priority_urgent">Khẩn cấp</string>
+    <string name="action_back">Quay lại</string>
+    <string name="task_detail_not_found">Công việc này không còn tồn tại.</string>
 </resources>

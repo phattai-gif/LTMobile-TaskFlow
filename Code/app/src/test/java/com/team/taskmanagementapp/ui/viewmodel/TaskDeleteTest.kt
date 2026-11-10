@@ -1,7 +1,6 @@
 package com.team.taskmanagementapp.ui.viewmodel
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import com.example.taskflow.ui.home.RepositoryHomeTaskSource
 import com.team.taskmanagementapp.data.local.dao.TaskDao
 import com.team.taskmanagementapp.data.local.entity.Task
 import com.team.taskmanagementapp.data.model.enums.Priority
@@ -37,7 +36,6 @@ class TaskDeleteTest {
     private lateinit var fakeDao: FakeTaskDao
     private lateinit var repository: TaskRepository
     private lateinit var viewModel: TaskViewModel
-    private lateinit var homeSource: RepositoryHomeTaskSource
 
     @Before
     fun setup() {
@@ -45,7 +43,6 @@ class TaskDeleteTest {
         fakeDao = FakeTaskDao()
         repository = TaskRepository(fakeDao)
         viewModel = TaskViewModel(repository)
-        homeSource = RepositoryHomeTaskSource(repository)
     }
 
     @After
@@ -79,10 +76,10 @@ class TaskDeleteTest {
     }
 
     @Test
-    fun deleteTask_viaHomeSource_removesTaskFromDatabase() = runTest {
+    fun deleteTask_viaRepository_removesTaskFromDatabase() = runTest {
         val task = Task(
             id = 20,
-            title = "Home Source Delete Task",
+            title = "Repository Delete Task",
             description = "Description",
             dueDate = System.currentTimeMillis() + 3600_000L,
             dueTime = 0L,
@@ -96,7 +93,7 @@ class TaskDeleteTest {
         fakeDao.insertTask(task)
         assertNotNull(repository.getTaskById(20L))
 
-        homeSource.deleteTask(20L)
+        repository.delete(task)
 
         val deleted = repository.getTaskById(20L)
         assertNull(deleted)

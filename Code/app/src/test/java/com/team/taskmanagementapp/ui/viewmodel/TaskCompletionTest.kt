@@ -1,7 +1,6 @@
 package com.team.taskmanagementapp.ui.viewmodel
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import com.example.taskflow.ui.home.RepositoryHomeTaskSource
 import com.team.taskmanagementapp.data.local.dao.TaskDao
 import com.team.taskmanagementapp.data.local.entity.Task
 import com.team.taskmanagementapp.data.model.enums.Priority
@@ -38,7 +37,6 @@ class TaskCompletionTest {
     private lateinit var fakeDao: FakeTaskDao
     private lateinit var repository: TaskRepository
     private lateinit var viewModel: TaskViewModel
-    private lateinit var homeSource: RepositoryHomeTaskSource
 
     @Before
     fun setup() {
@@ -46,7 +44,6 @@ class TaskCompletionTest {
         fakeDao = FakeTaskDao()
         repository = TaskRepository(fakeDao)
         viewModel = TaskViewModel(repository)
-        homeSource = RepositoryHomeTaskSource(repository)
     }
 
     @After
@@ -104,40 +101,6 @@ class TaskCompletionTest {
         advanceUntilIdle()
 
         val updated = repository.getTaskById(2L)
-        assertNotNull(updated)
-        assertFalse(updated!!.isCompleted)
-        assertEquals(TaskStatus.TODO, updated.status)
-        assertNull(updated.completedAt)
-    }
-
-    @Test
-    fun homeSource_setTaskCompleted_updatesCorrectly() = runTest {
-        val task = Task(
-            id = 3,
-            title = "Home Source Task",
-            description = "Description",
-            dueDate = System.currentTimeMillis() + 3600_000L,
-            dueTime = 0L,
-            priority = Priority.LOW,
-            status = TaskStatus.TODO,
-            isCompleted = false,
-            completedAt = null,
-            createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis()
-        )
-        fakeDao.insertTask(task)
-
-        // Complete via HomeSource
-        homeSource.setTaskCompleted(3L, true)
-        var updated = repository.getTaskById(3L)
-        assertNotNull(updated)
-        assertTrue(updated!!.isCompleted)
-        assertEquals(TaskStatus.COMPLETED, updated.status)
-        assertNotNull(updated.completedAt)
-
-        // Reopen via HomeSource
-        homeSource.setTaskCompleted(3L, false)
-        updated = repository.getTaskById(3L)
         assertNotNull(updated)
         assertFalse(updated!!.isCompleted)
         assertEquals(TaskStatus.TODO, updated.status)

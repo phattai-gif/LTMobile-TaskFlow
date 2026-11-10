@@ -181,8 +181,19 @@ class TaskViewModel(
                     _selectedTask.value = updatedTask
                 }
 
+                // Tự động sinh kỳ lặp tiếp theo khi hoàn thành hoặc dọn dẹp khi mở lại
+                val generatedNextInstance = repository.handleRecurringCompletion(
+                    originalTask = task,
+                    targetCompleted = !wasCompleted,
+                    now = now
+                )
+
                 val message = if (!wasCompleted) {
-                    "Completed \"${task.title}\""
+                    if (generatedNextInstance != null) {
+                        "Completed \"${task.title}\" (Next instance scheduled)"
+                    } else {
+                        "Completed \"${task.title}\""
+                    }
                 } else {
                     "Marked \"${task.title}\" as incomplete"
                 }

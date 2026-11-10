@@ -41,6 +41,17 @@ class TaskRepository(
         startDate: Long
     ) = taskDao.deleteFutureRecurringTasks(title, recurrenceType, startDate)
 
+    suspend fun handleRecurringCompletion(
+        originalTask: Task,
+        targetCompleted: Boolean,
+        now: Long = System.currentTimeMillis()
+    ): Task? = com.team.taskmanagementapp.util.TaskCompletionHelper.handleRecurrenceSideEffects(
+        taskDao,
+        originalTask,
+        targetCompleted,
+        now
+    )
+
     suspend fun getFutureRecurringTasks(
         title: String,
         recurrenceType: RecurrenceType,

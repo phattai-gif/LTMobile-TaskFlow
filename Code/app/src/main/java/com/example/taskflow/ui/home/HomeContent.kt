@@ -24,6 +24,7 @@ import com.example.taskflow.ui.theme.TaskFlowDimensions
 fun HomeContent(
     uiState: HomeUiState,
     onTaskClick: (Long) -> Unit,
+    onToggleComplete: (HomeTaskUiModel) -> Unit = {},
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -94,7 +95,8 @@ fun HomeContent(
                 ) { task ->
                     HomeTaskCard(
                         task = task,
-                        onTaskClick = onTaskClick
+                        onTaskClick = onTaskClick,
+                        onToggleComplete = onToggleComplete
                     )
                 }
 
@@ -125,7 +127,8 @@ fun HomeContent(
                 ) { task ->
                     HomeTaskCard(
                         task = task,
-                        onTaskClick = onTaskClick
+                        onTaskClick = onTaskClick,
+                        onToggleComplete = onToggleComplete
                     )
                 }
             }

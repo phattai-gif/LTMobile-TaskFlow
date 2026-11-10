@@ -21,6 +21,7 @@ fun HomeRoute(
     HomeContent(
         uiState = uiState,
         onTaskClick = onTaskClick,
+        onToggleComplete = homeViewModel::toggleTaskComplete,
         onRetry = homeViewModel::retry,
         modifier = modifier
     )

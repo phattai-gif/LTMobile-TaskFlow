@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.util.Calendar
 
 class HomeViewModel(
@@ -36,6 +37,12 @@ class HomeViewModel(
 
     fun retry() {
         retrySignal.update { it + 1 }
+    }
+
+    fun toggleTaskComplete(task: HomeTaskUiModel) {
+        viewModelScope.launch {
+            taskSource.setTaskCompleted(task.id, !task.isCompleted)
+        }
     }
 
     private fun observeHome(): Flow<HomeUiState> {

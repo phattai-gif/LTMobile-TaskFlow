@@ -26,6 +26,18 @@ class RepositoryHomeTaskSource(
             task?.toHomeTaskUiModel()
         }
     }
+
+    override suspend fun setTaskCompleted(taskId: Long, isCompleted: Boolean) {
+        val task = repository.getTaskById(taskId) ?: return
+        val now = System.currentTimeMillis()
+        val updatedTask = task.copy(
+            isCompleted = isCompleted,
+            status = if (isCompleted) TaskStatus.COMPLETED else TaskStatus.TODO,
+            completedAt = if (isCompleted) now else null,
+            updatedAt = now
+        )
+        repository.update(updatedTask)
+    }
 }
 
 private fun Task.toHomeTaskUiModel(): HomeTaskUiModel {
@@ -36,7 +48,9 @@ private fun Task.toHomeTaskUiModel(): HomeTaskUiModel {
         Priority.URGENT -> HomeTaskPriority.URGENT
     }
 
-    val homeStatus = if (isCompleted) {
+    val taskIsCompleted = isCompleted || status == TaskStatus.COMPLETED
+
+    val homeStatus = if (taskIsCompleted) {
         HomeTaskStatus.COMPLETED
     } else {
         when (status) {
@@ -54,6 +68,8 @@ private fun Task.toHomeTaskUiModel(): HomeTaskUiModel {
         dueDate = dueDate,
         dueTime = dueTime.takeIf { it > 0L },
         priority = homePriority,
-        status = homeStatus
+        status = homeStatus,
+        isCompleted = taskIsCompleted,
+        completedAt = completedAt
     )
 }

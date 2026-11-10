@@ -14,4 +14,6 @@ interface HomeTaskSource {
     }
 
     suspend fun setTaskCompleted(taskId: Long, isCompleted: Boolean)
+
+    suspend fun deleteTask(taskId: Long)
 }

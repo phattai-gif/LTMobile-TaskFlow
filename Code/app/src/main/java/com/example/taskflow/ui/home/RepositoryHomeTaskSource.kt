@@ -38,6 +38,11 @@ class RepositoryHomeTaskSource(
         )
         repository.update(updatedTask)
     }
+
+    override suspend fun deleteTask(taskId: Long) {
+        val task = repository.getTaskById(taskId) ?: return
+        repository.delete(task)
+    }
 }
 
 private fun Task.toHomeTaskUiModel(): HomeTaskUiModel {

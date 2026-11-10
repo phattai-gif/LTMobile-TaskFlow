@@ -7,20 +7,28 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
-import com.team.taskmanagementapp.R
 import com.example.taskflow.ui.components.TaskFlowCard
+import com.example.taskflow.ui.components.TaskFlowConfirmDialog
 import com.example.taskflow.ui.theme.TaskFlowDimensions
+import com.team.taskmanagementapp.R
 import java.util.Date
 
 @Composable
@@ -28,9 +36,11 @@ fun HomeTaskCard(
     task: HomeTaskUiModel,
     onTaskClick: (Long) -> Unit,
     onToggleComplete: (HomeTaskUiModel) -> Unit = {},
+    onDeleteTask: (Long) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     val dateText = if (task.dueDate > 0L) {
         DateFormat.getDateFormat(context).format(Date(task.dueDate))
@@ -129,6 +139,32 @@ fun HomeTaskCard(
                     color = statusColor
                 )
             }
+
+            IconButton(
+                onClick = { showDeleteDialog = true }
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_delete),
+                    contentDescription = stringResource(R.string.action_delete),
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
         }
+    }
+
+    if (showDeleteDialog) {
+        TaskFlowConfirmDialog(
+            title = stringResource(R.string.task_detail_delete_confirm_title),
+            message = stringResource(R.string.task_detail_delete_confirm_msg),
+            confirmTextRes = R.string.task_detail_delete_confirm_positive,
+            dismissTextRes = R.string.task_detail_delete_confirm_negative,
+            onConfirm = {
+                showDeleteDialog = false
+                onDeleteTask(task.id)
+            },
+            onDismiss = {
+                showDeleteDialog = false
+            }
+        )
     }
 }

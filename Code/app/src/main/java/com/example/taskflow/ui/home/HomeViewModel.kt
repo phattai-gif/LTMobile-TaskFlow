@@ -45,6 +45,12 @@ class HomeViewModel(
         }
     }
 
+    fun deleteTask(taskId: Long) {
+        viewModelScope.launch {
+            taskSource.deleteTask(taskId)
+        }
+    }
+
     private fun observeHome(): Flow<HomeUiState> {
         return flow<HomeUiState> {
             emit(HomeUiState.Loading)

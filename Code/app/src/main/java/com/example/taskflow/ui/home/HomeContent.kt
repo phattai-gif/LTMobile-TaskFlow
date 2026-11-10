@@ -25,6 +25,7 @@ fun HomeContent(
     uiState: HomeUiState,
     onTaskClick: (Long) -> Unit,
     onToggleComplete: (HomeTaskUiModel) -> Unit = {},
+    onDeleteTask: (Long) -> Unit = {},
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -96,7 +97,8 @@ fun HomeContent(
                     HomeTaskCard(
                         task = task,
                         onTaskClick = onTaskClick,
-                        onToggleComplete = onToggleComplete
+                        onToggleComplete = onToggleComplete,
+                        onDeleteTask = onDeleteTask
                     )
                 }
 
@@ -128,7 +130,8 @@ fun HomeContent(
                     HomeTaskCard(
                         task = task,
                         onTaskClick = onTaskClick,
-                        onToggleComplete = onToggleComplete
+                        onToggleComplete = onToggleComplete,
+                        onDeleteTask = onDeleteTask
                     )
                 }
             }

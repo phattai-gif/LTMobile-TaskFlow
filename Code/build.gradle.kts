@@ -7,7 +7,7 @@ plugins {
     alias(libs.plugins.ksp) apply false
 }
 // Đổi thư mục build ra ngoài C:/AndroidBuildCache để tránh lỗi OneDrive khóa file
-val baseBuildDir = file("D:/AndroidBuildCache/${rootProject.name}")
+val baseBuildDir = file("C:/AndroidBuildCache/${rootProject.name}")
 allprojects {
     layout.buildDirectory.set(baseBuildDir.resolve(name))
 }

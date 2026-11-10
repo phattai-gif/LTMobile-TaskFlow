@@ -75,4 +75,14 @@
     <string name="task_deleted">Đã xóa công việc</string>
     <string name="task_completed">Đã hoàn thành</string>
     <string name="task_reopened">Mở lại</string>
+
+    <!-- Chu kỳ lặp lại (Recurrence) -->
+    <string name="task_detail_recurrence_header">LẶP LẠI</string>
+    <string name="task_detail_recurrence_label">🔄 Lặp lại</string>
+    <string name="task_detail_recurrence_none">Không lặp lại</string>
+    <string name="task_detail_recurrence_daily">Hằng ngày</string>
+    <string name="task_detail_recurrence_weekly">Hằng tuần</string>
+    <string name="task_detail_recurrence_monthly">Hằng tháng</string>
+    <string name="task_detail_recurrence_yearly">Hằng năm</string>
+    <string name="task_detail_recurrence_interval">Mỗi %d ngày</string>
 </resources>

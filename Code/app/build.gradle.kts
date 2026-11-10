@@ -30,14 +30,18 @@ android {
         }
     }
 
-    // Đã loại bỏ khối kotlinOptions để tránh lỗi Unresolved Reference
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
     buildFeatures {
         compose = true
+        viewBinding = true // Bật ViewBinding để sinh ra class ActivityAddEditTaskBinding
     }
 
     sourceSets {
@@ -45,12 +49,12 @@ android {
             java.srcDirs("src/androidTest/java")
         }
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
 }
 
 dependencies {
+    // AndroidX AppCompat (Cần thiết cho AppCompatActivity)
+    implementation("androidx.appcompat:appcompat:1.7.0")
+
     // Jetpack Compose & Core
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
@@ -83,6 +87,8 @@ dependencies {
 
     // Testing
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)

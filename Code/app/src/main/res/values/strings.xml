@@ -59,22 +59,45 @@
     <string name="task_status_overdue">Quá hạn</string>
     <string name="task_priority_urgent">Khẩn cấp</string>
     <string name="action_back">Quay lại</string>
+    <string name="action_delete">Xóa</string>
     <string name="task_detail_not_found">Công việc này không còn tồn tại.</string>
-    <!-- LTDD-17: Màn hình chi tiết Task -->
+
+    <!-- Thao tác xóa và hoàn thành task -->
+    <string name="task_detail_delete_confirm_title">Xóa công việc này?</string>
+    <string name="task_detail_delete_confirm_msg">Thao tác này sẽ xóa vĩnh viễn công việc khỏi cơ sở dữ liệu và không thể hoàn tác.</string>
+    <string name="task_detail_button_delete">Xóa</string>
+    <string name="task_detail_delete_confirm_positive">Xóa</string>
+    <string name="task_detail_delete_confirm_negative">Hủy</string>
+    <string name="task_detail_delete_recurring_title">Xóa công việc lặp lại</string>
+    <string name="task_detail_delete_recurring_msg">Bạn muốn chỉ xóa công việc này hay tất cả công việc trong chuỗi lặp?</string>
+    <string name="task_detail_delete_only_this">Chỉ công việc này</string>
+    <string name="task_detail_delete_all_occurrences">Tất cả công việc</string>
+    <string name="task_deleted">Đã xóa công việc</string>
+    <string name="task_completed">Đã hoàn thành</string>
+    <string name="task_reopened">Mở lại</string>
+
+    <!-- Chu kỳ lặp lại (Recurrence) -->
+    <string name="task_detail_recurrence_header">LẶP LẠI</string>
+    <string name="task_detail_recurrence_label">🔄 Lặp lại</string>
+    <string name="task_detail_recurrence_none">Không lặp lại</string>
+    <string name="task_detail_recurrence_daily">Hằng ngày</string>
+    <string name="task_detail_recurrence_weekly">Hằng tuần</string>
+    <string name="task_detail_recurrence_monthly">Hằng tháng</string>
+    <string name="task_detail_recurrence_yearly">Hằng năm</string>
+    <string name="task_detail_recurrence_interval">Mỗi %d ngày</string>
+
+    <!-- LTDD-17: Chi tiết công việc và quote -->
     <string name="task_detail_heading">Chi tiết công việc</string>
     <string name="task_detail_loading">Đang tải chi tiết…</string>
     <string name="task_detail_load_error">Không tải được chi tiết công việc.</string>
     <string name="task_detail_no_description">Chưa có mô tả.</string>
-
     <string name="task_detail_due_date">Ngày hết hạn</string>
     <string name="task_detail_due_time">Giờ đến hạn</string>
     <string name="task_detail_priority">Mức ưu tiên</string>
     <string name="task_detail_status">Trạng thái</string>
-
     <string name="task_detail_reminder">Nhắc nhở</string>
     <string name="task_detail_no_reminder">Không nhắc</string>
     <string name="task_detail_reminder_before">Trước hạn %1$d phút</string>
-
     <string name="task_detail_recurrence">Lặp lại</string>
     <string name="task_detail_no_recurrence">Không lặp lại</string>
     <string name="task_detail_repeat_days">Mỗi %1$d ngày</string>
@@ -85,25 +108,20 @@
     <string name="task_detail_repeat_end_date">Kết thúc vào %1$s</string>
     <string name="task_detail_repeat_count">Lần %1$d / %2$d</string>
     <string name="task_detail_repeat_no_end">Không giới hạn ngày kết thúc</string>
-
     <string name="task_detail_edit">Sửa</string>
     <string name="task_detail_edit_title">Sửa nhanh công việc</string>
     <string name="task_detail_title_required">Vui lòng nhập tiêu đề.</string>
     <string name="task_detail_save">Lưu thay đổi</string>
-
     <string name="task_detail_mark_complete">Đánh dấu hoàn thành</string>
     <string name="task_detail_mark_incomplete">Bỏ đánh dấu hoàn thành</string>
-
     <string name="task_detail_delete">Xóa</string>
     <string name="task_detail_delete_title">Xóa công việc?</string>
     <string name="task_detail_delete_message">Bạn muốn xóa công việc “%1$s”? Chỉ công việc này sẽ được xóa.</string>
-
     <string name="task_detail_working">Đang xử lý…</string>
     <string name="task_detail_edit_error">Chưa lưu được thay đổi. Vui lòng thử lại.</string>
     <string name="task_detail_complete_error">Chưa cập nhật được trạng thái. Vui lòng thử lại.</string>
     <string name="task_detail_delete_error">Chưa xóa được công việc. Vui lòng thử lại.</string>
     <string name="task_detail_dismiss_error">Đóng thông báo</string>
-
     <string name="task_detail_motivation">Một chút động lực</string>
     <string name="task_detail_quote_1">Mỗi bước nhỏ hôm nay đều giúp bạn tiến gần mục tiêu.</string>
     <string name="task_detail_quote_2">Bắt đầu từ một việc nhỏ và làm thật tập trung.</string>

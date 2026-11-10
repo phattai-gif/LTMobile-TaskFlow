@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.example.taskflow.ui.demo.ThemeDemoScreen
+import com.example.taskflow.ui.TaskFlowApp
 import com.example.taskflow.ui.theme.TaskFLowTheme
 
 class MainActivity : ComponentActivity() {
@@ -15,7 +15,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             TaskFLowTheme {
-                ThemeDemoScreen()
+                TaskFlowApp()
             }
         }
     }

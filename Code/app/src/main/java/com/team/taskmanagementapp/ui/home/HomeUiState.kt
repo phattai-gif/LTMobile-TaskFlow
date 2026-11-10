@@ -1,4 +1,4 @@
-package com.example.taskflow.ui.home
+package com.team.taskmanagementapp.ui.home
 
 sealed interface HomeUiState {
 

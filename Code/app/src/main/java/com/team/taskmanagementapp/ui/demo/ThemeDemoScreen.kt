@@ -1,4 +1,4 @@
-package com.example.taskflow.ui.demo
+package com.team.taskmanagementapp.ui.demo
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,14 +22,14 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.team.taskmanagementapp.R
-import com.example.taskflow.ui.components.TaskFlowBottomNavigation
-import com.example.taskflow.ui.components.TaskFlowButton
-import com.example.taskflow.ui.components.TaskFlowCard
-import com.example.taskflow.ui.components.TaskFlowConfirmDialog
-import com.example.taskflow.ui.components.TaskFlowNavItem
-import com.example.taskflow.ui.components.TaskFlowTextField
-import com.example.taskflow.ui.theme.TaskFLowTheme
-import com.example.taskflow.ui.theme.TaskFlowDimensions
+import com.team.taskmanagementapp.ui.components.TaskFlowBottomNavigation
+import com.team.taskmanagementapp.ui.components.TaskFlowButton
+import com.team.taskmanagementapp.ui.components.TaskFlowCard
+import com.team.taskmanagementapp.ui.components.TaskFlowConfirmDialog
+import com.team.taskmanagementapp.ui.components.TaskFlowNavItem
+import com.team.taskmanagementapp.ui.components.TaskFlowTextField
+import com.team.taskmanagementapp.ui.theme.TaskFLowTheme
+import com.team.taskmanagementapp.ui.theme.TaskFlowDimensions
 
 @Composable
 fun ThemeDemoScreen(

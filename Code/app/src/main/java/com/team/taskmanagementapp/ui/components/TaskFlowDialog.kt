@@ -1,4 +1,4 @@
-package com.example.taskflow.ui.components
+package com.team.taskmanagementapp.ui.components
 
 import androidx.annotation.StringRes
 import androidx.compose.material3.AlertDialog

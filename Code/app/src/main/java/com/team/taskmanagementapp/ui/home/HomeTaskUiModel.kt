@@ -1,4 +1,4 @@
-package com.example.taskflow.ui.home
+package com.team.taskmanagementapp.ui.home
 
 enum class HomeTaskPriority {
     LOW,

@@ -1,4 +1,4 @@
-package com.example.taskflow.ui.components
+package com.team.taskmanagementapp.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,7 +13,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.example.taskflow.ui.theme.TaskFlowDimensions
+import com.team.taskmanagementapp.ui.theme.TaskFlowDimensions
 
 // Nút chính dùng chung
 @Composable

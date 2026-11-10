@@ -1,4 +1,4 @@
-package com.example.taskflow.ui.theme
+package com.team.taskmanagementapp.ui.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme

@@ -1,4 +1,4 @@
-package com.example.taskflow.ui.theme
+package com.team.taskmanagementapp.ui.theme
 
 import androidx.compose.ui.unit.dp
 

@@ -1,4 +1,4 @@
-package com.example.taskflow.ui.home
+package com.team.taskmanagementapp.ui.home
 
 import androidx.annotation.StringRes
 import com.team.taskmanagementapp.R
@@ -17,8 +17,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import com.example.taskflow.ui.components.TaskFlowButton
-import com.example.taskflow.ui.theme.TaskFlowDimensions
+import com.team.taskmanagementapp.ui.components.TaskFlowButton
+import com.team.taskmanagementapp.ui.theme.TaskFlowDimensions
 
 @Composable
 fun HomeContent(

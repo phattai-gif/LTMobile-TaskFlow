@@ -1,4 +1,4 @@
-package com.example.taskflow.ui.screens
+package com.team.taskmanagementapp.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,9 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import com.team.taskmanagementapp.R
-import com.example.taskflow.ui.components.TaskFlowButton
-import com.example.taskflow.ui.components.TaskFlowTextField
-import com.example.taskflow.ui.theme.TaskFlowDimensions
+import com.team.taskmanagementapp.ui.components.TaskFlowButton
+import com.team.taskmanagementapp.ui.components.TaskFlowTextField
+import com.team.taskmanagementapp.ui.theme.TaskFlowDimensions
 
 @Composable
 fun CreateTaskScreen(

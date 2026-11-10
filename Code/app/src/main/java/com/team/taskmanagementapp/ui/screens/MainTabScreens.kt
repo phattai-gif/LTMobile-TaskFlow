@@ -1,4 +1,4 @@
-package com.example.taskflow.ui.screens
+package com.team.taskmanagementapp.ui.screens
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
@@ -11,7 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.team.taskmanagementapp.R
-import com.example.taskflow.ui.theme.TaskFlowDimensions
+import com.team.taskmanagementapp.ui.theme.TaskFlowDimensions
 
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier) {

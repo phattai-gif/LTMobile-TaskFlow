@@ -1,4 +1,4 @@
-package com.example.taskflow.ui.components
+package com.team.taskmanagementapp.ui.components
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import com.example.taskflow.ui.theme.TaskFlowDimensions
+import com.team.taskmanagementapp.ui.theme.TaskFlowDimensions
 
 // Thông tin của một mục trên thanh điều hướng
 data class TaskFlowNavItem(

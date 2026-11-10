@@ -1,4 +1,4 @@
-package com.example.taskflow.ui.home
+package com.team.taskmanagementapp.ui.home
 
 import android.text.format.DateFormat
 import androidx.compose.foundation.clickable
@@ -25,9 +25,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
-import com.example.taskflow.ui.components.TaskFlowCard
-import com.example.taskflow.ui.components.TaskFlowConfirmDialog
-import com.example.taskflow.ui.theme.TaskFlowDimensions
+import com.team.taskmanagementapp.ui.components.TaskFlowCard
+import com.team.taskmanagementapp.ui.components.TaskFlowConfirmDialog
+import com.team.taskmanagementapp.ui.theme.TaskFlowDimensions
 import com.team.taskmanagementapp.R
 import java.util.Date
 

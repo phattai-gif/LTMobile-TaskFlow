@@ -7,15 +7,15 @@
     <string name="action_create_task">Tạo công việc</string>
 
     <!-- Điều hướng chính -->
-    <string name="nav_home">Trang chủ</string>
-    <string name="nav_calendar">Lịch</string>
-    <string name="nav_stats">Thống kê</string>
-    <string name="nav_streak">Chuỗi</string>
-    <string name="nav_rewards">Huy hiệu</string>
-    <string name="nav_settings">Cài đặt</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_calendar">Calendar</string>
+    <string name="nav_stats">Stats</string>
+    <string name="nav_streak">Streak</string>
+    <string name="nav_rewards">Badges</string>
+    <string name="nav_settings">Settings</string>
 
     <!-- Nhãn dùng trong màn hình demo -->
-    <string name="nav_tasks">Công việc</string>
+    <string name="nav_tasks">Tasks</string>
 
     <!-- Kiểm tra bộ giao diện -->
     <string name="theme_demo_title">Bộ giao diện TaskFlow</string>
@@ -33,31 +33,34 @@
     <string name="task_title_label">Tiêu đề công việc</string>
     <string name="task_description_label">Mô tả</string>
     <!-- Màn hình Home -->
-    <string name="home_today_tasks">Công việc hôm nay</string>
-    <string name="home_upcoming_tasks">Công việc sắp tới</string>
-    <string name="home_loading">Đang tải công việc…</string>
-    <string name="home_empty">Chưa có công việc để hiển thị.</string>
-    <string name="home_today_empty">Không có công việc đến hạn hôm nay.</string>
-    <string name="home_upcoming_empty">Không có công việc sắp tới.</string>
-    <string name="home_load_error">Không tải được danh sách công việc.</string>
-    <string name="action_retry">Thử lại</string>
+    <string name="home_today_tasks">Today\'s Tasks</string>
+    <string name="home_upcoming_tasks">Upcoming</string>
+    <string name="home_completed_tasks">Completed</string>
+    <string name="home_loading">Loading tasks…</string>
+    <string name="home_empty">No tasks found.</string>
+    <string name="home_today_empty">No tasks scheduled for today.</string>
+    <string name="home_upcoming_empty">No upcoming tasks scheduled</string>
+    <string name="home_completed_empty">No completed tasks yet</string>
+    <string name="home_view_full_calendar">VIEW FULL CALENDAR</string>
+    <string name="home_load_error">Could not load tasks.</string>
+    <string name="action_retry">Retry</string>
 
     <!-- Thông tin trên thẻ công việc -->
-    <string name="home_task_due">Hạn: %1$s · %2$s</string>
-    <string name="home_no_date">Chưa đặt ngày</string>
-    <string name="home_no_time">Chưa đặt giờ</string>
-    <string name="home_task_priority">Ưu tiên: %1$s</string>
-    <string name="home_task_status">Trạng thái: %1$s</string>
+    <string name="home_task_due">%1$s, %2$s</string>
+    <string name="home_no_date">No date</string>
+    <string name="home_no_time">No time</string>
+    <string name="home_task_priority">%1$s</string>
+    <string name="home_task_status">%1$s</string>
 
-    <string name="task_priority_low">Thấp</string>
-    <string name="task_priority_medium">Trung bình</string>
-    <string name="task_priority_high">Cao</string>
+    <string name="task_priority_low">LOW</string>
+    <string name="task_priority_medium">MEDIUM</string>
+    <string name="task_priority_high">HIGH</string>
+    <string name="task_priority_urgent">URGENT</string>
 
-    <string name="task_status_pending">Chờ thực hiện</string>
-    <string name="task_status_in_progress">Đang thực hiện</string>
-    <string name="task_status_completed">Hoàn thành</string>
-    <string name="task_status_overdue">Quá hạn</string>
-    <string name="task_priority_urgent">Khẩn cấp</string>
+    <string name="task_status_pending">PENDING</string>
+    <string name="task_status_in_progress">IN PROGRESS</string>
+    <string name="task_status_completed">COMPLETED</string>
+    <string name="task_status_overdue">OVERDUE</string>
     <string name="action_back">Quay lại</string>
     <string name="action_delete">Xóa</string>
     <string name="task_detail_not_found">Công việc này không còn tồn tại.</string>
@@ -80,9 +83,27 @@
     <string name="task_detail_recurrence_header">LẶP LẠI</string>
     <string name="task_detail_recurrence_label">🔄 Lặp lại</string>
     <string name="task_detail_recurrence_none">Không lặp lại</string>
-    <string name="task_detail_recurrence_daily">Hằng ngày</string>
-    <string name="task_detail_recurrence_weekly">Hằng tuần</string>
-    <string name="task_detail_recurrence_monthly">Hằng tháng</string>
-    <string name="task_detail_recurrence_yearly">Hằng năm</string>
-    <string name="task_detail_recurrence_interval">Mỗi %d ngày</string>
+    <string name="task_detail_recurrence_daily">Daily</string>
+    <string name="task_detail_recurrence_weekly">Weekly</string>
+    <string name="task_detail_recurrence_monthly">Monthly</string>
+    <string name="task_detail_recurrence_yearly">Yearly</string>
+    <string name="task_detail_recurrence_interval">Every %d days</string>
+
+    <!-- Home Dashboard Strings (Figma Wireframe) -->
+    <string name="home_good_morning">Good Morning!</string>
+    <string name="home_good_afternoon">Good Afternoon!</string>
+    <string name="home_good_evening">Good Evening!</string>
+    <string name="home_total_tasks_label">TOTAL TASKS</string>
+    <string name="home_total_tasks_subtitle">All tasks</string>
+    <string name="home_completed_label">COMPLETED</string>
+    <string name="home_pending_label">PENDING</string>
+    <string name="home_overdue_label">OVERDUE</string>
+    <string name="home_action_needed">Action needed</string>
+    <string name="home_all_caught_up">On track</string>
+    <string name="home_streak_title">%1$d Day Streak 🔥</string>
+    <string name="home_streak_subtitle">Complete all tasks today to start your streak!</string>
+    <string name="home_streak_best">Best: %1$d days</string>
+    <string name="home_productivity_tip_title">Productivity tip</string>
+    <string name="home_productivity_tip_body">Choose a time when you feel focused and reserve it for your most important task.</string>
+    <string name="home_ai_assistant">AI Assistant</string>
 </resources>

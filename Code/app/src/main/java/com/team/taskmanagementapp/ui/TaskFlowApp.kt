@@ -5,20 +5,28 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import com.team.taskmanagementapp.R
 import com.team.taskmanagementapp.ui.components.TaskFlowBottomNavigation
 import com.team.taskmanagementapp.ui.navigation.TaskFlowRoutes
@@ -30,17 +38,21 @@ import com.team.taskmanagementapp.ui.screens.SettingsScreen
 import com.team.taskmanagementapp.ui.screens.StatsScreen
 import com.team.taskmanagementapp.ui.screens.StreakScreen
 import com.team.taskmanagementapp.ui.theme.TaskFlowDimensions
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
-import androidx.navigation.NavType
-import androidx.navigation.navArgument
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.team.taskmanagementapp.ui.home.HomeRoute
 import com.team.taskmanagementapp.ui.home.RepositoryHomeTaskSource
 import com.team.taskmanagementapp.data.local.db.AppDatabase
 import com.team.taskmanagementapp.data.repository.TaskRepository
+
 @Composable
 fun TaskFlowApp(modifier: Modifier = Modifier) {
     val appContext = LocalContext.current.applicationContext
+    val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     val taskSource = remember(appContext) {
         val database = AppDatabase.getInstance(appContext)
@@ -63,6 +75,7 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
             .fillMaxSize()
             .imePadding(),
         containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             if (showMainControls) {
                 TaskFlowBottomNavigation(
@@ -82,31 +95,40 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
                                 restoreState = true
                             }
                         }
+                    },
+                    onAddClick = {
+                        navController.navigate(TaskFlowRoutes.CREATE_TASK) {
+                            launchSingleTop = true
+                        }
                     }
                 )
             }
         },
         floatingActionButton = {
             if (showMainControls) {
-                FloatingActionButton(
+                // Floating AI Chatbot Avatar at bottom right matching Figma exactly
+                androidx.compose.material3.Surface(
                     onClick = {
-                        navController.navigate(
-                            TaskFlowRoutes.CREATE_TASK
-                        ) {
-                            launchSingleTop = true
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar(
+                                "AI Assistant is ready to help!"
+                            )
                         }
                     },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
+                    shape = CircleShape,
+                    color = Color.White,
+                    shadowElevation = 6.dp,
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(CircleShape)
                 ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_add),
-                        contentDescription = stringResource(
-                            R.string.action_create_task
-                        ),
-                        modifier = Modifier.size(
-                            TaskFlowDimensions.iconMedium
-                        )
+                    Image(
+                        painter = painterResource(R.drawable.ic_chatbot_ai),
+                        contentDescription = stringResource(R.string.home_ai_assistant),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape)
                     )
                 }
             }
@@ -125,6 +147,11 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
                     taskSource = taskSource,
                     onTaskClick = { _ ->
                         // Nối điều hướng chi tiết Task ở nhánh tiếp theo.
+                    },
+                    onViewCalendarClick = {
+                        navController.navigate(TaskFlowRoutes.CALENDAR) {
+                            launchSingleTop = true
+                        }
                     }
                 )
             }

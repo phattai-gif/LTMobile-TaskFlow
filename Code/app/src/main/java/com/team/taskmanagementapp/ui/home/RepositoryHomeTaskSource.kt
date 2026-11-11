@@ -80,6 +80,7 @@ private fun Task.toHomeTaskUiModel(): HomeTaskUiModel {
         priority = homePriority,
         status = homeStatus,
         isCompleted = taskIsCompleted,
-        completedAt = completedAt
+        completedAt = completedAt,
+        isRecurring = isRecurring
     )
 }

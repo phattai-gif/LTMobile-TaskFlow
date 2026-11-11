@@ -10,6 +10,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 fun HomeRoute(
     taskSource: HomeTaskSource,
     onTaskClick: (Long) -> Unit,
+    onViewCalendarClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val homeViewModel = viewModel<HomeViewModel> {
@@ -24,6 +25,7 @@ fun HomeRoute(
         onToggleComplete = homeViewModel::toggleTaskComplete,
         onDeleteTask = { homeViewModel.deleteTask(it) },
         onRetry = homeViewModel::retry,
+        onViewCalendarClick = onViewCalendarClick,
         modifier = modifier
     )
 }

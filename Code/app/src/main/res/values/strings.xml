@@ -106,4 +106,10 @@
     <string name="home_productivity_tip_title">Productivity tip</string>
     <string name="home_productivity_tip_body">Choose a time when you feel focused and reserve it for your most important task.</string>
     <string name="home_ai_assistant">AI Assistant</string>
+
+    <!-- Calendar Screen Strings (Figma Wireframe) -->
+    <string name="calendar_title">Calendar</string>
+    <string name="calendar_schedule_header">Schedule  %1$s</string>
+    <string name="calendar_no_tasks_for_date">No tasks scheduled for this date</string>
+    <string name="calendar_view_details">Xem chi tiết</string>
 </resources>

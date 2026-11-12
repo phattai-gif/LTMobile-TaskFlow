@@ -19,11 +19,6 @@ fun HomeScreen(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun CalendarScreen(modifier: Modifier = Modifier) {
-    MainTabContent(R.string.nav_calendar, modifier)
-}
-
-@Composable
 fun StatsScreen(modifier: Modifier = Modifier) {
     MainTabContent(R.string.nav_stats, modifier)
 }

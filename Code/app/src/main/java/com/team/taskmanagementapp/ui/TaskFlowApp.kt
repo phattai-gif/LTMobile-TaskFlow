@@ -31,7 +31,7 @@ import com.team.taskmanagementapp.R
 import com.team.taskmanagementapp.ui.components.TaskFlowBottomNavigation
 import com.team.taskmanagementapp.ui.navigation.TaskFlowRoutes
 import com.team.taskmanagementapp.ui.navigation.taskFlowMainDestinations
-import com.team.taskmanagementapp.ui.screens.CalendarScreen
+import com.team.taskmanagementapp.ui.calendar.CalendarScreen
 import com.team.taskmanagementapp.ui.screens.CreateTaskScreen
 import com.team.taskmanagementapp.ui.screens.RewardsScreen
 import com.team.taskmanagementapp.ui.screens.SettingsScreen

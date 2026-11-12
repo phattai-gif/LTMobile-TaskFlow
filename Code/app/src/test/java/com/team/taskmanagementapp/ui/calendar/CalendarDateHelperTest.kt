@@ -27,18 +27,18 @@ class CalendarDateHelperTest {
     @Test
     fun november2026HasSevenColumnsAndCorrectWeekdayOffset() {
         val state = build(emptyList())
-        assertEquals(42, state.days.size)
-        assertTrue(state.days.chunked(7).all { it.size == 7 })
-        assertTrue(state.days.take(6).all { it.date == null })
-        assertEquals(LocalDate.of(2026, 11, 1), state.days[6].date)
-        assertEquals(LocalDate.of(2026, 11, 30), state.days[35].date)
-        assertTrue(state.days.drop(36).all { it.date == null })
+        assertEquals(42, state.calendarDays.size)
+        assertTrue(state.calendarDays.chunked(7).all { it.size == 7 })
+        assertEquals(LocalDate.of(2026, 11, 1), state.calendarDays[0].date)
+        assertEquals(LocalDate.of(2026, 11, 30), state.calendarDays[29].date)
+        assertTrue(state.calendarDays.drop(30).none { it.isCurrentMonth })
     }
 
     @Test
     fun leapFebruaryIncludes29Days() {
         val state = build(emptyList(), LocalDate.of(2028, 2, 10))
-        val dates = state.days.mapNotNull { it.date }
+        assertTrue(state.calendarDays.take(2).none { it.isCurrentMonth })
+        val dates = state.calendarDays.filter { it.isCurrentMonth }.map { it.date }
         assertEquals(29, dates.size)
         assertEquals(LocalDate.of(2028, 2, 29), dates.last())
     }
@@ -50,9 +50,9 @@ class CalendarDateHelperTest {
             task(2, selected),
             task(3, selected.plusMonths(1))
         ))
-        assertEquals(listOf(2L), state.tasksForSelectedDate.map { it.id })
-        assertTrue(state.days.single { it.date == selected }.hasTasks)
-        assertFalse(state.days.single { it.date == selected.plusDays(1) }.hasTasks)
+        assertEquals(listOf(2L), state.scheduledTasks.map { it.id })
+        assertTrue(state.calendarDays.single { it.date == selected }.hasTasks)
+        assertFalse(state.calendarDays.single { it.date == selected.plusDays(1) }.hasTasks)
     }
 
     @Test
@@ -61,9 +61,9 @@ class CalendarDateHelperTest {
             dueDate = Instant.parse("2026-11-05T18:30:00Z").toEpochMilli()
         )
         val state = build(listOf(value))
-        assertEquals(listOf(1L), state.tasksForSelectedDate.map { it.id })
-        assertTrue(state.days.single { it.date == selected }.hasTasks)
-        assertFalse(state.days.single { it.date == selected.minusDays(1) }.hasTasks)
+        assertEquals(listOf(1L), state.scheduledTasks.map { it.id })
+        assertTrue(state.calendarDays.single { it.date == selected }.hasTasks)
+        assertFalse(state.calendarDays.single { it.date == selected.minusDays(1) }.hasTasks)
     }
 
     @Test
@@ -72,9 +72,9 @@ class CalendarDateHelperTest {
             dueTime = selected.plusDays(1).atTime(9, 0).atZone(zone).toInstant().toEpochMilli()
         )
         val state = build(listOf(value))
-        assertEquals(1, state.tasksForSelectedDate.size)
-        assertTrue(state.days.single { it.date == selected }.hasTasks)
-        assertFalse(state.days.single { it.date == selected.plusDays(1) }.hasTasks)
+        assertEquals(1, state.scheduledTasks.size)
+        assertTrue(state.calendarDays.single { it.date == selected }.hasTasks)
+        assertFalse(state.calendarDays.single { it.date == selected.plusDays(1) }.hasTasks)
     }
 
     @Test
@@ -83,8 +83,8 @@ class CalendarDateHelperTest {
             task(1, selected).copy(dueDate = 0L),
             task(2, selected).copy(dueDate = -1L)
         ))
-        assertTrue(state.tasksForSelectedDate.isEmpty())
-        assertTrue(state.days.none { it.hasTasks })
+        assertTrue(state.scheduledTasks.isEmpty())
+        assertTrue(state.calendarDays.none { it.hasTasks })
     }
 
     @Test
@@ -92,16 +92,17 @@ class CalendarDateHelperTest {
         val first = task(1, selected).copy(title = "Trùng tiêu đề")
         val second = task(2, selected).copy(title = "Trùng tiêu đề")
         val state = build(listOf(first, second))
-        assertEquals(2, state.tasksForSelectedDate.size)
-        assertEquals(2, state.days.single { it.date == selected }.taskCount)
+        assertEquals(2, state.scheduledTasks.size)
+        assertEquals(listOf(1L, 2L), state.scheduledTasks.map { it.id })
+        assertTrue(state.calendarDays.single { it.date == selected }.hasTasks)
     }
 
     @Test
     fun completedTasksStillHaveCalendarDots() {
         val completed = task(1, selected).copy(status = HomeTaskStatus.COMPLETED)
         val state = build(listOf(completed))
-        assertEquals(HomeTaskStatus.COMPLETED, state.tasksForSelectedDate.single().status)
-        assertTrue(state.days.single { it.date == selected }.hasTasks)
+        assertTrue(state.scheduledTasks.single().isCompleted)
+        assertTrue(state.calendarDays.single { it.date == selected }.hasTasks)
     }
 
     @Test
@@ -117,15 +118,16 @@ class CalendarDateHelperTest {
         val noTime = task(4, selected)
         val zeroTime = task(5, selected).copy(dueTime = 0L)
         val state = build(listOf(noTime, sameTime, later, zeroTime, earlier))
-        assertEquals(listOf(2L, 3L, 1L, 4L, 5L), state.tasksForSelectedDate.map { it.id })
+        assertEquals(listOf(2L, 3L, 1L, 4L, 5L), state.scheduledTasks.map { it.id })
+        assertEquals(listOf("09:00", "09:00", "10:15", "—", "—"), state.scheduledTasks.map { it.timeDisplay })
     }
 
     @Test
     fun selectedAndTodayMarkersAreIndependent() {
         val state = build(emptyList(), selected.plusDays(2))
-        assertTrue(state.days.single { it.date == selected }.isToday)
-        assertFalse(state.days.single { it.date == selected }.isSelected)
-        assertTrue(state.days.single { it.date == selected.plusDays(2) }.isSelected)
-        assertFalse(state.days.single { it.date == selected.plusDays(2) }.isToday)
+        assertTrue(state.calendarDays.single { it.date == selected }.isToday)
+        assertFalse(state.calendarDays.single { it.date == selected }.isSelected)
+        assertTrue(state.calendarDays.single { it.date == selected.plusDays(2) }.isSelected)
+        assertFalse(state.calendarDays.single { it.date == selected.plusDays(2) }.isToday)
     }
 }

@@ -1,24 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="calendar_title">Lịch công việc</string>
-    <string name="calendar_month_year">Tháng %1$d/%2$d</string>
-    <string name="calendar_previous_month">Tháng trước</string>
-    <string name="calendar_next_month">Tháng sau</string>
-    <string name="calendar_today">Hôm nay</string>
-    <string name="calendar_tasks_for_date">Công việc ngày %1$s</string>
-    <string name="calendar_task_count">%1$d công việc</string>
-    <string name="calendar_empty_day">Không có công việc trong ngày này.</string>
     <string name="calendar_loading">Đang tải lịch công việc…</string>
     <string name="calendar_load_error">Không tải được lịch công việc. Vui lòng thử lại.</string>
-    <string name="calendar_day_description">Ngày %1$s, %2$d công việc</string>
-
-    <string-array name="calendar_weekdays">
-        <item>T2</item>
-        <item>T3</item>
-        <item>T4</item>
-        <item>T5</item>
-        <item>T6</item>
-        <item>T7</item>
-        <item>CN</item>
-    </string-array>
 </resources>

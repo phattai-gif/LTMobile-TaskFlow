@@ -78,8 +78,6 @@ class CalendarViewModel(
 
     fun nextMonth() = changeMonth(1L)
 
-    fun selectToday() = selectDate(today())
-
     fun retry() {
         retrySignal.update { it + 1 }
     }

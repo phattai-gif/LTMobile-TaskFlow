@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.util.Calendar
 
 class HomeViewModel(
@@ -38,6 +39,18 @@ class HomeViewModel(
         retrySignal.update { it + 1 }
     }
 
+    fun toggleTaskComplete(task: HomeTaskUiModel) {
+        viewModelScope.launch {
+            taskSource.setTaskCompleted(task.id, !task.isCompleted)
+        }
+    }
+
+    fun deleteTask(taskId: Long) {
+        viewModelScope.launch {
+            taskSource.deleteTask(taskId)
+        }
+    }
+
     private fun observeHome(): Flow<HomeUiState> {
         return flow<HomeUiState> {
             emit(HomeUiState.Loading)
@@ -58,45 +71,119 @@ class HomeViewModel(
     private fun createUiState(
         tasks: List<HomeTaskUiModel>
     ): HomeUiState {
-        val todayStart = startOfDay(System.currentTimeMillis())
+        val now = System.currentTimeMillis()
+        val todayStart = startOfDay(now)
 
         val tomorrowStart = Calendar.getInstance().apply {
             timeInMillis = todayStart
             add(Calendar.DAY_OF_YEAR, 1)
         }.timeInMillis
 
+        val weekAgoStart = Calendar.getInstance().apply {
+            timeInMillis = todayStart
+            add(Calendar.DAY_OF_YEAR, -7)
+        }.timeInMillis
+
+        val totalCount = tasks.size
+        val completedCount = tasks.count { it.isCompleted }
+        val overdueCount = tasks.count { !it.isCompleted && it.dueDate > 0L && it.dueDate < todayStart }
+        val pendingCount = tasks.count { !it.isCompleted && (it.dueDate <= 0L || it.dueDate >= todayStart) }
+        val weeklyAddedCount = tasks.count { it.dueDate >= weekAgoStart }
+
+        val metrics = HomeSummaryMetrics(
+            totalCount = totalCount,
+            completedCount = completedCount,
+            pendingCount = pendingCount,
+            overdueCount = overdueCount,
+            weeklyAddedCount = weeklyAddedCount
+        )
+
+        val priorityComparator = compareByDescending<HomeTaskUiModel> {
+            when (it.priority) {
+                HomeTaskPriority.URGENT -> 3
+                HomeTaskPriority.HIGH -> 2
+                HomeTaskPriority.MEDIUM -> 1
+                HomeTaskPriority.LOW -> 0
+            }
+        }
+
         val taskOrder = compareBy<HomeTaskUiModel> {
             startOfDay(it.dueDate)
         }.thenBy {
             minutesOfDay(it.dueTime)
-        }.thenBy {
+        }.then(priorityComparator).thenBy {
             it.id
         }
 
+        // Today's tasks: Incomplete tasks that are overdue or due today
         val todayTasks = tasks
             .filter {
-                it.dueDate >= todayStart &&
-                        it.dueDate < tomorrowStart
+                !it.isCompleted && (
+                    (it.dueDate >= todayStart && it.dueDate < tomorrowStart) ||
+                    (it.dueDate > 0L && it.dueDate < todayStart) ||
+                    (it.dueDate <= 0L)
+                )
             }
             .sortedWith(taskOrder)
 
+        // Upcoming tasks: Incomplete tasks due tomorrow or later
         val upcomingTasks = tasks
             .filter {
-                it.dueDate >= tomorrowStart
+                !it.isCompleted && it.dueDate >= tomorrowStart
             }
             .sortedWith(taskOrder)
 
-        return if (
-            todayTasks.isEmpty() &&
-            upcomingTasks.isEmpty()
-        ) {
-            HomeUiState.Empty
-        } else {
-            HomeUiState.Success(
-                todayTasks = todayTasks,
-                upcomingTasks = upcomingTasks
-            )
+        // Completed tasks
+        val completedTasks = tasks
+            .filter {
+                it.isCompleted
+            }
+            .sortedByDescending { it.completedAt ?: it.dueDate }
+
+        // Build streak week days (Monday to Sunday)
+        val streakWeekDays = buildStreakWeekDays(now)
+        val streakInfo = HomeStreakInfo(
+            currentStreak = if (completedCount > 0) 1 else 0,
+            bestStreak = 1,
+            weekDays = streakWeekDays
+        )
+
+        return HomeUiState.Success(
+            metrics = metrics,
+            streakInfo = streakInfo,
+            todayTasks = todayTasks,
+            upcomingTasks = upcomingTasks,
+            completedTasks = completedTasks,
+            userName = "Alex"
+        )
+    }
+
+    private fun buildStreakWeekDays(now: Long): List<StreakDayUiModel> {
+        val calendar = Calendar.getInstance().apply {
+            timeInMillis = now
+            firstDayOfWeek = Calendar.MONDAY
         }
+        val currentDayOfYear = calendar.get(Calendar.DAY_OF_YEAR)
+
+        calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+
+        val dayLetters = listOf("T", "T", "T", "T", "T", "T", "C")
+        val days = mutableListOf<StreakDayUiModel>()
+
+        for (i in 0 until 7) {
+            val dayNum = calendar.get(Calendar.DAY_OF_MONTH)
+            val isToday = calendar.get(Calendar.DAY_OF_YEAR) == currentDayOfYear
+            days.add(
+                StreakDayUiModel(
+                    dayLetter = dayLetters[i],
+                    dayNumber = dayNum,
+                    isToday = isToday,
+                    isCompleted = false
+                )
+            )
+            calendar.add(Calendar.DAY_OF_MONTH, 1)
+        }
+        return days
     }
 
     private fun startOfDay(timestamp: Long): Long {

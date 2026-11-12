@@ -21,5 +21,8 @@ data class HomeTaskUiModel(
     val dueDate: Long,
     val dueTime: Long? = null,
     val priority: HomeTaskPriority = HomeTaskPriority.MEDIUM,
-    val status: HomeTaskStatus = HomeTaskStatus.PENDING
+    val status: HomeTaskStatus = HomeTaskStatus.PENDING,
+    val isCompleted: Boolean = (status == HomeTaskStatus.COMPLETED),
+    val completedAt: Long? = null,
+    val isRecurring: Boolean = false
 )

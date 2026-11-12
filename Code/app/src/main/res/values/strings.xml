@@ -134,4 +134,24 @@
     <string name="stats_pomodoro_focus_subtitle">Focus time from completed sessions</string>
     <string name="stats_today">TODAY</string>
     <string name="stats_no_focus_sessions">No focus sessions yet — finish a Pomodoro to see your stats.</string>
+
+    <!-- Create Task Screen Strings (Figma Wireframe) -->
+    <string name="create_task_screen_title">Create New Task</string>
+    <string name="create_task_title_label_upper">TASK TITLE</string>
+    <string name="create_task_title_hint">e.g., Database Migration</string>
+    <string name="create_task_desc_label_upper">DESCRIPTION</string>
+    <string name="create_task_desc_hint">Add notes, links, or context...</string>
+    <string name="create_task_schedule_label">SCHEDULE</string>
+    <string name="create_task_priority_label">PRIORITY</string>
+    <string name="create_task_initial_status_label">INITIAL STATUS</string>
+    <string name="create_task_reminder_label">REMINDER</string>
+    <string name="create_task_recurrence_label">REPEAT / RECURRENCE</string>
+    <string name="create_task_action_button">Create Task</string>
+    <string name="create_task_empty_title_error">Please enter a task title</string>
+    <string name="create_task_status_todo">Todo</string>
+    <string name="create_task_status_in_progress">In Progress</string>
+    <string name="create_task_reminder_30m">30 mins before</string>
+    <string name="create_task_reminder_10m">10 mins before</string>
+    <string name="create_task_reminder_1h">1 hour before</string>
+    <string name="create_task_reminder_none">None</string>
 </resources>

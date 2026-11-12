@@ -32,10 +32,10 @@ import com.team.taskmanagementapp.ui.components.TaskFlowBottomNavigation
 import com.team.taskmanagementapp.ui.navigation.TaskFlowRoutes
 import com.team.taskmanagementapp.ui.navigation.taskFlowMainDestinations
 import com.team.taskmanagementapp.ui.calendar.CalendarScreen
+import com.team.taskmanagementapp.ui.stats.StatsScreen
 import com.team.taskmanagementapp.ui.screens.CreateTaskScreen
 import com.team.taskmanagementapp.ui.screens.RewardsScreen
 import com.team.taskmanagementapp.ui.screens.SettingsScreen
-import com.team.taskmanagementapp.ui.screens.StatsScreen
 import com.team.taskmanagementapp.ui.screens.StreakScreen
 import com.team.taskmanagementapp.ui.theme.TaskFlowDimensions
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -106,7 +106,7 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
         },
         floatingActionButton = {
             if (showMainControls) {
-                // Floating AI Chatbot Avatar at bottom right matching Figma exactly
+                // Floating AI Chatbot Avatar at bottom right positioned cleanly above bottom bar
                 androidx.compose.material3.Surface(
                     onClick = {
                         coroutineScope.launch {
@@ -116,10 +116,11 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
                         }
                     },
                     shape = CircleShape,
-                    color = Color.White,
+                    color = Color.Transparent,
                     shadowElevation = 6.dp,
                     modifier = Modifier
-                        .size(52.dp)
+                        .padding(bottom = 16.dp, end = 4.dp)
+                        .size(54.dp)
                         .clip(CircleShape)
                 ) {
                     Image(

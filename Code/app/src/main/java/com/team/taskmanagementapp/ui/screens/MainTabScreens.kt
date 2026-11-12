@@ -19,11 +19,6 @@ fun HomeScreen(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun StatsScreen(modifier: Modifier = Modifier) {
-    MainTabContent(R.string.nav_stats, modifier)
-}
-
-@Composable
 fun StreakScreen(modifier: Modifier = Modifier) {
     MainTabContent(R.string.nav_streak, modifier)
 }

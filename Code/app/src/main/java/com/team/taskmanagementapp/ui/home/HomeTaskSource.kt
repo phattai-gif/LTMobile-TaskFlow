@@ -12,4 +12,8 @@ interface HomeTaskSource {
             tasks.firstOrNull { it.id == taskId }
         }
     }
+
+    suspend fun setTaskCompleted(taskId: Long, isCompleted: Boolean)
+
+    suspend fun deleteTask(taskId: Long)
 }

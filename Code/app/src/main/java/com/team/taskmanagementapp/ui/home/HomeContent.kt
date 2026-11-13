@@ -187,14 +187,13 @@ private fun HomeDashboardSuccessView(
                     )
                 }
 
-                // Clock icon in top right
                 IconButton(
                     onClick = onClockClick,
                     modifier = Modifier.size(36.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.AccessTime,
-                        contentDescription = "Clock",
+                        contentDescription = stringResource(R.string.pomodoro_entry_content_description),
                         tint = TaskFlowPrimary,
                         modifier = Modifier.size(24.dp)
                     )

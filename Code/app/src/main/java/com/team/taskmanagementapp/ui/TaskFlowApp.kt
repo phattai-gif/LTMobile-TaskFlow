@@ -15,6 +15,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -31,6 +32,9 @@ import com.team.taskmanagementapp.R
 import com.team.taskmanagementapp.ui.components.TaskFlowBottomNavigation
 import com.team.taskmanagementapp.ui.navigation.TaskFlowRoutes
 import com.team.taskmanagementapp.ui.navigation.taskFlowMainDestinations
+import com.team.taskmanagementapp.ui.pomodoro.PomodoroScreen
+import com.team.taskmanagementapp.ui.pomodoro.PomodoroSettingsScreen
+import com.team.taskmanagementapp.ui.viewmodel.PomodoroViewModel
 import com.team.taskmanagementapp.ui.calendar.CalendarScreen
 import com.team.taskmanagementapp.ui.stats.StatsScreen
 import com.team.taskmanagementapp.ui.screens.CreateTaskScreen
@@ -47,9 +51,18 @@ import com.team.taskmanagementapp.ui.home.HomeRoute
 import com.team.taskmanagementapp.ui.home.RepositoryHomeTaskSource
 import com.team.taskmanagementapp.data.local.db.AppDatabase
 import com.team.taskmanagementapp.data.repository.TaskRepository
+import com.team.taskmanagementapp.data.repository.PomodoroSettingsRepository
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 
 @Composable
-fun TaskFlowApp(modifier: Modifier = Modifier) {
+fun TaskFlowApp(
+    modifier: Modifier = Modifier,
+    openPomodoro: Flow<Boolean> = emptyFlow(),
+    onPomodoroOpened: () -> Unit = {}
+) {
     val appContext = LocalContext.current.applicationContext
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -62,6 +75,27 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
     }
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
+    val pomodoroViewModel = viewModel<PomodoroViewModel> {
+        val database = AppDatabase.getInstance(appContext)
+        PomodoroViewModel(
+            TaskRepository(database.taskDao()),
+            PomodoroSettingsRepository.from(appContext),
+            appContext,
+            createSavedStateHandle()
+        )
+    }
+
+    LaunchedEffect(navController, openPomodoro) {
+        openPomodoro.collect { requested ->
+            if (requested) {
+                navController.navigate(TaskFlowRoutes.POMODORO) {
+                    popUpTo(TaskFlowRoutes.POMODORO)
+                    launchSingleTop = true
+                }
+                onPomodoroOpened()
+            }
+        }
+    }
 
     val currentRoute = backStackEntry?.destination?.route
         ?: TaskFlowRoutes.HOME
@@ -153,6 +187,11 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
                         navController.navigate(TaskFlowRoutes.CALENDAR) {
                             launchSingleTop = true
                         }
+                    },
+                    onOpenPomodoro = {
+                        navController.navigate(TaskFlowRoutes.POMODORO) {
+                            launchSingleTop = true
+                        }
                     }
                 )
             }
@@ -182,6 +221,21 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
                     onBack = {
                         navController.popBackStack()
                     }
+                )
+            }
+
+            composable(TaskFlowRoutes.POMODORO) {
+                PomodoroScreen(
+                    viewModel = pomodoroViewModel,
+                    onBack = { navController.popBackStack() },
+                    onSettings = { navController.navigate(TaskFlowRoutes.POMODORO_SETTINGS) }
+                )
+            }
+
+            composable(TaskFlowRoutes.POMODORO_SETTINGS) {
+                PomodoroSettingsScreen(
+                    viewModel = pomodoroViewModel,
+                    onBack = { navController.popBackStack() }
                 )
             }
         }

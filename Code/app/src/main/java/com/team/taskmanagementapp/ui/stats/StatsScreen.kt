@@ -2,91 +2,101 @@ package com.team.taskmanagementapp.ui.stats
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.team.taskmanagementapp.R
 import com.team.taskmanagementapp.data.local.db.AppDatabase
+import com.team.taskmanagementapp.data.model.stats.StatsTimeFilter
+import com.team.taskmanagementapp.data.model.stats.formatFocusDuration
 import com.team.taskmanagementapp.data.repository.TaskRepository
 import com.team.taskmanagementapp.ui.theme.TaskFlowOutline
 import com.team.taskmanagementapp.ui.theme.TaskFlowOutlineVariant
 import com.team.taskmanagementapp.ui.theme.TaskFlowPrimary
-import com.team.taskmanagementapp.ui.theme.TaskFlowSurfaceContainer
 import com.team.taskmanagementapp.ui.theme.TaskFlowSurfaceContainerLowest
+import kotlin.math.roundToInt
 
 @Composable
-fun StatsScreen(
-    modifier: Modifier = Modifier,
-    onFilterClick: () -> Unit = {}
-) {
+fun StatsScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val database = remember(context) { AppDatabase.getInstance(context) }
     val repository = remember(database) { TaskRepository(database.taskDao()) }
     val pomodoroDao = remember(database) { database.pomodoroDao() }
 
     val viewModel = viewModel<StatsViewModel> {
-        StatsViewModel(repository, pomodoroDao)
+        StatsViewModel(repository, pomodoroDao, createSavedStateHandle())
     }
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     StatsContent(
         uiState = uiState,
-        onFilterClick = onFilterClick,
+        onSelectPeriod = viewModel::selectPeriod,
+        onRetry = viewModel::retry,
         modifier = modifier
     )
 }
 
 @Composable
-fun StatsContent(
+internal fun StatsContent(
     uiState: StatsUiState,
-    onFilterClick: () -> Unit,
+    onSelectPeriod: (StatsTimeFilter) -> Unit,
+    onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val periodLabel = stringResource(uiState.timeFilter.labelRes)
+    var showFilters by rememberSaveable { mutableStateOf(false) }
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -112,22 +122,49 @@ fun StatsContent(
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFF3F4F6))
-                        .clickable(onClick = onFilterClick),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Tune,
-                        contentDescription = "Filter",
-                        tint = Color(0xFF6B7280),
-                        modifier = Modifier.size(20.dp)
+                Box {
+                    IconButton(onClick = { showFilters = true }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Tune,
+                            contentDescription = stringResource(R.string.stats_filter_description, periodLabel),
+                            tint = TaskFlowOutline
+                        )
+                    }
+                    DropdownMenu(expanded = showFilters, onDismissRequest = { showFilters = false }) {
+                        StatsTimeFilter.entries.forEach { filter ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        stringResource(filter.labelRes),
+                                        fontWeight = if (uiState.timeFilter == filter) FontWeight.Bold
+                                        else FontWeight.Normal
+                                    )
+                                },
+                                onClick = {
+                                    showFilters = false
+                                    onSelectPeriod(filter)
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        if (uiState.isLoading || uiState.hasError || uiState.isEmpty) {
+            item(key = "stats_message") {
+                StatsMessage(uiState, periodLabel, onRetry)
+            }
+            if (uiState.isEmpty && uiState.hasUnknownCompletionDates) {
+                item(key = "stats_unknown_completion_dates") {
+                    Text(
+                        text = stringResource(R.string.stats_unknown_completion_dates),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TaskFlowOutline
                     )
                 }
             }
+            return@LazyColumn
         }
 
         // 2. Card 1: Completions by weekday (Chart)
@@ -160,7 +197,7 @@ fun StatsContent(
                     )
 
                     Text(
-                        text = stringResource(R.string.stats_completions_subtitle),
+                        text = stringResource(R.string.stats_chart_period, periodLabel),
                         style = MaterialTheme.typography.bodySmall.copy(
                             fontSize = 12.sp,
                             color = TaskFlowOutline
@@ -169,14 +206,29 @@ fun StatsContent(
 
                     Spacer(modifier = Modifier.height(18.dp))
 
-                    // Bar Chart
-                    WeekdayBarChart(
-                        weekdayCompletions = uiState.weekdayCompletions,
-                        maxCount = uiState.maxWeekdayCount,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(140.dp)
-                    )
+                    if (uiState.weekdayCompletions.any { it.count > 0 }) {
+                        WeekdayBarChart(
+                            weekdayCompletions = uiState.weekdayCompletions,
+                            maxCount = uiState.maxWeekdayCount,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(140.dp)
+                        )
+                    } else {
+                        Text(
+                            text = stringResource(R.string.stats_no_dated_completions),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TaskFlowOutline
+                        )
+                    }
+                    if (uiState.hasUnknownCompletionDates) {
+                        Text(
+                            text = stringResource(R.string.stats_unknown_completion_dates),
+                            modifier = Modifier.padding(top = 10.dp),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TaskFlowOutline
+                        )
+                    }
                 }
             }
         }
@@ -230,22 +282,13 @@ fun StatsContent(
                         ) {
                             val progressFloat = uiState.completionRatePercent / 100f
 
-                            Canvas(modifier = Modifier.fillMaxSize()) {
-                                val strokeWidth = 9.dp.toPx()
-                                // Background circle
-                                drawCircle(
-                                    color = Color(0xFFE5E7EB),
-                                    style = Stroke(width = strokeWidth)
-                                )
-                                // Active arc
-                                drawArc(
-                                    color = TaskFlowPrimary,
-                                    startAngle = -90f,
-                                    sweepAngle = progressFloat * 360f,
-                                    useCenter = false,
-                                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
-                                )
-                            }
+                            CircularProgressIndicator(
+                                progress = { progressFloat },
+                                modifier = Modifier.fillMaxSize(),
+                                color = TaskFlowPrimary,
+                                trackColor = Color(0xFFE5E7EB),
+                                strokeWidth = 9.dp
+                            )
 
                             Text(
                                 text = "${uiState.completionRatePercent}%",
@@ -260,7 +303,7 @@ fun StatsContent(
                         Spacer(modifier = Modifier.height(10.dp))
 
                         Text(
-                            text = uiState.completionRateStatus,
+                                    text = stringResource(uiState.completionLabelRes),
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontSize = 12.sp,
                                 color = TaskFlowOutline
@@ -304,7 +347,7 @@ fun StatsContent(
                             )
 
                             Text(
-                                text = uiState.completedThisWeek.toString(),
+                                text = uiState.completedCount.toString(),
                                 style = MaterialTheme.typography.headlineMedium.copy(
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 26.sp
@@ -313,7 +356,7 @@ fun StatsContent(
                             )
 
                             Text(
-                                text = stringResource(R.string.stats_this_week),
+                                text = periodLabel,
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     fontSize = 11.sp
                                 ),
@@ -350,7 +393,7 @@ fun StatsContent(
                             )
 
                             Text(
-                                text = uiState.notCompletedThisWeek.toString(),
+                                text = uiState.pendingCount.toString(),
                                 style = MaterialTheme.typography.headlineMedium.copy(
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 26.sp
@@ -359,7 +402,7 @@ fun StatsContent(
                             )
 
                             Text(
-                                text = stringResource(R.string.stats_this_week),
+                                text = periodLabel,
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     fontSize = 11.sp
                                 ),
@@ -404,37 +447,41 @@ fun StatsContent(
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
-                    // Urgent Priority
-                    PriorityProgressRow(
-                        title = stringResource(R.string.stats_urgent_priority),
-                        count = dist.urgentCount,
-                        progress = dist.urgentCount.toFloat() / maxPriority,
-                        barColor = Color(0xFFBA1A1A)
-                    )
+                    if (dist.totalCount == 0) {
+                        Text(
+                            text = stringResource(R.string.stats_no_tasks),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TaskFlowOutline
+                        )
+                    } else {
+                        PriorityProgressRow(
+                            title = stringResource(R.string.stats_urgent_priority),
+                            count = dist.urgentCount,
+                            progress = dist.urgentCount.toFloat() / maxPriority,
+                            barColor = Color(0xFFBA1A1A)
+                        )
 
-                    // High Priority
-                    PriorityProgressRow(
-                        title = stringResource(R.string.stats_high_priority),
-                        count = dist.highCount,
-                        progress = dist.highCount.toFloat() / maxPriority,
-                        barColor = Color(0xFFEF4444)
-                    )
+                        PriorityProgressRow(
+                            title = stringResource(R.string.stats_high_priority),
+                            count = dist.highCount,
+                            progress = dist.highCount.toFloat() / maxPriority,
+                            barColor = Color(0xFFEF4444)
+                        )
 
-                    // Medium Priority
-                    PriorityProgressRow(
-                        title = stringResource(R.string.stats_medium_priority),
-                        count = dist.mediumCount,
-                        progress = dist.mediumCount.toFloat() / maxPriority,
-                        barColor = Color(0xFFF59E0B)
-                    )
+                        PriorityProgressRow(
+                            title = stringResource(R.string.stats_medium_priority),
+                            count = dist.mediumCount,
+                            progress = dist.mediumCount.toFloat() / maxPriority,
+                            barColor = Color(0xFFF59E0B)
+                        )
 
-                    // Low Priority
-                    PriorityProgressRow(
-                        title = stringResource(R.string.stats_low_priority),
-                        count = dist.lowCount,
-                        progress = dist.lowCount.toFloat() / maxPriority,
-                        barColor = Color(0xFF10B981)
-                    )
+                        PriorityProgressRow(
+                            title = stringResource(R.string.stats_low_priority),
+                            count = dist.lowCount,
+                            progress = dist.lowCount.toFloat() / maxPriority,
+                            barColor = Color(0xFF10B981)
+                        )
+                    }
                 }
             }
         }
@@ -496,7 +543,7 @@ fun StatsContent(
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = uiState.pomodoroStats.todayFormatted,
+                                text = formatFocusDuration(uiState.pomodoroStats.todayMinutes),
                                 style = MaterialTheme.typography.headlineMedium.copy(
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 22.sp
@@ -518,7 +565,7 @@ fun StatsContent(
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = uiState.pomodoroStats.thisWeekFormatted,
+                                text = formatFocusDuration(uiState.pomodoroStats.thisWeekMinutes),
                                 style = MaterialTheme.typography.headlineMedium.copy(
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 22.sp
@@ -530,15 +577,109 @@ fun StatsContent(
 
                     Spacer(modifier = Modifier.height(4.dp))
 
+                    val pomodoro = uiState.pomodoroStats
+                    val focusDetail = if (pomodoro.periodSessionCount > 0) {
+                        val sessions = pluralStringResource(
+                            R.plurals.stats_pomodoro_completed,
+                            pomodoro.periodSessionCount,
+                            pomodoro.periodSessionCount
+                        )
+                        stringResource(
+                            R.string.stats_focus_period_summary,
+                            periodLabel,
+                            formatFocusDuration(pomodoro.periodMinutes),
+                            sessions
+                        )
+                    } else if (pomodoro.hasFocus) {
+                        stringResource(R.string.stats_no_focus_in_period, periodLabel)
+                    } else {
+                        stringResource(R.string.stats_no_focus_sessions)
+                    }
                     Text(
-                        text = stringResource(R.string.stats_no_focus_sessions),
+                        text = focusDetail,
                         style = MaterialTheme.typography.bodySmall.copy(
                             fontSize = 12.sp,
                             color = TaskFlowOutline
                         )
                     )
+                    if (pomodoro.topTasks.isNotEmpty()) {
+                        Text(
+                            text = stringResource(R.string.stats_top_focus_tasks),
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                        pomodoro.topTasks.forEach { task ->
+                            val sessions = pluralStringResource(
+                                R.plurals.stats_session_count, task.sessionCount, task.sessionCount
+                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text(
+                                    text = task.taskTitle,
+                                    modifier = Modifier.weight(1f),
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Text(
+                                    text = stringResource(
+                                        R.string.stats_focus_task_summary,
+                                        formatFocusDuration(task.totalMinutes),
+                                        sessions
+                                    ),
+                                    color = TaskFlowOutline,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
+                    }
                 }
             }
+        }
+    }
+}
+
+private val StatsTimeFilter.labelRes: Int
+    get() = when (this) {
+        StatsTimeFilter.THIS_WEEK -> R.string.stats_this_week
+        StatsTimeFilter.LAST_WEEK -> R.string.stats_last_week
+        StatsTimeFilter.THIS_MONTH -> R.string.stats_this_month
+        StatsTimeFilter.ALL_TIME -> R.string.stats_all_time
+    }
+
+private val StatsUiState.completionLabelRes: Int
+    get() = when {
+        priorityDistribution.totalCount == 0 -> R.string.stats_no_tasks
+        completionRatePercent >= 85 -> R.string.stats_excellent
+        completionRatePercent >= 65 -> R.string.stats_on_track
+        completionRatePercent >= 40 -> R.string.stats_in_progress
+        else -> R.string.stats_needs_attention
+    }
+
+@Composable
+private fun StatsMessage(uiState: StatsUiState, periodLabel: String, onRetry: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 180.dp)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically)
+    ) {
+        if (uiState.isLoading) CircularProgressIndicator()
+        Text(
+            text = when {
+                uiState.isLoading -> stringResource(R.string.stats_loading)
+                uiState.hasError -> stringResource(R.string.stats_load_error)
+                else -> stringResource(R.string.stats_empty_period, periodLabel)
+            },
+            style = MaterialTheme.typography.bodyMedium,
+            color = TaskFlowOutline,
+            textAlign = TextAlign.Center
+        )
+        if (uiState.hasError) {
+            TextButton(onClick = onRetry) { Text(stringResource(R.string.action_retry)) }
         }
     }
 }
@@ -570,7 +711,7 @@ private fun PriorityProgressRow(
             )
 
             Text(
-                text = stringResource(R.string.stats_tasks_count, count),
+                text = pluralStringResource(R.plurals.stats_task_count, count, count),
                 style = MaterialTheme.typography.bodySmall.copy(
                     fontSize = 12.sp,
                     color = TaskFlowOutline
@@ -596,81 +737,38 @@ private fun WeekdayBarChart(
     maxCount: Int,
     modifier: Modifier = Modifier
 ) {
-    val yLevels = listOf(12, 8, 4, 0)
-
-    Row(modifier = modifier) {
-        // Y-axis labels
-        Column(
-            modifier = Modifier
-                .width(24.dp)
-                .fillMaxHeight(),
-            verticalArrangement = Arrangement.SpaceBetween,
-            horizontalAlignment = Alignment.End
-        ) {
-            yLevels.forEach { level ->
-                Text(
-                    text = level.toString(),
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 10.sp,
-                        color = Color(0xFF9CA3AF)
-                    )
-                )
-            }
-            Spacer(modifier = Modifier.height(16.dp)) // padding for X-axis labels
-        }
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        // Chart canvas & X-axis
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-        ) {
-            // Bars & Grid Lines
-            Box(
+    val chartDescription = weekdayCompletions.joinToString(", ") { "${it.dayLabel} ${it.count}" }
+    val step = maxCount / 3
+    val axisStyle = MaterialTheme.typography.labelSmall
+    Column(modifier = modifier.semantics { contentDescription = chartDescription }) {
+        Row(modifier = Modifier.weight(1f)) {
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
+                    .width(32.dp)
+                    .fillMaxHeight()
+                    .padding(end = 6.dp),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.End
             ) {
-                // Horizontal grid lines
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    val lineSpacing = size.height / 3f
-                    for (i in 0..3) {
-                        val y = i * lineSpacing
-                        drawLine(
-                            color = Color(0xFFE5E7EB),
-                            start = Offset(0f, y),
-                            end = Offset(size.width, y),
-                            strokeWidth = 1.dp.toPx()
-                        )
+                for (level in 3 downTo 0) {
+                    Text((level * step).toString(), style = axisStyle, color = TaskFlowOutline)
+                }
+            }
+            Box(Modifier.fillMaxHeight().weight(1f)) {
+                Canvas(Modifier.fillMaxSize()) {
+                    for (line in 0..3) {
+                        val y = size.height * line / 3f
+                        drawLine(Color(0xFFE5E7EB), Offset(0f, y), Offset(size.width, y))
                     }
                 }
-
-                // Bars
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceAround,
-                    verticalAlignment = Alignment.Bottom
-                ) {
+                Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.Bottom) {
                     weekdayCompletions.forEach { item ->
-                        val barHeightFactor = if (maxCount > 0) {
-                            (item.count.toFloat() / maxCount).coerceIn(0f, 1f)
-                        } else 0f
-
-                        Box(
-                            modifier = Modifier
-                                .width(16.dp)
-                                .fillMaxHeight(),
-                            contentAlignment = Alignment.BottomCenter
-                        ) {
+                        Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.BottomCenter) {
                             if (item.count > 0) {
                                 Box(
-                                    modifier = Modifier
-                                        .width(16.dp)
-                                        .fillMaxHeight(barHeightFactor)
+                                    Modifier
+                                        .fillMaxWidth(0.45f)
+                                        .fillMaxHeight((item.count.toFloat() / maxCount).coerceIn(0f, 1f))
                                         .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
                                         .background(TaskFlowPrimary)
                                 )
@@ -679,26 +777,18 @@ private fun WeekdayBarChart(
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // X-axis day labels
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
-                horizontalArrangement = Arrangement.SpaceAround
-            ) {
-                weekdayCompletions.forEach { item ->
-                    Text(
-                        text = item.dayLabel,
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontSize = 10.sp,
-                            color = Color(0xFF9CA3AF)
-                        ),
-                        textAlign = TextAlign.Center
-                    )
-                }
+        }
+        Row(Modifier.fillMaxWidth().padding(start = 32.dp, top = 6.dp)) {
+            weekdayCompletions.forEach { item ->
+                Text(
+                    text = item.dayLabel,
+                    modifier = Modifier.weight(1f),
+                    style = axisStyle,
+                    color = TaskFlowOutline,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }

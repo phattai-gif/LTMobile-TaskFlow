@@ -7,15 +7,15 @@
     <string name="action_create_task">Tạo công việc</string>
 
     <!-- Điều hướng chính -->
-    <string name="nav_home">Trang chủ</string>
-    <string name="nav_calendar">Lịch</string>
-    <string name="nav_stats">Thống kê</string>
-    <string name="nav_streak">Chuỗi</string>
-    <string name="nav_rewards">Huy hiệu</string>
-    <string name="nav_settings">Cài đặt</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_calendar">Calendar</string>
+    <string name="nav_stats">Stats</string>
+    <string name="nav_streak">Streak</string>
+    <string name="nav_rewards">Badges</string>
+    <string name="nav_settings">Settings</string>
 
     <!-- Nhãn dùng trong màn hình demo -->
-    <string name="nav_tasks">Công việc</string>
+    <string name="nav_tasks">Tasks</string>
 
     <!-- Kiểm tra bộ giao diện -->
     <string name="theme_demo_title">Bộ giao diện TaskFlow</string>
@@ -32,4 +32,126 @@
     <string name="theme_demo_confirmed">Đã xác nhận thao tác mẫu.</string>
     <string name="task_title_label">Tiêu đề công việc</string>
     <string name="task_description_label">Mô tả</string>
+    <!-- Màn hình Home -->
+    <string name="home_today_tasks">Today\'s Tasks</string>
+    <string name="home_upcoming_tasks">Upcoming</string>
+    <string name="home_completed_tasks">Completed</string>
+    <string name="home_loading">Loading tasks…</string>
+    <string name="home_empty">No tasks found.</string>
+    <string name="home_today_empty">No tasks scheduled for today.</string>
+    <string name="home_upcoming_empty">No upcoming tasks scheduled</string>
+    <string name="home_completed_empty">No completed tasks yet</string>
+    <string name="home_view_full_calendar">VIEW FULL CALENDAR</string>
+    <string name="home_load_error">Could not load tasks.</string>
+    <string name="action_retry">Retry</string>
+
+    <!-- Thông tin trên thẻ công việc -->
+    <string name="home_task_due">%1$s, %2$s</string>
+    <string name="home_no_date">No date</string>
+    <string name="home_no_time">No time</string>
+    <string name="home_task_priority">%1$s</string>
+    <string name="home_task_status">%1$s</string>
+
+    <string name="task_priority_low">LOW</string>
+    <string name="task_priority_medium">MEDIUM</string>
+    <string name="task_priority_high">HIGH</string>
+    <string name="task_priority_urgent">URGENT</string>
+
+    <string name="task_status_pending">PENDING</string>
+    <string name="task_status_in_progress">IN PROGRESS</string>
+    <string name="task_status_completed">COMPLETED</string>
+    <string name="task_status_overdue">OVERDUE</string>
+    <string name="action_back">Quay lại</string>
+    <string name="action_delete">Xóa</string>
+    <string name="task_detail_not_found">Công việc này không còn tồn tại.</string>
+
+    <!-- Thao tác xóa và hoàn thành task -->
+    <string name="task_detail_delete_confirm_title">Xóa công việc này?</string>
+    <string name="task_detail_delete_confirm_msg">Thao tác này sẽ xóa vĩnh viễn công việc khỏi cơ sở dữ liệu và không thể hoàn tác.</string>
+    <string name="task_detail_button_delete">Xóa</string>
+    <string name="task_detail_delete_confirm_positive">Xóa</string>
+    <string name="task_detail_delete_confirm_negative">Hủy</string>
+    <string name="task_detail_delete_recurring_title">Xóa công việc lặp lại</string>
+    <string name="task_detail_delete_recurring_msg">Bạn muốn chỉ xóa công việc này hay tất cả công việc trong chuỗi lặp?</string>
+    <string name="task_detail_delete_only_this">Chỉ công việc này</string>
+    <string name="task_detail_delete_all_occurrences">Tất cả công việc</string>
+    <string name="task_deleted">Đã xóa công việc</string>
+    <string name="task_completed">Đã hoàn thành</string>
+    <string name="task_reopened">Mở lại</string>
+
+    <!-- Chu kỳ lặp lại (Recurrence) -->
+    <string name="task_detail_recurrence_header">LẶP LẠI</string>
+    <string name="task_detail_recurrence_label">🔄 Lặp lại</string>
+    <string name="task_detail_recurrence_none">Không lặp lại</string>
+    <string name="task_detail_recurrence_daily">Daily</string>
+    <string name="task_detail_recurrence_weekly">Weekly</string>
+    <string name="task_detail_recurrence_monthly">Monthly</string>
+    <string name="task_detail_recurrence_yearly">Yearly</string>
+    <string name="task_detail_recurrence_interval">Every %d days</string>
+
+    <!-- Home Dashboard Strings (Figma Wireframe) -->
+    <string name="home_good_morning">Good Morning!</string>
+    <string name="home_good_afternoon">Good Afternoon!</string>
+    <string name="home_good_evening">Good Evening!</string>
+    <string name="home_total_tasks_label">TOTAL TASKS</string>
+    <string name="home_total_tasks_subtitle">All tasks</string>
+    <string name="home_completed_label">COMPLETED</string>
+    <string name="home_pending_label">PENDING</string>
+    <string name="home_overdue_label">OVERDUE</string>
+    <string name="home_action_needed">Action needed</string>
+    <string name="home_all_caught_up">On track</string>
+    <string name="home_streak_title">%1$d Day Streak 🔥</string>
+    <string name="home_streak_subtitle">Complete all tasks today to start your streak!</string>
+    <string name="home_streak_best">Best: %1$d days</string>
+    <string name="home_productivity_tip_title">Productivity tip</string>
+    <string name="home_productivity_tip_body">Choose a time when you feel focused and reserve it for your most important task.</string>
+    <string name="home_ai_assistant">AI Assistant</string>
+
+    <!-- Calendar Screen Strings (Figma Wireframe) -->
+    <string name="calendar_title">Calendar</string>
+    <string name="calendar_schedule_header">Schedule  %1$s</string>
+    <string name="calendar_no_tasks_for_date">No tasks scheduled for this date</string>
+    <string name="calendar_view_details">Xem chi tiết</string>
+
+    <!-- Statistics Screen Strings (Figma Wireframe) -->
+    <string name="stats_title">Statistics</string>
+    <string name="stats_completions_by_weekday">Completions by weekday</string>
+    <string name="stats_completions_subtitle">This week · recorded completion dates</string>
+    <string name="stats_completion_rate">Completion Rate</string>
+    <string name="stats_completed_label">COMPLETED</string>
+    <string name="stats_not_completed_label">NOT COMPLETED</string>
+    <string name="stats_this_week">This week</string>
+    <string name="stats_no_tasks">No tasks</string>
+    <string name="stats_on_track">On track</string>
+    <string name="stats_in_progress">In progress</string>
+    <string name="stats_tasks_by_priority">Tasks by Priority</string>
+    <string name="stats_urgent_priority">Urgent Priority</string>
+    <string name="stats_high_priority">High Priority</string>
+    <string name="stats_medium_priority">Medium Priority</string>
+    <string name="stats_low_priority">Low Priority</string>
+    <string name="stats_tasks_count">%1$d tasks</string>
+    <string name="stats_pomodoro_focus">Pomodoro Focus</string>
+    <string name="stats_pomodoro_focus_subtitle">Focus time from completed sessions</string>
+    <string name="stats_today">TODAY</string>
+    <string name="stats_no_focus_sessions">No focus sessions yet — finish a Pomodoro to see your stats.</string>
+
+    <!-- Create Task Screen Strings (Figma Wireframe) -->
+    <string name="create_task_screen_title">Create New Task</string>
+    <string name="create_task_title_label_upper">TASK TITLE</string>
+    <string name="create_task_title_hint">e.g., Database Migration</string>
+    <string name="create_task_desc_label_upper">DESCRIPTION</string>
+    <string name="create_task_desc_hint">Add notes, links, or context...</string>
+    <string name="create_task_schedule_label">SCHEDULE</string>
+    <string name="create_task_priority_label">PRIORITY</string>
+    <string name="create_task_initial_status_label">INITIAL STATUS</string>
+    <string name="create_task_reminder_label">REMINDER</string>
+    <string name="create_task_recurrence_label">REPEAT / RECURRENCE</string>
+    <string name="create_task_action_button">Create Task</string>
+    <string name="create_task_empty_title_error">Please enter a task title</string>
+    <string name="create_task_status_todo">Todo</string>
+    <string name="create_task_status_in_progress">In Progress</string>
+    <string name="create_task_reminder_30m">30 mins before</string>
+    <string name="create_task_reminder_10m">10 mins before</string>
+    <string name="create_task_reminder_1h">1 hour before</string>
+    <string name="create_task_reminder_none">None</string>
 </resources>

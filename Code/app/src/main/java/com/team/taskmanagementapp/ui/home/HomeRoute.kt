@@ -11,7 +11,8 @@ fun HomeRoute(
     taskSource: HomeTaskSource,
     onTaskClick: (Long) -> Unit,
     onViewCalendarClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onOpenPomodoro: () -> Unit = {}
 ) {
     val homeViewModel = viewModel<HomeViewModel> {
         HomeViewModel(taskSource)
@@ -26,6 +27,7 @@ fun HomeRoute(
         onDeleteTask = { homeViewModel.deleteTask(it) },
         onRetry = homeViewModel::retry,
         onViewCalendarClick = onViewCalendarClick,
+        onClockClick = onOpenPomodoro,
         modifier = modifier
     )
 }

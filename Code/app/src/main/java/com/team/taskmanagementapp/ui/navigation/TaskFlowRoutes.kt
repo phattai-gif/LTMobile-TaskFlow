@@ -9,4 +9,6 @@ object TaskFlowRoutes {
     const val SETTINGS = "settings"
 
     const val CREATE_TASK = "create_task"
+    const val POMODORO = "pomodoro"
+    const val POMODORO_SETTINGS = "pomodoro_settings"
 }

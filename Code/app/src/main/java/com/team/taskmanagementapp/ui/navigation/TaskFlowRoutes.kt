@@ -9,6 +9,9 @@ object TaskFlowRoutes {
     const val SETTINGS = "settings"
 
     const val CREATE_TASK = "create_task"
+    const val WELCOME = "welcome"
+    const val LOGIN = "login"
+    const val REGISTER = "register"
     const val TASK_ID = "taskId"
     const val TASK_DETAIL = "task_detail/{$TASK_ID}"
 

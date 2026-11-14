@@ -35,6 +35,7 @@ import com.team.taskmanagementapp.ui.navigation.taskFlowMainDestinations
 import com.team.taskmanagementapp.ui.calendar.CalendarScreen
 import com.team.taskmanagementapp.ui.stats.StatsScreen
 import com.team.taskmanagementapp.ui.screens.CreateTaskScreen
+import com.team.taskmanagementapp.ui.auth.WelcomeScreen
 import com.team.taskmanagementapp.ui.badges.BadgesScreen
 import com.team.taskmanagementapp.ui.screens.SettingsScreen
 import com.team.taskmanagementapp.ui.streak.StreakScreen
@@ -219,6 +220,21 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
                 CreateTaskScreen(
                     onBack = {
                         navController.popBackStack()
+                    }
+                )
+            }
+
+            composable(TaskFlowRoutes.WELCOME) {
+                WelcomeScreen(
+                    onNavigateToLogin = {
+                        navController.navigate(TaskFlowRoutes.LOGIN) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToRegister = {
+                        navController.navigate(TaskFlowRoutes.REGISTER) {
+                            launchSingleTop = true
+                        }
                     }
                 )
             }

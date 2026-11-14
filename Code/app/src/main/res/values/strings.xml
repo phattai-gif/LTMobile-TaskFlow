@@ -183,4 +183,29 @@
     <string name="badges_special_section_title">Special Badges</string>
     <string name="badges_status_locked">Locked 🔒</string>
     <string name="badges_status_unlocked">Unlocked 🏆</string>
+
+    <!-- Welcome Screen Strings -->
+    <string name="welcome_title">Manage Your\nDaily Tasks &amp; Focus</string>
+    <string name="welcome_subtitle">Track tasks, build unstoppable daily streaks, boost focus with Pomodoro, and achieve your goals with TaskFlow.</string>
+    <string name="welcome_btn_login">Login</string>
+    <string name="welcome_btn_register">Register</string>
+
+    <!-- Login Screen Strings -->
+    <string name="login_title">Login here</string>
+    <string name="login_subtitle">Welcome back you’ve\nbeen missed!</string>
+    <string name="login_hint_email">Email</string>
+    <string name="login_hint_password">Password</string>
+    <string name="login_forgot_password">Forgot your password?</string>
+    <string name="login_btn_signin">Sign in</string>
+    <string name="login_create_account">Create new account</string>
+    <string name="auth_or_continue_with">Or continue with</string>
+    <string name="auth_continue_with_google">Continue with Google</string>
+
+    <!-- Register Screen Strings -->
+    <string name="register_title">Create Account</string>
+    <string name="register_subtitle">Create an account so you can track tasks and sync your streak!</string>
+    <string name="register_hint_confirm_password">Confirm Password</string>
+    <string name="register_btn_signup">Sign up</string>
+    <string name="register_already_have_account">Already have an account</string>
+    <string name="auth_signup_with_google">Sign up with Google</string>
 </resources>

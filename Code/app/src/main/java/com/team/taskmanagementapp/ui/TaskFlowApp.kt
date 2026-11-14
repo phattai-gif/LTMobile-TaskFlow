@@ -36,6 +36,7 @@ import com.team.taskmanagementapp.ui.calendar.CalendarScreen
 import com.team.taskmanagementapp.ui.stats.StatsScreen
 import com.team.taskmanagementapp.ui.screens.CreateTaskScreen
 import com.team.taskmanagementapp.ui.auth.LoginScreen
+import com.team.taskmanagementapp.ui.auth.RegisterScreen
 import com.team.taskmanagementapp.ui.auth.WelcomeScreen
 import com.team.taskmanagementapp.ui.badges.BadgesScreen
 import com.team.taskmanagementapp.ui.screens.SettingsScreen
@@ -72,6 +73,10 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
         RepositoryTaskDetailSource(repository, database)
     }
     val navController = rememberNavController()
+    val auth = remember { com.google.firebase.auth.FirebaseAuth.getInstance() }
+    val startDestination = remember {
+        if (auth.currentUser != null) TaskFlowRoutes.HOME else TaskFlowRoutes.WELCOME
+    }
     val openTaskDetail: (Long) -> Unit = { taskId ->
         navController.navigate(TaskFlowRoutes.taskDetail(taskId)) {
             launchSingleTop = true
@@ -153,7 +158,7 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = TaskFlowRoutes.HOME,
+            startDestination = startDestination,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
@@ -214,7 +219,14 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
             }
 
             composable(TaskFlowRoutes.SETTINGS) {
-                SettingsScreen()
+                SettingsScreen(
+                    onLogout = {
+                        auth.signOut()
+                        navController.navigate(TaskFlowRoutes.WELCOME) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
             }
 
             composable(TaskFlowRoutes.CREATE_TASK) {
@@ -252,6 +264,24 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
                     },
                     onNavigateToRegister = {
                         navController.navigate(TaskFlowRoutes.REGISTER) {
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+
+            composable(TaskFlowRoutes.REGISTER) {
+                RegisterScreen(
+                    onRegisterSuccess = {
+                        navController.navigate(TaskFlowRoutes.HOME) {
+                            popUpTo(TaskFlowRoutes.WELCOME) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToLogin = {
+                        navController.navigate(TaskFlowRoutes.LOGIN) {
                             launchSingleTop = true
                         }
                     }

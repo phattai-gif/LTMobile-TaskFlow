@@ -35,6 +35,7 @@ import com.team.taskmanagementapp.ui.navigation.taskFlowMainDestinations
 import com.team.taskmanagementapp.ui.calendar.CalendarScreen
 import com.team.taskmanagementapp.ui.stats.StatsScreen
 import com.team.taskmanagementapp.ui.screens.CreateTaskScreen
+import com.team.taskmanagementapp.ui.auth.LoginScreen
 import com.team.taskmanagementapp.ui.auth.WelcomeScreen
 import com.team.taskmanagementapp.ui.badges.BadgesScreen
 import com.team.taskmanagementapp.ui.screens.SettingsScreen
@@ -228,6 +229,24 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
                 WelcomeScreen(
                     onNavigateToLogin = {
                         navController.navigate(TaskFlowRoutes.LOGIN) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToRegister = {
+                        navController.navigate(TaskFlowRoutes.REGISTER) {
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+
+            composable(TaskFlowRoutes.LOGIN) {
+                LoginScreen(
+                    onLoginSuccess = {
+                        navController.navigate(TaskFlowRoutes.HOME) {
+                            popUpTo(TaskFlowRoutes.WELCOME) {
+                                inclusive = true
+                            }
                             launchSingleTop = true
                         }
                     },

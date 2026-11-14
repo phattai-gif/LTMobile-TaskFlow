@@ -26,6 +26,7 @@
 
         <activity
             android:name=".ui.activity.AddEditTaskActivity"
+            android:theme="@style/Theme.TaskFLow.Form"
             android:exported="false" />
     </application>
 

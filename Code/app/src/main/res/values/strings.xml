@@ -152,4 +152,21 @@
     <string name="create_task_reminder_10m">10 mins before</string>
     <string name="create_task_reminder_1h">1 hour before</string>
     <string name="create_task_reminder_none">None</string>
+
+    <!-- Streak Screen Strings (Figma Wireframe) -->
+    <string name="streak_screen_title">Daily Streak</string>
+    <string name="streak_title">%1$d Day Streak</string>
+    <string name="streak_subtitle">Complete all tasks today to start your streak!</string>
+    <string name="streak_best">Best: %1$d days</string>
+    <string name="streak_current_label">CURRENT STREAK</string>
+    <string name="streak_badge_caption">Streak:   %1$s</string>
+    <string name="streak_badge_none">None Badge</string>
+    <string name="streak_best_label">BEST RECORD</string>
+    <string name="streak_all_time_high">All-time high</string>
+    <string name="streak_protection_title">Streak Protection</string>
+    <string name="streak_protection_subtitle">Get reminded if you have an active streak but haven’t finished any tasks today.</string>
+    <string name="streak_reminder_time_label">Reminder Time</string>
+    <string name="streak_how_it_works_title">How Streaks Work</string>
+    <string name="streak_how_it_works_desc">Finish 100% of your daily scheduled tasks to earn and maintain your streak. Missing any task or having no task on a scheduled day will reset your streak.</string>
+    <string name="streak_view_detailed_badges">VIEW DETAILED BADGES</string>
 </resources>

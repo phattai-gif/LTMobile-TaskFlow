@@ -19,11 +19,6 @@ fun HomeScreen(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun StreakScreen(modifier: Modifier = Modifier) {
-    MainTabContent(R.string.nav_streak, modifier)
-}
-
-@Composable
 fun RewardsScreen(modifier: Modifier = Modifier) {
     MainTabContent(R.string.nav_rewards, modifier)
 }

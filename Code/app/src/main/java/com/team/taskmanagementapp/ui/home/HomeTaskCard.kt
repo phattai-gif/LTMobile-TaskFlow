@@ -57,6 +57,7 @@ import com.team.taskmanagementapp.ui.theme.TaskFlowOutlineVariant
 import com.team.taskmanagementapp.ui.theme.TaskFlowOverdue
 import com.team.taskmanagementapp.ui.theme.TaskFlowPrimary
 import com.team.taskmanagementapp.ui.theme.TaskFlowSurfaceContainerLowest
+import com.team.taskmanagementapp.util.DateTimeUtils
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -74,7 +75,11 @@ fun HomeTaskCard(
     var showMenu by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    val isOverdue = !task.isCompleted && (task.status == HomeTaskStatus.OVERDUE || (task.dueDate > 0L && task.dueDate < System.currentTimeMillis()))
+    val deadline = DateTimeUtils.getCombinedDueTimestamp(task.dueDate, task.dueTime ?: 0L)
+    val isOverdue = !task.isCompleted && (
+        task.status == HomeTaskStatus.OVERDUE ||
+            (deadline > 0L && deadline < System.currentTimeMillis())
+        )
 
     // Stripe & indicator color
     val indicatorColor = when {

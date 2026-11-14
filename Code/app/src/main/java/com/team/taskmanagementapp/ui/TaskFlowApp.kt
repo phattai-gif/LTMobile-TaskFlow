@@ -37,7 +37,7 @@ import com.team.taskmanagementapp.ui.stats.StatsScreen
 import com.team.taskmanagementapp.ui.screens.CreateTaskScreen
 import com.team.taskmanagementapp.ui.screens.RewardsScreen
 import com.team.taskmanagementapp.ui.screens.SettingsScreen
-import com.team.taskmanagementapp.ui.screens.StreakScreen
+import com.team.taskmanagementapp.ui.streak.StreakScreen
 import com.team.taskmanagementapp.ui.theme.TaskFlowDimensions
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -194,7 +194,17 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
             }
 
             composable(TaskFlowRoutes.STREAK) {
-                StreakScreen()
+                StreakScreen(
+                    onViewBadges = {
+                        navController.navigate(TaskFlowRoutes.REWARDS) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
             }
 
             composable(TaskFlowRoutes.REWARDS) {

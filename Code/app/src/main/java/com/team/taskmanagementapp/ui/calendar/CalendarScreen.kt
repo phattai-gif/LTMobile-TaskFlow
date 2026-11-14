@@ -33,6 +33,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -46,10 +47,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.team.taskmanagementapp.R
 import com.team.taskmanagementapp.data.local.db.AppDatabase
 import com.team.taskmanagementapp.data.repository.TaskRepository
+import com.team.taskmanagementapp.ui.home.RepositoryHomeTaskSource
 import com.team.taskmanagementapp.ui.theme.TaskFlowOutline
 import com.team.taskmanagementapp.ui.theme.TaskFlowOutlineVariant
 import com.team.taskmanagementapp.ui.theme.TaskFlowPrimary
@@ -61,14 +64,14 @@ fun CalendarScreen(
     modifier: Modifier = Modifier,
     onTaskClick: (Long) -> Unit = {}
 ) {
-    val context = LocalContext.current
-    val repository = remember(context) {
+    val context = LocalContext.current.applicationContext
+    val taskSource = remember(context) {
         val database = AppDatabase.getInstance(context)
-        TaskRepository(database.taskDao())
+        RepositoryHomeTaskSource(TaskRepository(database.taskDao()))
     }
 
     val viewModel = viewModel<CalendarViewModel> {
-        CalendarViewModel(repository)
+        CalendarViewModel(taskSource, createSavedStateHandle())
     }
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -78,6 +81,7 @@ fun CalendarScreen(
         onPreviousMonth = viewModel::previousMonth,
         onNextMonth = viewModel::nextMonth,
         onSelectDate = viewModel::selectDate,
+        onRetry = viewModel::retry,
         onTaskClick = onTaskClick,
         modifier = modifier
     )
@@ -89,6 +93,7 @@ fun CalendarContent(
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
     onSelectDate: (java.time.LocalDate) -> Unit,
+    onRetry: () -> Unit,
     onTaskClick: (Long) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -185,7 +190,7 @@ fun CalendarContent(
         }
 
         // 4. Month Grid (7 columns per row)
-        val dayRows = uiState.calendarDays.chunked(7)
+        val dayRows = uiState.calendarDays.chunked(7).filter { row -> row.any { it.isCurrentMonth } }
         items(
             items = dayRows,
             key = { row -> "row_${row.firstOrNull()?.date}_${row.firstOrNull()?.dayOfMonth}" }
@@ -228,20 +233,31 @@ fun CalendarContent(
         }
 
         // 6. Schedule Timeline List for Selected Date
-        if (uiState.scheduledTasks.isEmpty()) {
+        if (uiState.isLoading || uiState.hasError || uiState.scheduledTasks.isEmpty()) {
             item(key = "schedule_empty") {
-                Box(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp, vertical = 12.dp)
                 ) {
                     Text(
-                        text = stringResource(R.string.calendar_no_tasks_for_date),
+                        text = stringResource(
+                            when {
+                                uiState.isLoading -> R.string.calendar_loading
+                                uiState.hasError -> R.string.calendar_load_error
+                                else -> R.string.calendar_no_tasks_for_date
+                            }
+                        ),
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontSize = 13.sp,
                             color = TaskFlowOutline
                         )
                     )
+                    if (uiState.hasError) {
+                        TextButton(onClick = onRetry) {
+                            Text(stringResource(R.string.action_retry))
+                        }
+                    }
                 }
             }
         } else {

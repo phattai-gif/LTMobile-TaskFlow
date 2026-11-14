@@ -70,6 +70,11 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
         RepositoryTaskDetailSource(repository, database)
     }
     val navController = rememberNavController()
+    val openTaskDetail: (Long) -> Unit = { taskId ->
+        navController.navigate(TaskFlowRoutes.taskDetail(taskId)) {
+            launchSingleTop = true
+        }
+    }
     val backStackEntry by navController.currentBackStackEntryAsState()
 
     val currentRoute = backStackEntry?.destination?.route
@@ -155,11 +160,7 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
             composable(TaskFlowRoutes.HOME) {
                 HomeRoute(
                     taskSource = taskSource,
-                    onTaskClick = { taskId ->
-                        navController.navigate(TaskFlowRoutes.taskDetail(taskId)) {
-                            launchSingleTop = true
-                        }
-                    },
+                    onTaskClick = openTaskDetail,
                     onViewCalendarClick = {
                         navController.navigate(TaskFlowRoutes.CALENDAR) {
                             launchSingleTop = true
@@ -169,7 +170,7 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
             }
 
             composable(TaskFlowRoutes.CALENDAR) {
-                CalendarScreen()
+                CalendarScreen(onTaskClick = openTaskDetail)
             }
 
             composable(

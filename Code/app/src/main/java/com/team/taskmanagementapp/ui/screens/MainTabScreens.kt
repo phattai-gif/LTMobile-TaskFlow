@@ -19,11 +19,6 @@ fun HomeScreen(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun RewardsScreen(modifier: Modifier = Modifier) {
-    MainTabContent(R.string.nav_rewards, modifier)
-}
-
-@Composable
 fun SettingsScreen(modifier: Modifier = Modifier) {
     MainTabContent(R.string.nav_settings, modifier)
 }

@@ -169,4 +169,18 @@
     <string name="streak_how_it_works_title">How Streaks Work</string>
     <string name="streak_how_it_works_desc">Finish 100% of your daily scheduled tasks to earn and maintain your streak. Missing any task or having no task on a scheduled day will reset your streak.</string>
     <string name="streak_view_detailed_badges">VIEW DETAILED BADGES</string>
+
+    <!-- Badges / Rewards Screen Strings (Figma Wireframe) -->
+    <string name="badges_screen_title">Milestone Badges</string>
+    <string name="badges_screen_subtitle">Complete daily tasks to maintain your streak and unlock milestone badges!</string>
+    <string name="badges_unlocked_label">BADGES UNLOCKED</string>
+    <string name="badges_streak_section_title">Streak Milestone Badges</string>
+    <string name="badges_active_streak">Active Streak</string>
+    <string name="badges_streak_today_progress">Today: %1$d / %2$d tasks</string>
+    <string name="badges_task_section_title">Task Completion</string>
+    <string name="badges_task_progress_title">Task Progress</string>
+    <string name="badges_task_completed_format">Completed: %1$d tasks</string>
+    <string name="badges_special_section_title">Special Badges</string>
+    <string name="badges_status_locked">Locked 🔒</string>
+    <string name="badges_status_unlocked">Unlocked 🏆</string>
 </resources>

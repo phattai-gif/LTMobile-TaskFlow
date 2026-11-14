@@ -35,7 +35,7 @@ import com.team.taskmanagementapp.ui.navigation.taskFlowMainDestinations
 import com.team.taskmanagementapp.ui.calendar.CalendarScreen
 import com.team.taskmanagementapp.ui.stats.StatsScreen
 import com.team.taskmanagementapp.ui.screens.CreateTaskScreen
-import com.team.taskmanagementapp.ui.screens.RewardsScreen
+import com.team.taskmanagementapp.ui.badges.BadgesScreen
 import com.team.taskmanagementapp.ui.screens.SettingsScreen
 import com.team.taskmanagementapp.ui.streak.StreakScreen
 import com.team.taskmanagementapp.ui.theme.TaskFlowDimensions
@@ -208,7 +208,7 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
             }
 
             composable(TaskFlowRoutes.REWARDS) {
-                RewardsScreen()
+                BadgesScreen()
             }
 
             composable(TaskFlowRoutes.SETTINGS) {

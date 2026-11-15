@@ -2,4 +2,5 @@
 <resources>
 
     <style name="Theme.TaskFLow" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.TaskFLow.Form" parent="Theme.AppCompat.Light.NoActionBar" />
 </resources>

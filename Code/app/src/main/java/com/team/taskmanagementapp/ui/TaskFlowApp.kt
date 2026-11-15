@@ -1,5 +1,6 @@
 package com.team.taskmanagementapp.ui
 
+import android.content.Intent
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
@@ -38,15 +39,23 @@ import com.team.taskmanagementapp.ui.viewmodel.PomodoroViewModel
 import com.team.taskmanagementapp.ui.calendar.CalendarScreen
 import com.team.taskmanagementapp.ui.stats.StatsScreen
 import com.team.taskmanagementapp.ui.screens.CreateTaskScreen
-import com.team.taskmanagementapp.ui.screens.RewardsScreen
+import com.team.taskmanagementapp.ui.auth.LoginScreen
+import com.team.taskmanagementapp.ui.auth.RegisterScreen
+import com.team.taskmanagementapp.ui.auth.WelcomeScreen
+import com.team.taskmanagementapp.ui.badges.BadgesScreen
 import com.team.taskmanagementapp.ui.screens.SettingsScreen
-import com.team.taskmanagementapp.ui.screens.StreakScreen
+import com.team.taskmanagementapp.ui.streak.StreakScreen
 import com.team.taskmanagementapp.ui.theme.TaskFlowDimensions
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.team.taskmanagementapp.ui.activity.AddEditTaskActivity
+import com.team.taskmanagementapp.ui.detail.RepositoryTaskDetailSource
+import com.team.taskmanagementapp.ui.detail.TaskDetailRoute
 import com.team.taskmanagementapp.ui.home.HomeRoute
 import com.team.taskmanagementapp.ui.home.RepositoryHomeTaskSource
 import com.team.taskmanagementapp.data.local.db.AppDatabase
@@ -63,22 +72,33 @@ fun TaskFlowApp(
     openPomodoro: Flow<Boolean> = emptyFlow(),
     onPomodoroOpened: () -> Unit = {}
 ) {
-    val appContext = LocalContext.current.applicationContext
+    val context = LocalContext.current
+    val appContext = context.applicationContext
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val taskSource = remember(appContext) {
-        val database = AppDatabase.getInstance(appContext)
-        val repository = TaskRepository(database.taskDao())
-
+    val database = remember(appContext) { AppDatabase.getInstance(appContext) }
+    val repository = remember(database) { TaskRepository(database.taskDao()) }
+    val taskSource = remember(repository) {
         RepositoryHomeTaskSource(repository)
     }
+    val detailSource = remember(repository, database) {
+        RepositoryTaskDetailSource(repository, database)
+    }
     val navController = rememberNavController()
+    val auth = remember { com.google.firebase.auth.FirebaseAuth.getInstance() }
+    val startDestination = remember {
+        if (auth.currentUser != null) TaskFlowRoutes.HOME else TaskFlowRoutes.WELCOME
+    }
+    val openTaskDetail: (Long) -> Unit = { taskId ->
+        navController.navigate(TaskFlowRoutes.taskDetail(taskId)) {
+            launchSingleTop = true
+        }
+    }
     val backStackEntry by navController.currentBackStackEntryAsState()
     val pomodoroViewModel = viewModel<PomodoroViewModel> {
-        val database = AppDatabase.getInstance(appContext)
         PomodoroViewModel(
-            TaskRepository(database.taskDao()),
+            repository,
             PomodoroSettingsRepository.from(appContext),
             appContext,
             createSavedStateHandle()
@@ -87,13 +107,16 @@ fun TaskFlowApp(
 
     LaunchedEffect(navController, openPomodoro) {
         openPomodoro.collect { requested ->
-            if (requested) {
-                navController.navigate(TaskFlowRoutes.POMODORO) {
+            if (!requested) return@collect
+
+            when (navController.currentDestination?.route) {
+                null, TaskFlowRoutes.WELCOME, TaskFlowRoutes.LOGIN, TaskFlowRoutes.REGISTER -> Unit
+                else -> navController.navigate(TaskFlowRoutes.POMODORO) {
                     popUpTo(TaskFlowRoutes.POMODORO)
                     launchSingleTop = true
                 }
-                onPomodoroOpened()
             }
+            onPomodoroOpened()
         }
     }
 
@@ -171,7 +194,7 @@ fun TaskFlowApp(
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = TaskFlowRoutes.HOME,
+            startDestination = startDestination,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
@@ -180,9 +203,7 @@ fun TaskFlowApp(
             composable(TaskFlowRoutes.HOME) {
                 HomeRoute(
                     taskSource = taskSource,
-                    onTaskClick = { _ ->
-                        // Nối điều hướng chi tiết Task ở nhánh tiếp theo.
-                    },
+                    onTaskClick = openTaskDetail,
                     onViewCalendarClick = {
                         navController.navigate(TaskFlowRoutes.CALENDAR) {
                             launchSingleTop = true
@@ -197,7 +218,23 @@ fun TaskFlowApp(
             }
 
             composable(TaskFlowRoutes.CALENDAR) {
-                CalendarScreen()
+                CalendarScreen(onTaskClick = openTaskDetail)
+            }
+
+            composable(
+                route = TaskFlowRoutes.TASK_DETAIL,
+                arguments = listOf(navArgument(TaskFlowRoutes.TASK_ID) { type = NavType.LongType })
+            ) { entry ->
+                TaskDetailRoute(
+                    taskId = entry.arguments?.getLong(TaskFlowRoutes.TASK_ID) ?: -1L,
+                    taskSource = detailSource,
+                    onBack = { navController.popBackStack() },
+                    onEditTask = { taskId ->
+                        val editor = Intent(context, AddEditTaskActivity::class.java)
+                            .putExtra(AddEditTaskActivity.EXTRA_TASK_ID, taskId)
+                        context.startActivity(editor)
+                    }
+                )
             }
 
             composable(TaskFlowRoutes.STATS) {
@@ -205,15 +242,32 @@ fun TaskFlowApp(
             }
 
             composable(TaskFlowRoutes.STREAK) {
-                StreakScreen()
+                StreakScreen(
+                    onViewBadges = {
+                        navController.navigate(TaskFlowRoutes.REWARDS) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
             }
 
             composable(TaskFlowRoutes.REWARDS) {
-                RewardsScreen()
+                BadgesScreen()
             }
 
             composable(TaskFlowRoutes.SETTINGS) {
-                SettingsScreen()
+                SettingsScreen(
+                    onLogout = {
+                        auth.signOut()
+                        navController.navigate(TaskFlowRoutes.WELCOME) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
             }
 
             composable(TaskFlowRoutes.CREATE_TASK) {
@@ -236,6 +290,57 @@ fun TaskFlowApp(
                 PomodoroSettingsScreen(
                     viewModel = pomodoroViewModel,
                     onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(TaskFlowRoutes.WELCOME) {
+                WelcomeScreen(
+                    onNavigateToLogin = {
+                        navController.navigate(TaskFlowRoutes.LOGIN) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToRegister = {
+                        navController.navigate(TaskFlowRoutes.REGISTER) {
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+
+            composable(TaskFlowRoutes.LOGIN) {
+                LoginScreen(
+                    onLoginSuccess = {
+                        navController.navigate(TaskFlowRoutes.HOME) {
+                            popUpTo(TaskFlowRoutes.WELCOME) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToRegister = {
+                        navController.navigate(TaskFlowRoutes.REGISTER) {
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+
+            composable(TaskFlowRoutes.REGISTER) {
+                RegisterScreen(
+                    onRegisterSuccess = {
+                        navController.navigate(TaskFlowRoutes.HOME) {
+                            popUpTo(TaskFlowRoutes.WELCOME) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToLogin = {
+                        navController.navigate(TaskFlowRoutes.LOGIN) {
+                            launchSingleTop = true
+                        }
+                    }
                 )
             }
         }

@@ -1,7 +1,12 @@
 package com.team.taskmanagementapp.ui.screens
 
+import android.Manifest
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -64,6 +69,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.team.taskmanagementapp.R
 import com.team.taskmanagementapp.data.local.db.AppDatabase
 import com.team.taskmanagementapp.data.local.entity.Task
@@ -72,6 +78,7 @@ import com.team.taskmanagementapp.data.model.enums.RecurrenceType
 import com.team.taskmanagementapp.data.model.enums.TaskStatus
 import com.team.taskmanagementapp.data.repository.TaskRepository
 import com.team.taskmanagementapp.ui.theme.TaskFlowPrimary
+import com.team.taskmanagementapp.util.TaskReminderTiming
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -87,6 +94,9 @@ fun CreateTaskScreen(
     val focusManager = LocalFocusManager.current
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    val requestNotifications = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { }
 
     val repository = remember(context) {
         val database = AppDatabase.getInstance(context)
@@ -184,6 +194,14 @@ fun CreateTaskScreen(
                     completedAt = if (selectedStatus == TaskStatus.COMPLETED) now else null
                 )
                 repository.insert(newTask)
+                val reminderAt = TaskReminderTiming.reminderAt(newTask)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                    reminderAt != null && reminderAt > System.currentTimeMillis() &&
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
+                        PackageManager.PERMISSION_GRANTED
+                ) {
+                    requestNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
                 onBack()
             } catch (e: Exception) {
                 snackbarHostState.showSnackbar(

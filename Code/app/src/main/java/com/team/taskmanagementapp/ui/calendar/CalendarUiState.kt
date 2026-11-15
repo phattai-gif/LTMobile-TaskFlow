@@ -29,5 +29,6 @@ data class CalendarUiState(
     val scheduleHeaderFormatted: String = "",
     val calendarDays: List<CalendarDayUiModel> = emptyList(),
     val scheduledTasks: List<CalendarTaskUiModel> = emptyList(),
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val hasError: Boolean = false
 )

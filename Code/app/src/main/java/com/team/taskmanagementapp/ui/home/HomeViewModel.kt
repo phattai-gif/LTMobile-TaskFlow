@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Calendar
+import java.util.Locale
 
 class HomeViewModel(
     private val taskSource: HomeTaskSource
@@ -148,13 +149,18 @@ class HomeViewModel(
             weekDays = streakWeekDays
         )
 
+        val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+        val resolvedUserName = currentUser?.displayName?.takeIf { it.isNotBlank() }
+            ?: currentUser?.email?.substringBefore('@')?.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+            ?: ""
+
         return HomeUiState.Success(
             metrics = metrics,
             streakInfo = streakInfo,
             todayTasks = todayTasks,
             upcomingTasks = upcomingTasks,
             completedTasks = completedTasks,
-            userName = "Alex"
+            userName = resolvedUserName
         )
     }
 

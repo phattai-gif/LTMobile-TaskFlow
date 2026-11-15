@@ -109,6 +109,7 @@ fun HomeContent(
                 todayTasks = uiState.todayTasks,
                 upcomingTasks = uiState.upcomingTasks,
                 completedTasks = uiState.completedTasks,
+                userName = uiState.userName,
                 onTaskClick = onTaskClick,
                 onToggleComplete = onToggleComplete,
                 onDeleteTask = onDeleteTask,
@@ -128,6 +129,7 @@ private fun HomeDashboardSuccessView(
     todayTasks: List<HomeTaskUiModel>,
     upcomingTasks: List<HomeTaskUiModel>,
     completedTasks: List<HomeTaskUiModel>,
+    userName: String = "",
     onTaskClick: (Long) -> Unit,
     onToggleComplete: (HomeTaskUiModel) -> Unit,
     onDeleteTask: (Long) -> Unit,
@@ -141,12 +143,17 @@ private fun HomeDashboardSuccessView(
         sdf.format(Date())
     }
 
-    val greetingText = remember {
+    val greetingText = remember(userName) {
         val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-        when (hour) {
-            in 4..11 -> "Good Morning!"
-            in 12..17 -> "Good Afternoon!"
-            else -> "Good Evening!"
+        val baseGreeting = when (hour) {
+            in 4..11 -> "Good Morning"
+            in 12..17 -> "Good Afternoon"
+            else -> "Good Evening"
+        }
+        if (userName.isNotBlank()) {
+            "$baseGreeting, $userName!"
+        } else {
+            "$baseGreeting!"
         }
     }
 

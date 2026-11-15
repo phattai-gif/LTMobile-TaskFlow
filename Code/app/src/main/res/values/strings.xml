@@ -116,7 +116,6 @@
     <!-- Statistics Screen Strings (Figma Wireframe) -->
     <string name="stats_title">Statistics</string>
     <string name="stats_completions_by_weekday">Completions by weekday</string>
-    <string name="stats_completions_subtitle">This week · recorded completion dates</string>
     <string name="stats_completion_rate">Completion Rate</string>
     <string name="stats_completed_label">COMPLETED</string>
     <string name="stats_not_completed_label">NOT COMPLETED</string>
@@ -129,7 +128,6 @@
     <string name="stats_high_priority">High Priority</string>
     <string name="stats_medium_priority">Medium Priority</string>
     <string name="stats_low_priority">Low Priority</string>
-    <string name="stats_tasks_count">%1$d tasks</string>
     <string name="stats_pomodoro_focus">Pomodoro Focus</string>
     <string name="stats_pomodoro_focus_subtitle">Focus time from completed sessions</string>
     <string name="stats_today">TODAY</string>
@@ -154,4 +152,60 @@
     <string name="create_task_reminder_10m">10 mins before</string>
     <string name="create_task_reminder_1h">1 hour before</string>
     <string name="create_task_reminder_none">None</string>
+
+    <!-- Streak Screen Strings (Figma Wireframe) -->
+    <string name="streak_screen_title">Daily Streak</string>
+    <string name="streak_title">%1$d Day Streak</string>
+    <string name="streak_subtitle">Complete all tasks today to start your streak!</string>
+    <string name="streak_best">Best: %1$d days</string>
+    <string name="streak_current_label">CURRENT STREAK</string>
+    <string name="streak_badge_caption">Streak:   %1$s</string>
+    <string name="streak_badge_none">None Badge</string>
+    <string name="streak_best_label">BEST RECORD</string>
+    <string name="streak_all_time_high">All-time high</string>
+    <string name="streak_protection_title">Streak Protection</string>
+    <string name="streak_protection_subtitle">Get reminded if you have an active streak but haven’t finished any tasks today.</string>
+    <string name="streak_reminder_time_label">Reminder Time</string>
+    <string name="streak_how_it_works_title">How Streaks Work</string>
+    <string name="streak_how_it_works_desc">Finish 100% of your daily scheduled tasks to earn and maintain your streak. Missing any task or having no task on a scheduled day will reset your streak.</string>
+    <string name="streak_view_detailed_badges">VIEW DETAILED BADGES</string>
+
+    <!-- Badges / Rewards Screen Strings (Figma Wireframe) -->
+    <string name="badges_screen_title">Milestone Badges</string>
+    <string name="badges_screen_subtitle">Complete daily tasks to maintain your streak and unlock milestone badges!</string>
+    <string name="badges_unlocked_label">BADGES UNLOCKED</string>
+    <string name="badges_streak_section_title">Streak Milestone Badges</string>
+    <string name="badges_active_streak">Active Streak</string>
+    <string name="badges_streak_today_progress">Today: %1$d / %2$d tasks</string>
+    <string name="badges_task_section_title">Task Completion</string>
+    <string name="badges_task_progress_title">Task Progress</string>
+    <string name="badges_task_completed_format">Completed: %1$d tasks</string>
+    <string name="badges_special_section_title">Special Badges</string>
+    <string name="badges_status_locked">Locked 🔒</string>
+    <string name="badges_status_unlocked">Unlocked 🏆</string>
+
+    <!-- Welcome Screen Strings -->
+    <string name="welcome_title">Manage Your\nDaily Tasks &amp; Focus</string>
+    <string name="welcome_subtitle">Track tasks, build unstoppable daily streaks, boost focus with Pomodoro, and achieve your goals with TaskFlow.</string>
+    <string name="welcome_btn_login">Login</string>
+    <string name="welcome_btn_register">Register</string>
+
+    <!-- Login Screen Strings -->
+    <string name="login_title">Login here</string>
+    <string name="login_subtitle">Welcome back you’ve\nbeen missed!</string>
+    <string name="login_hint_email">Email</string>
+    <string name="login_hint_password">Password</string>
+    <string name="login_forgot_password">Forgot your password?</string>
+    <string name="login_btn_signin">Sign in</string>
+    <string name="login_create_account">Create new account</string>
+    <string name="auth_or_continue_with">Or continue with</string>
+    <string name="auth_continue_with_google">Continue with Google</string>
+
+    <!-- Register Screen Strings -->
+    <string name="register_title">Create Account</string>
+    <string name="register_subtitle">Create an account so you can track tasks and sync your streak!</string>
+    <string name="register_hint_confirm_password">Confirm Password</string>
+    <string name="register_btn_signup">Sign up</string>
+    <string name="register_already_have_account">Already have an account</string>
+    <string name="auth_signup_with_google">Sign up with Google</string>
 </resources>

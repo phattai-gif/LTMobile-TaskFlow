@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="task_reminder_channel">Task reminders</string>
+    <string name="task_reminder_message">A task is due soon.</string>
+</resources>

@@ -11,4 +11,11 @@ object TaskFlowRoutes {
     const val CREATE_TASK = "create_task"
     const val POMODORO = "pomodoro"
     const val POMODORO_SETTINGS = "pomodoro_settings"
+    const val WELCOME = "welcome"
+    const val LOGIN = "login"
+    const val REGISTER = "register"
+    const val TASK_ID = "taskId"
+    const val TASK_DETAIL = "task_detail/{$TASK_ID}"
+
+    fun taskDetail(taskId: Long): String = "task_detail/$taskId"
 }

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stats_last_week">Last week</string>
+    <string name="stats_this_month">This month</string>
+    <string name="stats_all_time">All time</string>
+    <string name="stats_filter_description">Filter by time period. Selected: %1$s</string>
+    <string name="stats_chart_period">%1$s · recorded completion dates</string>
+    <string name="stats_loading">Loading statistics…</string>
+    <string name="stats_load_error">Could not load statistics.</string>
+    <string name="stats_empty_period">No task or focus activity for %1$s.</string>
+    <string name="stats_no_dated_completions">No recorded task completions in this period.</string>
+    <string name="stats_unknown_completion_dates">Older tasks without a completion date appear in All time totals.</string>
+    <string name="stats_excellent">Excellent</string>
+    <string name="stats_needs_attention">Needs attention</string>
+    <string name="stats_no_focus_in_period">No completed focus sessions for %1$s.</string>
+    <string name="stats_focus_period_summary">%1$s · %2$s · %3$s</string>
+    <string name="stats_top_focus_tasks">Top tasks by focus time</string>
+    <string name="stats_focus_task_summary">%1$s · %2$s</string>
+    <plurals name="stats_task_count">
+        <item quantity="one">%d task</item>
+        <item quantity="other">%d tasks</item>
+    </plurals>
+    <plurals name="stats_pomodoro_completed">
+        <item quantity="one">%d focus session</item>
+        <item quantity="other">%d focus sessions</item>
+    </plurals>
+    <plurals name="stats_session_count">
+        <item quantity="one">%d session</item>
+        <item quantity="other">%d sessions</item>
+    </plurals>
+</resources>

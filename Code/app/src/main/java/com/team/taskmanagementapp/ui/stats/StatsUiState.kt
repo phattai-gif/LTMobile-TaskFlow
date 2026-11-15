@@ -1,5 +1,8 @@
 package com.team.taskmanagementapp.ui.stats
 
+import com.team.taskmanagementapp.data.model.stats.StatsTimeFilter
+import com.team.taskmanagementapp.data.model.stats.TaskFocusSummary
+
 data class WeekdayCompletion(
     val dayLabel: String, // "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"
     val count: Int
@@ -15,38 +18,29 @@ data class PriorityDistribution(
 
 data class PomodoroStats(
     val todayMinutes: Int = 0,
-    val thisWeekMinutes: Int = 0
+    val thisWeekMinutes: Int = 0,
+    val periodMinutes: Int = 0,
+    val periodSessionCount: Int = 0,
+    val topTasks: List<TaskFocusSummary> = emptyList()
 ) {
-    val todayFormatted: String
-        get() = formatMinutes(todayMinutes)
-
-    val thisWeekFormatted: String
-        get() = formatMinutes(thisWeekMinutes)
-
-    private fun formatMinutes(minutes: Int): String {
-        if (minutes <= 0) return "0m"
-        val h = minutes / 60
-        val m = minutes % 60
-        return if (h > 0) "${h}h ${m}m" else "${m}m"
-    }
+    val hasFocus: Boolean
+        get() = periodSessionCount > 0 || todayMinutes > 0 || thisWeekMinutes > 0
 }
 
 data class StatsUiState(
-    val weekdayCompletions: List<WeekdayCompletion> = listOf(
-        WeekdayCompletion("Mon", 0),
-        WeekdayCompletion("Tue", 0),
-        WeekdayCompletion("Wed", 0),
-        WeekdayCompletion("Thu", 0),
-        WeekdayCompletion("Fri", 0),
-        WeekdayCompletion("Sat", 0),
-        WeekdayCompletion("Sun", 0)
-    ),
+    val timeFilter: StatsTimeFilter = StatsTimeFilter.THIS_WEEK,
+    val weekdayCompletions: List<WeekdayCompletion> = emptyList(),
     val maxWeekdayCount: Int = 12,
     val completionRatePercent: Int = 0,
-    val completionRateStatus: String = "No tasks",
-    val completedThisWeek: Int = 0,
-    val notCompletedThisWeek: Int = 0,
+    val completedCount: Int = 0,
+    val pendingCount: Int = 0,
+    val hasUnknownCompletionDates: Boolean = false,
     val priorityDistribution: PriorityDistribution = PriorityDistribution(),
     val pomodoroStats: PomodoroStats = PomodoroStats(),
-    val isLoading: Boolean = false
-)
+    val isLoading: Boolean = true,
+    val hasError: Boolean = false
+) {
+    val isEmpty: Boolean
+        get() = !isLoading && !hasError &&
+            priorityDistribution.totalCount == 0 && !pomodoroStats.hasFocus
+}

@@ -173,7 +173,7 @@ private fun HomeDashboardSuccessView(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = dateText,
                         style = MaterialTheme.typography.bodySmall.copy(

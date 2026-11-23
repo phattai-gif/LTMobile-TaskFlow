@@ -1,5 +1,6 @@
 package com.team.taskmanagementapp.ui.data
 
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -55,11 +56,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.team.taskmanagementapp.data.local.db.AppDatabase
+import com.team.taskmanagementapp.data.model.ValidationResult
 import com.team.taskmanagementapp.data.repository.TaskRepository
 import com.team.taskmanagementapp.ui.theme.TaskFlowPrimary
 import com.team.taskmanagementapp.util.BackupFileInfo
 import com.team.taskmanagementapp.util.BackupManager
 import kotlinx.coroutines.launch
+import java.io.File
 
 @Composable
 fun DataManagementScreen(
@@ -462,7 +465,22 @@ fun DataManagementScreen(
                                 .background(Color(0x33FFFFFF))
                                 .border(BorderStroke(1.dp, Color(0x44FFFFFF)), RoundedCornerShape(20.dp))
                                 .clickable {
-                                    Toast.makeText(context, "Backup downloaded to device", Toast.LENGTH_SHORT).show()
+                                    val backup = lastBackup
+                                    val file = backup?.let { File(it.filePath) }
+                                    if (file != null && file.exists()) {
+                                        try {
+                                            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                                                type = "application/json"
+                                                putExtra(Intent.EXTRA_SUBJECT, backup.fileName)
+                                                putExtra(Intent.EXTRA_TEXT, file.readText())
+                                            }
+                                            context.startActivity(Intent.createChooser(sendIntent, "Download / Share Backup"))
+                                        } catch (e: Exception) {
+                                            Toast.makeText(context, "Cannot share file: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                                        }
+                                    } else {
+                                        Toast.makeText(context, "Please export a backup first before downloading.", Toast.LENGTH_SHORT).show()
+                                    }
                                 }
                                 .padding(horizontal = 14.dp, vertical = 8.dp)
                         ) {
@@ -480,7 +498,21 @@ fun DataManagementScreen(
                                 .background(Color(0x33FFFFFF))
                                 .border(BorderStroke(1.dp, Color(0x44FFFFFF)), RoundedCornerShape(20.dp))
                                 .clickable {
-                                    Toast.makeText(context, "Backup integrity verified: Valid JSON structure", Toast.LENGTH_SHORT).show()
+                                    val backup = lastBackup
+                                    val file = backup?.let { File(it.filePath) }
+                                    if (file != null && file.exists()) {
+                                        val result = backupManager.verifyBackupFile(file.absolutePath)
+                                        when (result) {
+                                            is ValidationResult.Success -> {
+                                                Toast.makeText(context, "Verification passed: ${result.validItemCount} valid tasks (5/5 steps passed)", Toast.LENGTH_LONG).show()
+                                            }
+                                            is ValidationResult.Error -> {
+                                                Toast.makeText(context, "Verification failed (Step ${result.step}): ${result.message}", Toast.LENGTH_LONG).show()
+                                            }
+                                        }
+                                    } else {
+                                        Toast.makeText(context, "No backup file found on device to verify.", Toast.LENGTH_SHORT).show()
+                                    }
                                 }
                                 .padding(horizontal = 14.dp, vertical = 8.dp)
                         ) {

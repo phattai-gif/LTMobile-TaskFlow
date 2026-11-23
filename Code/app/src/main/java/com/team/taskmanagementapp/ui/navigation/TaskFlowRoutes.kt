@@ -17,6 +17,8 @@ object TaskFlowRoutes {
 
     const val DATA_MANAGEMENT = "data_management"
     const val RESTORE_DATA = "restore_data"
+    const val POMODORO = "pomodoro"
+    const val POMODORO_SETTINGS = "pomodoro_settings"
 
     fun taskDetail(taskId: Long): String = "task_detail/$taskId"
 }

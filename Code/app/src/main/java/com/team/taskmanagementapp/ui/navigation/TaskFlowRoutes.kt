@@ -15,5 +15,8 @@ object TaskFlowRoutes {
     const val TASK_ID = "taskId"
     const val TASK_DETAIL = "task_detail/{$TASK_ID}"
 
+    const val DATA_MANAGEMENT = "data_management"
+    const val RESTORE_DATA = "restore_data"
+
     fun taskDetail(taskId: Long): String = "task_detail/$taskId"
 }

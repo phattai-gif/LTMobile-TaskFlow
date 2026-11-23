@@ -76,7 +76,9 @@ import java.util.Locale
 fun SettingsScreen(
     modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
-    onLogout: () -> Unit = {}
+    onLogout: () -> Unit = {},
+    onNavigateToExport: () -> Unit = {},
+    onNavigateToRestore: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val pinManager = remember { PinManager.getInstance(context) }
@@ -483,14 +485,14 @@ fun SettingsScreen(
                         icon = Icons.Outlined.FileDownload,
                         title = "Export JSON backup",
                         subtitle = "Save a copy of your task data",
-                        onClick = { featureNoticeMessage = "Task export completed. File saved to downloads." }
+                        onClick = onNavigateToExport
                     )
                     HorizontalDivider(color = Color(0xFFF1F5F9), thickness = 1.dp)
                     SettingsClickableRow(
                         icon = Icons.Outlined.Restore,
                         title = "Restore JSON backup",
                         subtitle = "Import tasks from a backup file",
-                        onClick = { featureNoticeMessage = "Select a valid TaskFlow JSON backup file to import." }
+                        onClick = onNavigateToRestore
                     )
                 }
             }

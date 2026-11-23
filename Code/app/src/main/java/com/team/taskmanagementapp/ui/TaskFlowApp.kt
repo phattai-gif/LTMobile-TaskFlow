@@ -36,6 +36,7 @@ import com.team.taskmanagementapp.ui.components.TaskFlowBottomNavigation
 import com.team.taskmanagementapp.ui.navigation.TaskFlowRoutes
 import com.team.taskmanagementapp.ui.navigation.taskFlowMainDestinations
 import com.team.taskmanagementapp.ui.calendar.CalendarScreen
+import com.team.taskmanagementapp.ui.data.DataManagementScreen
 import com.team.taskmanagementapp.ui.stats.StatsScreen
 import com.team.taskmanagementapp.ui.screens.CreateTaskScreen
 import com.team.taskmanagementapp.ui.auth.LoginScreen
@@ -240,6 +241,27 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
                         auth.signOut()
                         navController.navigate(TaskFlowRoutes.WELCOME) {
                             popUpTo(0) { inclusive = true }
+                        }
+                    },
+                    onNavigateToExport = {
+                        navController.navigate(TaskFlowRoutes.DATA_MANAGEMENT) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToRestore = {
+                        navController.navigate(TaskFlowRoutes.RESTORE_DATA) {
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+
+            composable(TaskFlowRoutes.DATA_MANAGEMENT) {
+                DataManagementScreen(
+                    onBack = { navController.popBackStack() },
+                    onNavigateToRestore = {
+                        navController.navigate(TaskFlowRoutes.RESTORE_DATA) {
+                            launchSingleTop = true
                         }
                     }
                 )

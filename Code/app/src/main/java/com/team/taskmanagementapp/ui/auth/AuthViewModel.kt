@@ -53,6 +53,16 @@ class AuthViewModel(
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         auth.signInWithEmailAndPassword(trimmedEmail, pass)
             .addOnSuccessListener { result ->
+                if (result.user?.displayName.isNullOrBlank()) {
+                    val defaultName = trimmedEmail.substringBefore('@')
+                        .split('.', '_', '-')
+                        .filter { it.isNotBlank() }
+                        .joinToString(" ") { it.replaceFirstChar { c -> if (c.isLowerCase()) c.titlecase(java.util.Locale.getDefault()) else c.toString() } }
+                    val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
+                        .setDisplayName(defaultName)
+                        .build()
+                    result.user?.updateProfile(profileUpdates)
+                }
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     user = result.user,
@@ -99,6 +109,14 @@ class AuthViewModel(
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         auth.createUserWithEmailAndPassword(trimmedEmail, pass)
             .addOnSuccessListener { result ->
+                val defaultName = trimmedEmail.substringBefore('@')
+                    .split('.', '_', '-')
+                    .filter { it.isNotBlank() }
+                    .joinToString(" ") { it.replaceFirstChar { c -> if (c.isLowerCase()) c.titlecase(java.util.Locale.getDefault()) else c.toString() } }
+                val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
+                    .setDisplayName(defaultName)
+                    .build()
+                result.user?.updateProfile(profileUpdates)
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     user = result.user,

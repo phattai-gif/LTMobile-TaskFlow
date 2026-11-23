@@ -3,11 +3,13 @@ package com.team.taskmanagementapp.ui.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emitAll
@@ -52,6 +54,17 @@ class HomeViewModel(
         }
     }
 
+    private fun authUserFlow(): Flow<com.google.firebase.auth.FirebaseUser?> = callbackFlow {
+        val auth = com.google.firebase.auth.FirebaseAuth.getInstance()
+        val listener = com.google.firebase.auth.FirebaseAuth.AuthStateListener { fbAuth ->
+            trySend(fbAuth.currentUser)
+        }
+        auth.addAuthStateListener(listener)
+        // Also emit current value immediately
+        trySend(auth.currentUser)
+        awaitClose { auth.removeAuthStateListener(listener) }
+    }
+
     private fun observeHome(): Flow<HomeUiState> {
         return flow<HomeUiState> {
             emit(HomeUiState.Loading)
@@ -59,9 +72,10 @@ class HomeViewModel(
             emitAll(
                 combine(
                     taskSource.observeTasks(),
-                    dateChanges()
-                ) { tasks, _ ->
-                    createUiState(tasks)
+                    dateChanges(),
+                    authUserFlow()
+                ) { tasks, _, user ->
+                    createUiState(tasks, user)
                 }
             )
         }.catch {
@@ -70,7 +84,8 @@ class HomeViewModel(
     }
 
     private fun createUiState(
-        tasks: List<HomeTaskUiModel>
+        tasks: List<HomeTaskUiModel>,
+        user: com.google.firebase.auth.FirebaseUser?
     ): HomeUiState {
         val now = System.currentTimeMillis()
         val todayStart = startOfDay(now)
@@ -149,10 +164,7 @@ class HomeViewModel(
             weekDays = streakWeekDays
         )
 
-        val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
-        val resolvedUserName = currentUser?.displayName?.takeIf { it.isNotBlank() }
-            ?: currentUser?.email?.substringBefore('@')?.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
-            ?: ""
+        val resolvedUserName = resolveUserName(user)
 
         return HomeUiState.Success(
             metrics = metrics,
@@ -162,6 +174,27 @@ class HomeViewModel(
             completedTasks = completedTasks,
             userName = resolvedUserName
         )
+    }
+
+    private fun resolveUserName(currentUser: com.google.firebase.auth.FirebaseUser?): String {
+        val user = currentUser ?: com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+        if (user == null) return ""
+        val displayName = user.displayName?.trim()
+        if (!displayName.isNullOrBlank()) {
+            return displayName
+        }
+        val email = user.email?.trim() ?: ""
+        if (email.isNotBlank()) {
+            val prefix = email.substringBefore('@')
+            val words = prefix.split('.', '_', '-').filter { it.isNotBlank() }
+            if (words.size > 1) {
+                return words.joinToString(" ") { word ->
+                    word.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+                }
+            }
+            return prefix.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+        }
+        return ""
     }
 
     private fun buildStreakWeekDays(now: Long): List<StreakDayUiModel> {

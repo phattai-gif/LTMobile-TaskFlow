@@ -86,12 +86,17 @@ fun HomeContent(
         }
 
         HomeUiState.Empty -> {
+            val user = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+            val fallbackName = user?.displayName?.takeIf { it.isNotBlank() }
+                ?: user?.email?.substringBefore('@')?.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+                ?: ""
             HomeDashboardSuccessView(
                 metrics = HomeSummaryMetrics(),
                 streakInfo = HomeStreakInfo(),
                 todayTasks = emptyList(),
                 upcomingTasks = emptyList(),
                 completedTasks = emptyList(),
+                userName = fallbackName,
                 onTaskClick = onTaskClick,
                 onToggleComplete = onToggleComplete,
                 onDeleteTask = onDeleteTask,

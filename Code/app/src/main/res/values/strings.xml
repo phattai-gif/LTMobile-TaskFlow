@@ -136,9 +136,9 @@
     <!-- Create Task Screen Strings (Figma Wireframe) -->
     <string name="create_task_screen_title">Create New Task</string>
     <string name="create_task_title_label_upper">TASK TITLE</string>
-    <string name="create_task_title_hint">e.g., Database Migration</string>
+    <string name="create_task_title_hint">e.g., Chuẩn bị slide, Team meeting...</string>
     <string name="create_task_desc_label_upper">DESCRIPTION</string>
-    <string name="create_task_desc_hint">Add notes, links, or context...</string>
+    <string name="create_task_desc_hint">Add notes, ghi chú chi tiết hoặc context...</string>
     <string name="create_task_schedule_label">SCHEDULE</string>
     <string name="create_task_priority_label">PRIORITY</string>
     <string name="create_task_initial_status_label">INITIAL STATUS</string>

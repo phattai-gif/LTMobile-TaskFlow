@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -13,6 +14,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import com.team.taskmanagementapp.ui.theme.TaskFlowDimensions
 
 // Nút chính dùng chung
@@ -65,15 +69,20 @@ fun TaskFlowCard(
     }
 }
 
-// Ô nhập dùng chung, có hỗ trợ hiển thị lỗi
+// Ô nhập dùng chung, có hỗ trợ hiển thị lỗi và gõ tiếng Việt (Telex/VNI) với TextFieldValue
 @Composable
 fun TaskFlowTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
+    value: TextFieldValue,
+    onValueChange: (TextFieldValue) -> Unit,
     label: String,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     singleLine: Boolean = true,
+    keyboardOptions: KeyboardOptions = KeyboardOptions(
+        capitalization = KeyboardCapitalization.Sentences,
+        keyboardType = KeyboardType.Text,
+        autoCorrectEnabled = false
+    ),
     errorMessage: String? = null
 ) {
     OutlinedTextField(
@@ -84,6 +93,54 @@ fun TaskFlowTextField(
         ),
         enabled = enabled,
         singleLine = singleLine,
+        keyboardOptions = keyboardOptions,
+        label = {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        },
+        textStyle = MaterialTheme.typography.bodyLarge,
+        shape = MaterialTheme.shapes.medium,
+        isError = errorMessage != null,
+        supportingText = if (errorMessage != null) {
+            {
+                Text(
+                    text = errorMessage,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        } else {
+            null
+        }
+    )
+}
+
+// Ô nhập dùng chung, có hỗ trợ hiển thị lỗi và gõ tiếng Việt (Telex/VNI)
+@Composable
+fun TaskFlowTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    singleLine: Boolean = true,
+    keyboardOptions: KeyboardOptions = KeyboardOptions(
+        capitalization = KeyboardCapitalization.Sentences,
+        keyboardType = KeyboardType.Text,
+        autoCorrectEnabled = false
+    ),
+    errorMessage: String? = null
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier.heightIn(
+            min = TaskFlowDimensions.inputMinHeight
+        ),
+        enabled = enabled,
+        singleLine = singleLine,
+        keyboardOptions = keyboardOptions,
         label = {
             Text(
                 text = label,

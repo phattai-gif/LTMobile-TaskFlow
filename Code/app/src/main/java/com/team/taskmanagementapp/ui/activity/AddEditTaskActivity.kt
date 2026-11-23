@@ -25,16 +25,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -46,7 +44,6 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -64,7 +61,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.team.taskmanagementapp.data.local.db.AppDatabase
@@ -95,8 +96,8 @@ class AddEditTaskActivity : AppCompatActivity() {
     private var isEditMode: Boolean = false
 
     // Form states
-    private var formTitle by mutableStateOf("")
-    private var formDescription by mutableStateOf("")
+    private var initialTaskTitle by mutableStateOf("")
+    private var initialTaskDescription by mutableStateOf("")
     private var formDueDate by mutableStateOf<Long?>(null)
     private var formDueTime by mutableStateOf<Long?>(null)
     private var formPriority by mutableStateOf(Priority.MEDIUM)
@@ -125,10 +126,8 @@ class AddEditTaskActivity : AppCompatActivity() {
             TaskFLowTheme {
                 EditTaskContent(
                     isEditMode = isEditMode,
-                    title = formTitle,
-                    onTitleChange = { formTitle = it },
-                    description = formDescription,
-                    onDescriptionChange = { formDescription = it },
+                    initialTitle = initialTaskTitle,
+                    initialDescription = initialTaskDescription,
                     dueDate = formDueDate,
                     dueTime = formDueTime,
                     priority = formPriority,
@@ -142,7 +141,7 @@ class AddEditTaskActivity : AppCompatActivity() {
                     isSaving = isSaving,
                     onPickDate = { showDatePicker() },
                     onPickTime = { showTimePicker() },
-                    onSave = { saveTask() },
+                    onSave = { title, description -> saveTask(title, description) },
                     onBack = { finish() }
                 )
             }
@@ -184,8 +183,8 @@ class AddEditTaskActivity : AppCompatActivity() {
     }
 
     private fun populateForm(task: Task) {
-        formTitle = task.title
-        formDescription = task.description
+        initialTaskTitle = task.title
+        initialTaskDescription = task.description
         formDueDate = task.dueDate.takeIf { it > 0L }
         formDueTime = task.dueTime.takeIf { it > 0L }
         formPriority = task.priority
@@ -243,22 +242,22 @@ class AddEditTaskActivity : AppCompatActivity() {
         ).show()
     }
 
-    private fun saveTask() {
-        val title = formTitle.trim()
-        val description = formDescription.trim()
+    private fun saveTask(title: String, description: String) {
+        val trimmedTitle = title.trim()
+        val trimmedDescription = description.trim()
         val dueDate = formDueDate
 
-        if (title.isBlank()) {
+        if (trimmedTitle.isBlank()) {
             Toast.makeText(this, "Please enter task title.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        if (title.length > 200) {
+        if (trimmedTitle.length > 200) {
             Toast.makeText(this, "Title maximum 200 characters.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        if (description.length > 1000) {
+        if (trimmedDescription.length > 1000) {
             Toast.makeText(this, "Description maximum 1000 characters.", Toast.LENGTH_SHORT).show()
             return
         }
@@ -285,8 +284,8 @@ class AddEditTaskActivity : AppCompatActivity() {
 
         viewModel.saveTask(
             taskId = if (isEditMode) taskId else -1L,
-            title = title,
-            description = description,
+            title = trimmedTitle,
+            description = trimmedDescription,
             dueDate = startOfDay(dueDate),
             dueTime = time,
             priority = formPriority,
@@ -337,10 +336,8 @@ class AddEditTaskActivity : AppCompatActivity() {
 @Composable
 private fun EditTaskContent(
     isEditMode: Boolean,
-    title: String,
-    onTitleChange: (String) -> Unit,
-    description: String,
-    onDescriptionChange: (String) -> Unit,
+    initialTitle: String,
+    initialDescription: String,
     dueDate: Long?,
     dueTime: Long?,
     priority: Priority,
@@ -354,10 +351,17 @@ private fun EditTaskContent(
     isSaving: Boolean,
     onPickDate: () -> Unit,
     onPickTime: () -> Unit,
-    onSave: () -> Unit,
+    onSave: (String, String) -> Unit,
     onBack: () -> Unit
 ) {
     val focusManager = LocalFocusManager.current
+    var titleValue by remember(initialTitle) {
+        mutableStateOf(TextFieldValue(initialTitle, TextRange(initialTitle.length)))
+    }
+    var descriptionValue by remember(initialDescription) {
+        mutableStateOf(TextFieldValue(initialDescription, TextRange(initialDescription.length)))
+    }
+
     var statusDropdownExpanded by remember { mutableStateOf(false) }
     var reminderDropdownExpanded by remember { mutableStateOf(false) }
 
@@ -471,11 +475,16 @@ private fun EditTaskContent(
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     TextField(
-                        value = title,
-                        onValueChange = onTitleChange,
+                        value = titleValue,
+                        onValueChange = { titleValue = it },
                         placeholder = {
-                            Text("e.g., Prepare slide presentation...", color = Color(0xFF9CA3AF), fontSize = 15.sp)
+                            Text("e.g., Chuẩn bị slide, Team meeting...", color = Color(0xFF9CA3AF), fontSize = 15.sp)
                         },
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Sentences,
+                            keyboardType = KeyboardType.Text,
+                            autoCorrectEnabled = false
+                        ),
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,
@@ -499,12 +508,17 @@ private fun EditTaskContent(
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     TextField(
-                        value = description,
-                        onValueChange = onDescriptionChange,
+                        value = descriptionValue,
+                        onValueChange = { descriptionValue = it },
                         placeholder = {
-                            Text("Add detailed notes, links, or context (optional)...", color = Color(0xFF9CA3AF), fontSize = 14.sp)
+                            Text("Add detailed notes, ghi chú chi tiết (optional)...", color = Color(0xFF9CA3AF), fontSize = 14.sp)
                         },
                         minLines = 3,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Sentences,
+                            keyboardType = KeyboardType.Text,
+                            autoCorrectEnabled = false
+                        ),
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,
@@ -830,7 +844,7 @@ private fun EditTaskContent(
             Button(
                 onClick = {
                     focusManager.clearFocus()
-                    onSave()
+                    onSave(titleValue.text, descriptionValue.text)
                 },
                 enabled = !isSaving,
                 modifier = Modifier

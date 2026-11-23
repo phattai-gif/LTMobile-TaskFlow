@@ -56,6 +56,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -94,7 +97,7 @@ fun AiAssistantBottomSheet(
         )
     }
 
-    var inputText by remember { mutableStateOf("") }
+    var inputTextValue by remember { mutableStateOf(TextFieldValue("")) }
     var isListening by remember { mutableStateOf(false) }
 
     fun sendMessage(text: String) {
@@ -102,7 +105,7 @@ fun AiAssistantBottomSheet(
         if (trimmed.isBlank()) return
 
         messages.add(AiChatMessage(text = trimmed, isFromUser = true))
-        inputText = ""
+        inputTextValue = TextFieldValue("")
 
         coroutineScope.launch {
             delay(100)
@@ -320,8 +323,8 @@ fun AiAssistantBottomSheet(
             ) {
                 // Rounded Input Box
                 OutlinedTextField(
-                    value = inputText,
-                    onValueChange = { inputText = it },
+                    value = inputTextValue,
+                    onValueChange = { inputTextValue = it },
                     placeholder = {
                         Text(
                             text = "Ask TaskFlow AI...",
@@ -337,10 +340,15 @@ fun AiAssistantBottomSheet(
                         focusedBorderColor = TaskFlowPrimary,
                         unfocusedBorderColor = Color(0xFFE2E8F0)
                     ),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Sentences,
+                        keyboardType = KeyboardType.Text,
+                        autoCorrectEnabled = false,
+                        imeAction = ImeAction.Send
+                    ),
                     keyboardActions = KeyboardActions(
                         onSend = {
-                            sendMessage(inputText)
+                            sendMessage(inputTextValue.text)
                         }
                     ),
                     modifier = Modifier
@@ -353,7 +361,7 @@ fun AiAssistantBottomSheet(
                     onClick = {
                         isListening = !isListening
                         if (isListening) {
-                            inputText = "Create a high priority task for project demo"
+                            inputTextValue = TextFieldValue("Create a high priority task for project demo")
                         }
                     },
                     shape = CircleShape,
@@ -373,10 +381,10 @@ fun AiAssistantBottomSheet(
                 // Send Button
                 Surface(
                     onClick = {
-                        sendMessage(inputText)
+                        sendMessage(inputTextValue.text)
                     },
                     shape = CircleShape,
-                    color = if (inputText.isNotBlank()) TaskFlowPrimary else TaskFlowPrimary.copy(alpha = 0.5f),
+                    color = if (inputTextValue.text.isNotBlank()) TaskFlowPrimary else TaskFlowPrimary.copy(alpha = 0.5f),
                     modifier = Modifier.size(48.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {

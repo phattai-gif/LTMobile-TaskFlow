@@ -55,7 +55,8 @@ import kotlin.math.roundToInt
 enum class PinScreenMode {
     SET_NEW,
     CHANGE,
-    VERIFY_TO_DISABLE
+    VERIFY_TO_DISABLE,
+    UNLOCK
 }
 
 @Composable
@@ -114,6 +115,9 @@ fun SetPinScreen(
         }
         PinScreenMode.VERIFY_TO_DISABLE -> {
             "Enter Current PIN" to "Enter your 4-digit PIN to turn off PIN Lock"
+        }
+        PinScreenMode.UNLOCK -> {
+            "Enter Your PIN" to "Enter your 4-digit security PIN to continue"
         }
     }
 
@@ -181,6 +185,15 @@ fun SetPinScreen(
                     enteredPin = ""
                 }
             }
+            PinScreenMode.UNLOCK -> {
+                if (pinManager.verifyPin(pin)) {
+                    onSuccess()
+                } else {
+                    errorMessage = "Incorrect PIN. Please try again."
+                    triggerShake()
+                    enteredPin = ""
+                }
+            }
         }
     }
 
@@ -216,14 +229,27 @@ fun SetPinScreen(
         // ── Top Navigation Bar ──────────────────────────────────────────────
         Row(
             modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color(0xFF1F2937)
-                )
+            if (mode != PinScreenMode.UNLOCK) {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color(0xFF1F2937)
+                    )
+                }
+            } else {
+                Spacer(modifier = Modifier.width(4.dp))
+                androidx.compose.material3.TextButton(onClick = onBack) {
+                    Text(
+                        text = "Sign out",
+                        color = Color(0xFFDC2626),
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp
+                    )
+                }
             }
         }
 
@@ -355,7 +381,11 @@ fun SetPinScreen(
                 // Biometric / Fingerprint button
                 Surface(
                     onClick = {
-                        // Quick biometric prompt placeholder or action
+                        if (pinManager.isBiometricEnabled()) {
+                            onSuccess()
+                        } else {
+                            errorMessage = "Biometric unlock is not enabled in Settings."
+                        }
                     },
                     shape = CircleShape,
                     color = Color.Transparent,
@@ -365,7 +395,7 @@ fun SetPinScreen(
                         Icon(
                             imageVector = Icons.Outlined.Fingerprint,
                             contentDescription = "Biometric Unlock",
-                            tint = Color(0xFF94A3B8),
+                            tint = if (pinManager.isBiometricEnabled()) TaskFlowPrimary else Color(0xFF94A3B8),
                             modifier = Modifier.size(28.dp)
                         )
                     }

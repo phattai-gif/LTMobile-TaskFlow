@@ -205,7 +205,7 @@ fun SettingsScreen(
                             pinManager.setBiometricEnabled(false)
                             featureNoticeMessage = "PIN lock has been disabled."
                         }
-                        null -> {}
+                        PinScreenMode.UNLOCK, null -> {}
                     }
                 },
                 onBack = { activePinMode = null }

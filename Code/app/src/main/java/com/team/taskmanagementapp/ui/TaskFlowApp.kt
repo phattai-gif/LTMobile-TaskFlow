@@ -42,7 +42,10 @@ import com.team.taskmanagementapp.ui.auth.LoginScreen
 import com.team.taskmanagementapp.ui.auth.RegisterScreen
 import com.team.taskmanagementapp.ui.auth.WelcomeScreen
 import com.team.taskmanagementapp.ui.badges.BadgesScreen
+import com.team.taskmanagementapp.ui.pin.PinScreenMode
+import com.team.taskmanagementapp.ui.pin.SetPinScreen
 import com.team.taskmanagementapp.ui.settings.SettingsScreen
+import com.team.taskmanagementapp.util.PinManager
 import com.team.taskmanagementapp.ui.streak.StreakScreen
 import com.team.taskmanagementapp.ui.theme.TaskFlowDimensions
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -77,7 +80,11 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
     }
     val navController = rememberNavController()
     var showAiAssistantBottomSheet by rememberSaveable { mutableStateOf(false) }
+    val pinManager = remember(appContext) { PinManager.getInstance(appContext) }
     val auth = remember { com.google.firebase.auth.FirebaseAuth.getInstance() }
+    var isAppLocked by rememberSaveable {
+        mutableStateOf(pinManager.isPinLockEnabled() && auth.currentUser != null)
+    }
     val startDestination = remember {
         if (auth.currentUser != null) TaskFlowRoutes.HOME else TaskFlowRoutes.WELCOME
     }
@@ -264,6 +271,9 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
             composable(TaskFlowRoutes.LOGIN) {
                 LoginScreen(
                     onLoginSuccess = {
+                        if (pinManager.isPinLockEnabled()) {
+                            isAppLocked = true
+                        }
                         navController.navigate(TaskFlowRoutes.HOME) {
                             popUpTo(TaskFlowRoutes.WELCOME) {
                                 inclusive = true
@@ -282,6 +292,9 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
             composable(TaskFlowRoutes.REGISTER) {
                 RegisterScreen(
                     onRegisterSuccess = {
+                        if (pinManager.isPinLockEnabled()) {
+                            isAppLocked = true
+                        }
                         navController.navigate(TaskFlowRoutes.HOME) {
                             popUpTo(TaskFlowRoutes.WELCOME) {
                                 inclusive = true
@@ -312,6 +325,22 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
                 showAiAssistantBottomSheet = false
                 navController.navigate(TaskFlowRoutes.HOME) {
                     launchSingleTop = true
+                }
+            }
+        )
+    }
+
+    if (isAppLocked && pinManager.isPinLockEnabled()) {
+        SetPinScreen(
+            mode = PinScreenMode.UNLOCK,
+            onSuccess = {
+                isAppLocked = false
+            },
+            onBack = {
+                auth.signOut()
+                isAppLocked = false
+                navController.navigate(TaskFlowRoutes.WELCOME) {
+                    popUpTo(0) { inclusive = true }
                 }
             }
         )

@@ -30,8 +30,8 @@
     <string name="theme_demo_dialog_title">Xác nhận kiểm tra</string>
     <string name="theme_demo_dialog_message">Bạn muốn xác nhận thao tác mẫu này?</string>
     <string name="theme_demo_confirmed">Đã xác nhận thao tác mẫu.</string>
-    <string name="task_title_label">Tiêu đề công việc</string>
-    <string name="task_description_label">Mô tả</string>
+    <string name="task_title_label">Task Title</string>
+    <string name="task_description_label">Description</string>
     <!-- Màn hình Home -->
     <string name="home_today_tasks">Today\'s Tasks</string>
     <string name="home_upcoming_tasks">Upcoming</string>
@@ -61,7 +61,7 @@
     <string name="task_status_in_progress">IN PROGRESS</string>
     <string name="task_status_completed">COMPLETED</string>
     <string name="task_status_overdue">OVERDUE</string>
-    <string name="action_back">Quay lại</string>
+    <string name="action_back">Back</string>
     <string name="action_delete">Xóa</string>
     <string name="task_detail_not_found">Công việc này không còn tồn tại.</string>
 

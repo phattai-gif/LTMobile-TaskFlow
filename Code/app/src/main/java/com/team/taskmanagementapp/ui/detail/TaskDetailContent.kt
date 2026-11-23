@@ -490,9 +490,9 @@ private fun TaskDetailCards(
                         } else {
                             val interval = task.recurrenceInterval.coerceAtLeast(1)
                             when (task.recurrenceType) {
-                                RecurrenceType.DAILY -> if (interval == 1) "Mỗi ngày" else "Mỗi $interval ngày"
-                                RecurrenceType.WEEKLY -> if (interval == 1) "Mỗi tuần" else "Mỗi $interval tuần"
-                                RecurrenceType.MONTHLY -> if (interval == 1) "Mỗi tháng" else "Mỗi $interval tháng"
+                                RecurrenceType.DAILY -> if (interval == 1) "Daily" else "Every $interval days"
+                                RecurrenceType.WEEKLY -> if (interval == 1) "Weekly" else "Every $interval weeks"
+                                RecurrenceType.MONTHLY -> if (interval == 1) "Monthly" else "Every $interval months"
                                 else -> stringResource(R.string.task_detail_no_recurrence)
                             }
                         }

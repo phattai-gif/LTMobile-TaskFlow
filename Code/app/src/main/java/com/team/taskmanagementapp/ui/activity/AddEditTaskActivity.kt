@@ -166,7 +166,7 @@ class AddEditTaskActivity : AppCompatActivity() {
                 }
                 is AddEditTaskState.Saved -> {
                     isSaving = false
-                    Toast.makeText(this, "Đã lưu công việc thành công.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Task saved successfully.", Toast.LENGTH_SHORT).show()
                     setResult(RESULT_OK)
                     finish()
                 }
@@ -222,7 +222,7 @@ class AddEditTaskActivity : AppCompatActivity() {
     private fun showTimePicker() {
         val dueDate = formDueDate
         if (dueDate == null) {
-            Toast.makeText(this, "Hãy chọn ngày hạn trước.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Please select due date first.", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -247,27 +247,27 @@ class AddEditTaskActivity : AppCompatActivity() {
         val dueDate = formDueDate
 
         if (title.isBlank()) {
-            Toast.makeText(this, "Vui lòng nhập tiêu đề.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Please enter task title.", Toast.LENGTH_SHORT).show()
             return
         }
 
         if (title.length > 200) {
-            Toast.makeText(this, "Tiêu đề tối đa 200 ký tự.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Title maximum 200 characters.", Toast.LENGTH_SHORT).show()
             return
         }
 
         if (description.length > 1000) {
-            Toast.makeText(this, "Mô tả tối đa 1000 ký tự.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Description maximum 1000 characters.", Toast.LENGTH_SHORT).show()
             return
         }
 
         if (dueDate == null) {
-            Toast.makeText(this, "Vui lòng chọn ngày hạn.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Please select a due date.", Toast.LENGTH_SHORT).show()
             return
         }
 
         if (!isEditMode && dueDate < startOfDay(System.currentTimeMillis())) {
-            Toast.makeText(this, "Ngày hạn không được ở quá khứ.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Due date cannot be in the past.", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -277,7 +277,7 @@ class AddEditTaskActivity : AppCompatActivity() {
             startOfDay(dueDate) == startOfDay(System.currentTimeMillis()) &&
             time <= System.currentTimeMillis()
         ) {
-            Toast.makeText(this, "Giờ hạn phải ở tương lai.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Due time must be in the future.", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -360,35 +360,35 @@ private fun EditTaskContent(
     var reminderDropdownExpanded by remember { mutableStateOf(false) }
 
     fun formatDate(millis: Long?): String {
-        if (millis == null || millis <= 0L) return "Chọn ngày hạn"
-        val sdf = SimpleDateFormat("EEE, dd/MM/yyyy", Locale.getDefault())
+        if (millis == null || millis <= 0L) return "Select due date"
+        val sdf = SimpleDateFormat("EEE, MMM dd, yyyy", Locale.US)
         return sdf.format(Date(millis))
     }
 
     fun formatTime(millis: Long?): String {
-        if (millis == null || millis <= 0L) return "Chọn giờ hạn (không bắt buộc)"
-        val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
-        return "Giờ hạn: " + sdf.format(Date(millis))
+        if (millis == null || millis <= 0L) return "Select due time (optional)"
+        val sdf = SimpleDateFormat("hh:mm a", Locale.US)
+        return "Due time: " + sdf.format(Date(millis))
     }
 
     fun reminderLabel(minutes: Int): String {
         return when (minutes) {
-            0 -> "Không nhắc"
-            5 -> "5 phút trước"
-            10 -> "10 phút trước"
-            15 -> "15 phút trước"
-            30 -> "30 phút trước"
-            60 -> "60 phút trước"
-            else -> "$minutes phút trước"
+            0 -> "No reminder"
+            5 -> "5 mins before"
+            10 -> "10 mins before"
+            15 -> "15 mins before"
+            30 -> "30 mins before"
+            60 -> "1 hour before"
+            else -> "$minutes mins before"
         }
     }
 
     fun statusLabel(st: TaskStatus): String {
         return when (st) {
-            TaskStatus.TODO -> "Cần làm (Todo)"
-            TaskStatus.IN_PROGRESS -> "Đang làm (In Progress)"
-            TaskStatus.COMPLETED -> "Hoàn thành (Completed)"
-            TaskStatus.OVERDUE -> "Quá hạn (Overdue)"
+            TaskStatus.TODO -> "Todo"
+            TaskStatus.IN_PROGRESS -> "In Progress"
+            TaskStatus.COMPLETED -> "Completed"
+            TaskStatus.OVERDUE -> "Overdue"
         }
     }
 
@@ -416,7 +416,7 @@ private fun EditTaskContent(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Quay lại",
+                        contentDescription = "Back",
                         tint = Color(0xFF1E293B)
                     )
                 }
@@ -431,14 +431,14 @@ private fun EditTaskContent(
 
             // ── Screen Title & Subtitle ─────────────────────────────────────
             Text(
-                text = if (isEditMode) "Chỉnh sửa công việc" else "Tạo công việc",
+                text = if (isEditMode) "Edit Task" else "Create Task",
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF1E293B)
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Cập nhật chi tiết, thời hạn và độ ưu tiên cho công việc.",
+                text = "Update task details, deadline, priority, and reminders.",
                 fontSize = 13.sp,
                 color = Color(0xFF64748B)
             )
@@ -455,7 +455,7 @@ private fun EditTaskContent(
             ) {
                 Column(modifier = Modifier.padding(18.dp)) {
                     Text(
-                        text = "TIÊU ĐỀ CÔNG VIỆC",
+                        text = "TASK TITLE",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF94A3B8),
@@ -466,7 +466,7 @@ private fun EditTaskContent(
                         value = title,
                         onValueChange = onTitleChange,
                         placeholder = {
-                            Text("Ví dụ: Chuẩn bị slide thuyết trình...", color = Color(0xFF9CA3AF), fontSize = 15.sp)
+                            Text("e.g., Prepare slide presentation...", color = Color(0xFF9CA3AF), fontSize = 15.sp)
                         },
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.Transparent,
@@ -483,7 +483,7 @@ private fun EditTaskContent(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = "MÔ TẢ CHI TIẾT",
+                        text = "TASK DESCRIPTION",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF94A3B8),
@@ -494,7 +494,7 @@ private fun EditTaskContent(
                         value = description,
                         onValueChange = onDescriptionChange,
                         placeholder = {
-                            Text("Ghi chú thêm về công việc này (không bắt buộc)...", color = Color(0xFF9CA3AF), fontSize = 14.sp)
+                            Text("Add detailed notes, links, or context (optional)...", color = Color(0xFF9CA3AF), fontSize = 14.sp)
                         },
                         minLines = 3,
                         colors = TextFieldDefaults.colors(
@@ -521,7 +521,7 @@ private fun EditTaskContent(
             ) {
                 Column(modifier = Modifier.padding(18.dp)) {
                     Text(
-                        text = "THỜI HẠN & GIỜ ĐẾN HẠN",
+                        text = "SCHEDULE & DEADLINE",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF94A3B8),
@@ -553,7 +553,7 @@ private fun EditTaskContent(
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column {
                                     Text(
-                                        text = "Ngày hạn",
+                                        text = "Due Date",
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = Color(0xFF94A3B8)
@@ -588,7 +588,7 @@ private fun EditTaskContent(
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column {
                                     Text(
-                                        text = "Giờ hạn",
+                                        text = "Due Time",
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = Color(0xFF94A3B8)
@@ -618,10 +618,10 @@ private fun EditTaskContent(
             ) {
                 Column(modifier = Modifier.padding(18.dp)) {
                     Text(
-                        text = "MỨC ƯU TIÊN",
+                        text = "PRIORITY",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF94A3B8),
+                        color = Color(0xFF6B7280),
                         letterSpacing = 0.5.sp
                     )
                     Spacer(modifier = Modifier.height(14.dp))
@@ -637,12 +637,6 @@ private fun EditTaskContent(
                             Priority.URGENT to "Urgent"
                         ).forEach { (p, label) ->
                             val isSelected = priority == p
-                            val selectedColor = when (p) {
-                                Priority.URGENT -> Color(0xFFDC2626)
-                                Priority.HIGH -> Color(0xFFEF4444)
-                                Priority.MEDIUM -> Color(0xFFF59E0B)
-                                Priority.LOW -> Color(0xFF10B981)
-                            }
                             Surface(
                                 modifier = Modifier
                                     .weight(1f)
@@ -684,7 +678,7 @@ private fun EditTaskContent(
                 Column(modifier = Modifier.padding(18.dp)) {
                     // Status row
                     Text(
-                        text = "TRẠNG THÁI CÔNG VIỆC",
+                        text = "TASK STATUS",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF94A3B8),
@@ -732,7 +726,7 @@ private fun EditTaskContent(
 
                     // Reminder row
                     Text(
-                        text = "NHẮC TRƯỚC HẠN",
+                        text = "REMIND BEFORE",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF94A3B8),
@@ -776,7 +770,7 @@ private fun EditTaskContent(
 
                     // Recurrence row
                     Text(
-                        text = "LẶP LẠI",
+                        text = "RECURRENCE",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF94A3B8),
@@ -789,10 +783,10 @@ private fun EditTaskContent(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         listOf(
-                            RecurrenceType.NONE to "Không lặp",
-                            RecurrenceType.DAILY to "Hàng ngày",
-                            RecurrenceType.WEEKLY to "Hàng tuần",
-                            RecurrenceType.MONTHLY to "Hàng tháng"
+                            RecurrenceType.NONE to "None",
+                            RecurrenceType.DAILY to "Daily",
+                            RecurrenceType.WEEKLY to "Weekly",
+                            RecurrenceType.MONTHLY to "Monthly"
                         ).forEach { (rec, label) ->
                             val isSelected = recurrence == rec
                             Surface(
@@ -845,7 +839,7 @@ private fun EditTaskContent(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = if (isSaving) "Đang lưu..." else if (isEditMode) "Cập nhật công việc" else "Tạo công việc",
+                    text = if (isSaving) "Saving..." else if (isEditMode) "Update Task" else "Save Task",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White

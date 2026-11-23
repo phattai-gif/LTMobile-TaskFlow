@@ -67,8 +67,7 @@ Hệ thống tuân thủ nghiêm ngặt các tiêu chuẩn kỹ thuật hiện �
 | STT | Họ và Tên | Mã Số Sinh Viên | Vai Trò Đảm Nhiệm | Kênh Liên Hệ / Email |
 | :---: | :--- | :---: | :---: | :--- |
 | 1 | **Trần Phát Tài** | `086206011804` | **Team Leader** & Full-stack Mobile Dev | taiphattran2006@gmail.com |
-| 2 | **Chu Trí Đạt** | `070206002492` | Core Member & Module Developer | dat.chu@example.com |
-| 3 | **Nguyễn Quốc Thái** | `087206004822` | Core Member & QA / Testing | thai.nguyen@example.com |
+| 2 | **Nguyễn Quốc Thái** | `087206004822` | **Core Member** & QA / Mobile Developer | thai.nguyen@example.com |
 
 ---
 

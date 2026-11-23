@@ -16,6 +16,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,6 +31,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
 import com.team.taskmanagementapp.R
 import com.team.taskmanagementapp.ui.components.TaskFlowBottomNavigation
@@ -57,6 +60,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.team.taskmanagementapp.data.repository.PomodoroSettingsRepository
+import com.team.taskmanagementapp.ui.pomodoro.PomodoroScreen
+import com.team.taskmanagementapp.ui.pomodoro.PomodoroSettingsScreen
+import com.team.taskmanagementapp.ui.viewmodel.PomodoroViewModel
 import com.team.taskmanagementapp.ui.activity.AddEditTaskActivity
 import com.team.taskmanagementapp.ui.detail.RepositoryTaskDetailSource
 import com.team.taskmanagementapp.ui.detail.TaskDetailRoute
@@ -66,7 +75,11 @@ import com.team.taskmanagementapp.data.local.db.AppDatabase
 import com.team.taskmanagementapp.data.repository.TaskRepository
 
 @Composable
-fun TaskFlowApp(modifier: Modifier = Modifier) {
+fun TaskFlowApp(
+    modifier: Modifier = Modifier,
+    openPomodoro: Flow<Boolean> = emptyFlow(),
+    onPomodoroOpened: () -> Unit = {}
+) {
     val context = LocalContext.current
     val appContext = context.applicationContext
     val coroutineScope = rememberCoroutineScope()
@@ -96,6 +109,30 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
         }
     }
     val backStackEntry by navController.currentBackStackEntryAsState()
+    val pomodoroViewModel = viewModel<PomodoroViewModel> {
+        PomodoroViewModel(
+            repository,
+            PomodoroSettingsRepository.from(appContext),
+            appContext,
+            createSavedStateHandle()
+        )
+    }
+
+    LaunchedEffect(navController, openPomodoro) {
+        openPomodoro.collect { requested ->
+            if (!requested) return@collect
+
+            when (navController.currentDestination?.route) {
+                null, TaskFlowRoutes.WELCOME, TaskFlowRoutes.LOGIN, TaskFlowRoutes.REGISTER -> Unit
+                else -> {
+                    navController.navigate(TaskFlowRoutes.POMODORO) {
+                        launchSingleTop = true
+                    }
+                    onPomodoroOpened()
+                }
+            }
+        }
+    }
 
     val currentRoute = backStackEntry?.destination?.route
         ?: TaskFlowRoutes.HOME
@@ -179,6 +216,11 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
                     onTaskClick = openTaskDetail,
                     onViewCalendarClick = {
                         navController.navigate(TaskFlowRoutes.CALENDAR) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onClockClick = {
+                        navController.navigate(TaskFlowRoutes.POMODORO) {
                             launchSingleTop = true
                         }
                     }
@@ -288,6 +330,21 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
                     onBack = {
                         navController.popBackStack()
                     }
+                )
+            }
+
+            composable(TaskFlowRoutes.POMODORO) {
+                PomodoroScreen(
+                    viewModel = pomodoroViewModel,
+                    onBack = { navController.popBackStack() },
+                    onSettings = { navController.navigate(TaskFlowRoutes.POMODORO_SETTINGS) }
+                )
+            }
+
+            composable(TaskFlowRoutes.POMODORO_SETTINGS) {
+                PomodoroSettingsScreen(
+                    viewModel = pomodoroViewModel,
+                    onBack = { navController.popBackStack() }
                 )
             }
 

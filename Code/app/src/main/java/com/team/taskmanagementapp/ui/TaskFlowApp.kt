@@ -39,7 +39,7 @@ import com.team.taskmanagementapp.ui.auth.LoginScreen
 import com.team.taskmanagementapp.ui.auth.RegisterScreen
 import com.team.taskmanagementapp.ui.auth.WelcomeScreen
 import com.team.taskmanagementapp.ui.badges.BadgesScreen
-import com.team.taskmanagementapp.ui.screens.SettingsScreen
+import com.team.taskmanagementapp.ui.settings.SettingsScreen
 import com.team.taskmanagementapp.ui.streak.StreakScreen
 import com.team.taskmanagementapp.ui.theme.TaskFlowDimensions
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -220,6 +220,15 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
 
             composable(TaskFlowRoutes.SETTINGS) {
                 SettingsScreen(
+                    onBack = {
+                        navController.navigate(TaskFlowRoutes.HOME) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                     onLogout = {
                         auth.signOut()
                         navController.navigate(TaskFlowRoutes.WELCOME) {

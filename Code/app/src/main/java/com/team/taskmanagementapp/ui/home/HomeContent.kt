@@ -32,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -86,12 +87,17 @@ fun HomeContent(
         }
 
         HomeUiState.Empty -> {
+            val user = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+            val fallbackName = user?.displayName?.takeIf { it.isNotBlank() }
+                ?: user?.email?.substringBefore('@')?.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+                ?: ""
             HomeDashboardSuccessView(
                 metrics = HomeSummaryMetrics(),
                 streakInfo = HomeStreakInfo(),
                 todayTasks = emptyList(),
                 upcomingTasks = emptyList(),
                 completedTasks = emptyList(),
+                userName = fallbackName,
                 onTaskClick = onTaskClick,
                 onToggleComplete = onToggleComplete,
                 onDeleteTask = onDeleteTask,
@@ -536,24 +542,40 @@ private fun HomeStateMessage(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(TaskFlowDimensions.screenPadding),
+            .background(MaterialTheme.colorScheme.background)
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(
-            TaskFlowDimensions.spacing16,
-            Alignment.CenterVertically
-        )
+        verticalArrangement = Arrangement.Center
     ) {
         if (showProgress) {
-            CircularProgressIndicator(color = TaskFlowPrimary)
+            Surface(
+                shape = CircleShape,
+                color = TaskFlowPrimary.copy(alpha = 0.08f),
+                modifier = Modifier.size(68.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(
+                        color = TaskFlowPrimary,
+                        strokeWidth = 3.dp,
+                        modifier = Modifier.size(34.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(18.dp))
         }
 
         Text(
             text = stringResource(messageRes),
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.bodyLarge.copy(
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF4B5563)
+            ),
             textAlign = TextAlign.Center
         )
 
         if (onRetry != null) {
+            Spacer(modifier = Modifier.height(16.dp))
             TaskFlowButton(
                 text = stringResource(R.string.action_retry),
                 onClick = onRetry

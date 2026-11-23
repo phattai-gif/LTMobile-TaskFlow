@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Tune
@@ -30,6 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -123,12 +125,18 @@ internal fun StatsContent(
                 )
 
                 Box {
-                    IconButton(onClick = { showFilters = true }) {
-                        Icon(
-                            imageVector = Icons.Outlined.Tune,
-                            contentDescription = stringResource(R.string.stats_filter_description, periodLabel),
-                            tint = TaskFlowOutline
-                        )
+                    Surface(
+                        shape = CircleShape,
+                        color = Color(0xFFE2E8F0).copy(alpha = 0.6f),
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        IconButton(onClick = { showFilters = true }) {
+                            Icon(
+                                imageVector = Icons.Outlined.Tune,
+                                contentDescription = stringResource(R.string.stats_filter_description, periodLabel),
+                                tint = Color(0xFF475569)
+                            )
+                        }
                     }
                     DropdownMenu(expanded = showFilters, onDismissRequest = { showFilters = false }) {
                         StatsTimeFilter.entries.forEach { filter ->
@@ -151,20 +159,10 @@ internal fun StatsContent(
             }
         }
 
-        if (uiState.isLoading || uiState.hasError || uiState.isEmpty) {
-            item(key = "stats_message") {
+        if (uiState.hasError) {
+            item(key = "stats_error_message") {
                 StatsMessage(uiState, periodLabel, onRetry)
             }
-            if (uiState.isEmpty && uiState.hasUnknownCompletionDates) {
-                item(key = "stats_unknown_completion_dates") {
-                    Text(
-                        text = stringResource(R.string.stats_unknown_completion_dates),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TaskFlowOutline
-                    )
-                }
-            }
-            return@LazyColumn
         }
 
         // 2. Card 1: Completions by weekday (Chart)
@@ -206,21 +204,13 @@ internal fun StatsContent(
 
                     Spacer(modifier = Modifier.height(18.dp))
 
-                    if (uiState.weekdayCompletions.any { it.count > 0 }) {
-                        WeekdayBarChart(
-                            weekdayCompletions = uiState.weekdayCompletions,
-                            maxCount = uiState.maxWeekdayCount,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(140.dp)
-                        )
-                    } else {
-                        Text(
-                            text = stringResource(R.string.stats_no_dated_completions),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = TaskFlowOutline
-                        )
-                    }
+                    WeekdayBarChart(
+                        weekdayCompletions = uiState.weekdayCompletions,
+                        maxCount = uiState.maxWeekdayCount,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(140.dp)
+                    )
                     if (uiState.hasUnknownCompletionDates) {
                         Text(
                             text = stringResource(R.string.stats_unknown_completion_dates),
@@ -447,41 +437,33 @@ internal fun StatsContent(
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
-                    if (dist.totalCount == 0) {
-                        Text(
-                            text = stringResource(R.string.stats_no_tasks),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = TaskFlowOutline
-                        )
-                    } else {
-                        PriorityProgressRow(
-                            title = stringResource(R.string.stats_urgent_priority),
-                            count = dist.urgentCount,
-                            progress = dist.urgentCount.toFloat() / maxPriority,
-                            barColor = Color(0xFFBA1A1A)
-                        )
+                    PriorityProgressRow(
+                        title = stringResource(R.string.stats_urgent_priority),
+                        count = dist.urgentCount,
+                        progress = if (dist.totalCount > 0) dist.urgentCount.toFloat() / maxPriority else 0f,
+                        barColor = Color(0xFFBA1A1A)
+                    )
 
-                        PriorityProgressRow(
-                            title = stringResource(R.string.stats_high_priority),
-                            count = dist.highCount,
-                            progress = dist.highCount.toFloat() / maxPriority,
-                            barColor = Color(0xFFEF4444)
-                        )
+                    PriorityProgressRow(
+                        title = stringResource(R.string.stats_high_priority),
+                        count = dist.highCount,
+                        progress = if (dist.totalCount > 0) dist.highCount.toFloat() / maxPriority else 0f,
+                        barColor = Color(0xFFEF4444)
+                    )
 
-                        PriorityProgressRow(
-                            title = stringResource(R.string.stats_medium_priority),
-                            count = dist.mediumCount,
-                            progress = dist.mediumCount.toFloat() / maxPriority,
-                            barColor = Color(0xFFF59E0B)
-                        )
+                    PriorityProgressRow(
+                        title = stringResource(R.string.stats_medium_priority),
+                        count = dist.mediumCount,
+                        progress = if (dist.totalCount > 0) dist.mediumCount.toFloat() / maxPriority else 0f,
+                        barColor = Color(0xFFF59E0B)
+                    )
 
-                        PriorityProgressRow(
-                            title = stringResource(R.string.stats_low_priority),
-                            count = dist.lowCount,
-                            progress = dist.lowCount.toFloat() / maxPriority,
-                            barColor = Color(0xFF10B981)
-                        )
-                    }
+                    PriorityProgressRow(
+                        title = stringResource(R.string.stats_low_priority),
+                        count = dist.lowCount,
+                        progress = if (dist.totalCount > 0) dist.lowCount.toFloat() / maxPriority else 0f,
+                        barColor = Color(0xFF10B981)
+                    )
                 }
             }
         }
@@ -738,8 +720,16 @@ private fun WeekdayBarChart(
     modifier: Modifier = Modifier
 ) {
     val chartDescription = weekdayCompletions.joinToString(", ") { "${it.dayLabel} ${it.count}" }
-    val step = maxCount / 3
+    val effectiveMax = maxOf(12, maxCount)
+    val step = effectiveMax / 3
     val axisStyle = MaterialTheme.typography.labelSmall
+    val defaultDays = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+    val displayDays = if (weekdayCompletions.isNotEmpty()) {
+        weekdayCompletions
+    } else {
+        defaultDays.map { WeekdayCompletion(it, 0) }
+    }
+
     Column(modifier = modifier.semantics { contentDescription = chartDescription }) {
         Row(modifier = Modifier.weight(1f)) {
             Column(
@@ -762,13 +752,13 @@ private fun WeekdayBarChart(
                     }
                 }
                 Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.Bottom) {
-                    weekdayCompletions.forEach { item ->
+                    displayDays.forEach { item ->
                         Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.BottomCenter) {
                             if (item.count > 0) {
                                 Box(
                                     Modifier
                                         .fillMaxWidth(0.45f)
-                                        .fillMaxHeight((item.count.toFloat() / maxCount).coerceIn(0f, 1f))
+                                        .fillMaxHeight((item.count.toFloat() / effectiveMax).coerceIn(0f, 1f))
                                         .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
                                         .background(TaskFlowPrimary)
                                 )
@@ -779,7 +769,7 @@ private fun WeekdayBarChart(
             }
         }
         Row(Modifier.fillMaxWidth().padding(start = 32.dp, top = 6.dp)) {
-            weekdayCompletions.forEach { item ->
+            displayDays.forEach { item ->
                 Text(
                     text = item.dayLabel,
                     modifier = Modifier.weight(1f),

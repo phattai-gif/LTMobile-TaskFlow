@@ -37,6 +37,7 @@ import com.team.taskmanagementapp.ui.navigation.TaskFlowRoutes
 import com.team.taskmanagementapp.ui.navigation.taskFlowMainDestinations
 import com.team.taskmanagementapp.ui.calendar.CalendarScreen
 import com.team.taskmanagementapp.ui.data.DataManagementScreen
+import com.team.taskmanagementapp.ui.data.RestoreTasksScreen
 import com.team.taskmanagementapp.ui.stats.StatsScreen
 import com.team.taskmanagementapp.ui.screens.CreateTaskScreen
 import com.team.taskmanagementapp.ui.auth.LoginScreen
@@ -262,6 +263,21 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
                     onNavigateToRestore = {
                         navController.navigate(TaskFlowRoutes.RESTORE_DATA) {
                             launchSingleTop = true
+                        }
+                    }
+                )
+            }
+
+            composable(TaskFlowRoutes.RESTORE_DATA) {
+                RestoreTasksScreen(
+                    onBack = { navController.popBackStack() },
+                    onRestoreSuccess = {
+                        navController.navigate(TaskFlowRoutes.HOME) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
                         }
                     }
                 )

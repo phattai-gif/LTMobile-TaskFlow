@@ -524,12 +524,13 @@ fun CreateTaskScreen(
                     Spacer(modifier = Modifier.height(14.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         listOf(
                             Priority.LOW to "Low",
                             Priority.MEDIUM to "Medium",
-                            Priority.HIGH to "High"
+                            Priority.HIGH to "High",
+                            Priority.URGENT to "Urgent"
                         ).forEach { (p, label) ->
                             val isSelected = selectedPriority == p
                             Surface(
@@ -548,7 +549,8 @@ fun CreateTaskScreen(
                                 ) {
                                     Text(
                                         text = label,
-                                        fontSize = 14.sp,
+                                        fontSize = 13.sp,
+                                        maxLines = 1,
                                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                                         color = if (isSelected) Color.White else Color(0xFF374151)
                                     )

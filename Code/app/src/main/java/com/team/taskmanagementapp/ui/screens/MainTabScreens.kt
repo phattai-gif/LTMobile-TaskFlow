@@ -29,28 +29,10 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
     onLogout: () -> Unit = {}
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(TaskFlowDimensions.screenPadding),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = stringResource(R.string.nav_settings),
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        androidx.compose.material3.Button(
-            onClick = onLogout,
-            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFEF4444)
-            )
-        ) {
-            Text("Log out", color = Color.White)
-        }
-    }
+    com.team.taskmanagementapp.ui.settings.SettingsScreen(
+        modifier = modifier,
+        onLogout = onLogout
+    )
 }
 
 @Composable

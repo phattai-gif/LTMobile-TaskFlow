@@ -146,7 +146,7 @@ internal fun calculateStats(
         .groupingBy { Instant.ofEpochMilli(it).atZone(zone).dayOfWeek }
         .eachCount()
     val weekdays = DayOfWeek.entries.map { day ->
-        WeekdayCompletion(day.getDisplayName(TextStyle.SHORT, Locale.getDefault()), completionCounts[day] ?: 0)
+        WeekdayCompletion(day.getDisplayName(TextStyle.SHORT, Locale.ENGLISH), completionCounts[day] ?: 0)
     }
     val total = tasksInPeriod.size
     val completed = tasksInPeriod.count { it.completed }

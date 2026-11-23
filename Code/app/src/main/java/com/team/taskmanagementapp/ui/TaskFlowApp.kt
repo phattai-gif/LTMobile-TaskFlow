@@ -17,8 +17,11 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -33,13 +36,18 @@ import com.team.taskmanagementapp.ui.components.TaskFlowBottomNavigation
 import com.team.taskmanagementapp.ui.navigation.TaskFlowRoutes
 import com.team.taskmanagementapp.ui.navigation.taskFlowMainDestinations
 import com.team.taskmanagementapp.ui.calendar.CalendarScreen
+import com.team.taskmanagementapp.ui.data.DataManagementScreen
+import com.team.taskmanagementapp.ui.data.RestoreTasksScreen
 import com.team.taskmanagementapp.ui.stats.StatsScreen
 import com.team.taskmanagementapp.ui.screens.CreateTaskScreen
 import com.team.taskmanagementapp.ui.auth.LoginScreen
 import com.team.taskmanagementapp.ui.auth.RegisterScreen
 import com.team.taskmanagementapp.ui.auth.WelcomeScreen
 import com.team.taskmanagementapp.ui.badges.BadgesScreen
+import com.team.taskmanagementapp.ui.pin.PinScreenMode
+import com.team.taskmanagementapp.ui.pin.SetPinScreen
 import com.team.taskmanagementapp.ui.settings.SettingsScreen
+import com.team.taskmanagementapp.util.PinManager
 import com.team.taskmanagementapp.ui.streak.StreakScreen
 import com.team.taskmanagementapp.ui.theme.TaskFlowDimensions
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -73,7 +81,12 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
         RepositoryTaskDetailSource(repository, database)
     }
     val navController = rememberNavController()
+    var showAiAssistantBottomSheet by rememberSaveable { mutableStateOf(false) }
+    val pinManager = remember(appContext) { PinManager.getInstance(appContext) }
     val auth = remember { com.google.firebase.auth.FirebaseAuth.getInstance() }
+    var isAppLocked by rememberSaveable {
+        mutableStateOf(pinManager.isPinLockEnabled() && auth.currentUser != null)
+    }
     val startDestination = remember {
         if (auth.currentUser != null) TaskFlowRoutes.HOME else TaskFlowRoutes.WELCOME
     }
@@ -130,11 +143,7 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
                 // Floating AI Chatbot Avatar at bottom right positioned cleanly above bottom bar
                 androidx.compose.material3.Surface(
                     onClick = {
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar(
-                                "AI Assistant is ready to help!"
-                            )
-                        }
+                        showAiAssistantBottomSheet = true
                     },
                     shape = CircleShape,
                     color = Color.Transparent,
@@ -234,6 +243,42 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
                         navController.navigate(TaskFlowRoutes.WELCOME) {
                             popUpTo(0) { inclusive = true }
                         }
+                    },
+                    onNavigateToExport = {
+                        navController.navigate(TaskFlowRoutes.DATA_MANAGEMENT) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToRestore = {
+                        navController.navigate(TaskFlowRoutes.RESTORE_DATA) {
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+
+            composable(TaskFlowRoutes.DATA_MANAGEMENT) {
+                DataManagementScreen(
+                    onBack = { navController.popBackStack() },
+                    onNavigateToRestore = {
+                        navController.navigate(TaskFlowRoutes.RESTORE_DATA) {
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+
+            composable(TaskFlowRoutes.RESTORE_DATA) {
+                RestoreTasksScreen(
+                    onBack = { navController.popBackStack() },
+                    onRestoreSuccess = {
+                        navController.navigate(TaskFlowRoutes.HOME) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 )
             }
@@ -264,6 +309,9 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
             composable(TaskFlowRoutes.LOGIN) {
                 LoginScreen(
                     onLoginSuccess = {
+                        if (pinManager.isPinLockEnabled()) {
+                            isAppLocked = true
+                        }
                         navController.navigate(TaskFlowRoutes.HOME) {
                             popUpTo(TaskFlowRoutes.WELCOME) {
                                 inclusive = true
@@ -282,6 +330,9 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
             composable(TaskFlowRoutes.REGISTER) {
                 RegisterScreen(
                     onRegisterSuccess = {
+                        if (pinManager.isPinLockEnabled()) {
+                            isAppLocked = true
+                        }
                         navController.navigate(TaskFlowRoutes.HOME) {
                             popUpTo(TaskFlowRoutes.WELCOME) {
                                 inclusive = true
@@ -297,5 +348,39 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
                 )
             }
         }
+    }
+
+    if (showAiAssistantBottomSheet) {
+        AiAssistantBottomSheet(
+            onDismissRequest = { showAiAssistantBottomSheet = false },
+            onNavigateToCreateTask = {
+                showAiAssistantBottomSheet = false
+                navController.navigate(TaskFlowRoutes.CREATE_TASK) {
+                    launchSingleTop = true
+                }
+            },
+            onNavigateToTodayTasks = {
+                showAiAssistantBottomSheet = false
+                navController.navigate(TaskFlowRoutes.HOME) {
+                    launchSingleTop = true
+                }
+            }
+        )
+    }
+
+    if (isAppLocked && pinManager.isPinLockEnabled()) {
+        SetPinScreen(
+            mode = PinScreenMode.UNLOCK,
+            onSuccess = {
+                isAppLocked = false
+            },
+            onBack = {
+                auth.signOut()
+                isAppLocked = false
+                navController.navigate(TaskFlowRoutes.WELCOME) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
+        )
     }
 }

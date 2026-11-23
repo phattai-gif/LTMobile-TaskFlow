@@ -28,6 +28,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -64,8 +65,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -103,8 +108,12 @@ fun CreateTaskScreen(
         TaskRepository(database.taskDao())
     }
 
-    var title by rememberSaveable { mutableStateOf("") }
-    var description by rememberSaveable { mutableStateOf("") }
+    var titleValue by rememberSaveable(stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue(""))
+    }
+    var descriptionValue by rememberSaveable(stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue(""))
+    }
 
     val initialCalendar = remember {
         Calendar.getInstance().apply {
@@ -167,7 +176,7 @@ fun CreateTaskScreen(
 
     fun onSave() {
         focusManager.clearFocus()
-        val trimmedTitle = title.trim()
+        val trimmedTitle = titleValue.text.trim()
         if (trimmedTitle.isEmpty()) {
             coroutineScope.launch {
                 snackbarHostState.showSnackbar(emptyTitleError)
@@ -180,7 +189,7 @@ fun CreateTaskScreen(
                 val now = System.currentTimeMillis()
                 val newTask = Task(
                     title = trimmedTitle,
-                    description = description.trim(),
+                    description = descriptionValue.text.trim(),
                     dueDate = selectedDueDate,
                     dueTime = selectedDueTime,
                     priority = selectedPriority,
@@ -331,7 +340,7 @@ fun CreateTaskScreen(
                             .fillMaxWidth()
                             .padding(top = 16.dp, bottom = 8.dp)
                     ) {
-                        if (title.isEmpty()) {
+                        if (titleValue.text.isEmpty()) {
                             Text(
                                 text = stringResource(R.string.create_task_title_hint),
                                 fontSize = 16.sp,
@@ -340,14 +349,19 @@ fun CreateTaskScreen(
                             )
                         }
                         BasicTextField(
-                            value = title,
-                            onValueChange = { title = it },
+                            value = titleValue,
+                            onValueChange = { titleValue = it },
                             textStyle = TextStyle(
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = Color(0xFF1F2937)
                             ),
                             singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                capitalization = KeyboardCapitalization.Sentences,
+                                keyboardType = KeyboardType.Text,
+                                autoCorrectEnabled = false
+                            ),
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -379,7 +393,7 @@ fun CreateTaskScreen(
                             .heightIn(min = 100.dp)
                             .padding(top = 16.dp)
                     ) {
-                        if (description.isEmpty()) {
+                        if (descriptionValue.text.isEmpty()) {
                             Text(
                                 text = stringResource(R.string.create_task_desc_hint),
                                 fontSize = 14.sp,
@@ -388,12 +402,17 @@ fun CreateTaskScreen(
                             )
                         }
                         BasicTextField(
-                            value = description,
-                            onValueChange = { description = it },
+                            value = descriptionValue,
+                            onValueChange = { descriptionValue = it },
                             textStyle = TextStyle(
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Normal,
                                 color = Color(0xFF1F2937)
+                            ),
+                            keyboardOptions = KeyboardOptions(
+                                capitalization = KeyboardCapitalization.Sentences,
+                                keyboardType = KeyboardType.Text,
+                                autoCorrectEnabled = false
                             ),
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -524,12 +543,13 @@ fun CreateTaskScreen(
                     Spacer(modifier = Modifier.height(14.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         listOf(
                             Priority.LOW to "Low",
                             Priority.MEDIUM to "Medium",
-                            Priority.HIGH to "High"
+                            Priority.HIGH to "High",
+                            Priority.URGENT to "Urgent"
                         ).forEach { (p, label) ->
                             val isSelected = selectedPriority == p
                             Surface(
@@ -548,7 +568,8 @@ fun CreateTaskScreen(
                                 ) {
                                     Text(
                                         text = label,
-                                        fontSize = 14.sp,
+                                        fontSize = 13.sp,
+                                        maxLines = 1,
                                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                                         color = if (isSelected) Color.White else Color(0xFF374151)
                                     )

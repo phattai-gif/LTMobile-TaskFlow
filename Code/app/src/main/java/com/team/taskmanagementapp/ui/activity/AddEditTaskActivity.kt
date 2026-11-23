@@ -2,20 +2,80 @@ package com.team.taskmanagementapp.ui.activity
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
-import android.content.Intent
 import android.os.Bundle
-import android.widget.ArrayAdapter
-import android.widget.Spinner
 import android.widget.Toast
+import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.AccessTime
+import androidx.compose.material.icons.outlined.CalendarToday
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.team.taskmanagementapp.data.local.db.AppDatabase
 import com.team.taskmanagementapp.data.local.entity.Task
 import com.team.taskmanagementapp.data.model.enums.Priority
 import com.team.taskmanagementapp.data.model.enums.RecurrenceType
 import com.team.taskmanagementapp.data.model.enums.TaskStatus
 import com.team.taskmanagementapp.data.repository.TaskRepository
-import com.team.taskmanagementapp.databinding.ActivityAddEditTaskBinding
+import com.team.taskmanagementapp.ui.theme.TaskFLowTheme
+import com.team.taskmanagementapp.ui.theme.TaskFlowPrimary
 import com.team.taskmanagementapp.ui.viewmodel.AddEditTaskState
 import com.team.taskmanagementapp.ui.viewmodel.AddEditTaskViewModel
 import com.team.taskmanagementapp.ui.viewmodel.AddEditTaskViewModelFactory
@@ -26,95 +86,94 @@ import java.util.Locale
 
 class AddEditTaskActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityAddEditTaskBinding
-
     private val viewModel: AddEditTaskViewModel by viewModels {
         val database = AppDatabase.getInstance(this)
         val repository = TaskRepository(database.taskDao())
         AddEditTaskViewModelFactory(repository)
     }
 
-    private val taskId: Long by lazy {
-        intent.getLongExtra(EXTRA_TASK_ID, -1L)
-    }
+    private var taskId: Long = -1L
+    private var isEditMode: Boolean = false
 
-    private var isEditMode = false
+    // Form states
+    private var initialTaskTitle by mutableStateOf("")
+    private var initialTaskDescription by mutableStateOf("")
+    private var formDueDate by mutableStateOf<Long?>(null)
+    private var formDueTime by mutableStateOf<Long?>(null)
+    private var formPriority by mutableStateOf(Priority.MEDIUM)
+    private var formStatus by mutableStateOf(TaskStatus.TODO)
+    private var formRecurrence by mutableStateOf(RecurrenceType.NONE)
+    private var formReminderMinutes by mutableIntStateOf(30)
+    private var isSaving by mutableStateOf(false)
     private var hasLoadedTask = false
-    private var selectedDueDate: Long? = null
-    private var selectedDueTime: Long? = null
-
-    private val priorities = Priority.values()
-    private val statuses = TaskStatus.values()
-    private val recurrenceTypes = RecurrenceType.values()
-    private val reminderValues = intArrayOf(0, 5, 10, 15, 30, 60)
-    private val reminderLabels = listOf(
-        "Không nhắc",
-        "5 phút trước",
-        "10 phút trước",
-        "15 phút trước",
-        "30 phút trước",
-        "60 phút trước"
-    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        binding = ActivityAddEditTaskBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
+        taskId = intent.getLongExtra(EXTRA_TASK_ID, -1L)
         isEditMode = taskId > 0L
-        setupForm()
+
         observeViewModel()
 
         if (isEditMode) {
-            binding.formTitle.text = "Chỉnh sửa công việc"
-            binding.saveTaskButton.text = "Cập nhật"
             viewModel.loadTask(taskId)
+        } else {
+            formDueDate = startOfDay(System.currentTimeMillis())
+            formDueTime = System.currentTimeMillis() + 3600000L
         }
-    }
 
-    private fun setupForm() {
-        setSpinnerItems(binding.prioritySpinner, priorities) { enumLabel(it.name) }
-        setSpinnerItems(binding.statusSpinner, statuses) { enumLabel(it.name) }
-        setSpinnerItems(binding.recurrenceSpinner, recurrenceTypes) { enumLabel(it.name) }
-        setStringSpinnerItems(binding.reminderSpinner, reminderLabels)
-
-        binding.prioritySpinner.setSelection(priorities.indexOf(Priority.MEDIUM))
-        binding.statusSpinner.setSelection(statuses.indexOf(TaskStatus.TODO))
-        binding.recurrenceSpinner.setSelection(recurrenceTypes.indexOf(RecurrenceType.NONE))
-
-        binding.dueDateButton.setOnClickListener { showDatePicker() }
-        binding.dueTimeButton.setOnClickListener { showTimePicker() }
-        binding.saveTaskButton.setOnClickListener { saveTask() }
+        setContent {
+            TaskFLowTheme {
+                EditTaskContent(
+                    isEditMode = isEditMode,
+                    initialTitle = initialTaskTitle,
+                    initialDescription = initialTaskDescription,
+                    dueDate = formDueDate,
+                    dueTime = formDueTime,
+                    priority = formPriority,
+                    onPriorityChange = { formPriority = it },
+                    status = formStatus,
+                    onStatusChange = { formStatus = it },
+                    recurrence = formRecurrence,
+                    onRecurrenceChange = { formRecurrence = it },
+                    reminderMinutes = formReminderMinutes,
+                    onReminderChange = { formReminderMinutes = it },
+                    isSaving = isSaving,
+                    onPickDate = { showDatePicker() },
+                    onPickTime = { showTimePicker() },
+                    onSave = { title, description -> saveTask(title, description) },
+                    onBack = { finish() }
+                )
+            }
+        }
     }
 
     private fun observeViewModel() {
         viewModel.state.observe(this) { state ->
             when (state) {
-                AddEditTaskState.Idle -> Unit
+                AddEditTaskState.Idle -> {
+                    isSaving = false
+                }
                 AddEditTaskState.Loading,
                 AddEditTaskState.Saving -> {
-                    binding.saveTaskButton.isEnabled = false
+                    isSaving = true
                 }
-
                 is AddEditTaskState.Loaded -> {
-                    binding.saveTaskButton.isEnabled = true
+                    isSaving = false
                     if (!hasLoadedTask) {
                         hasLoadedTask = true
                         populateForm(state.task)
                     }
                 }
-
                 is AddEditTaskState.Saved -> {
-                    Toast.makeText(this, "Đã lưu công việc.", Toast.LENGTH_SHORT).show()
+                    isSaving = false
+                    Toast.makeText(this, "Task saved successfully.", Toast.LENGTH_SHORT).show()
                     setResult(RESULT_OK)
                     finish()
                 }
-
                 is AddEditTaskState.Error -> {
-                    binding.saveTaskButton.isEnabled = true
+                    isSaving = false
                     Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
-
                     if (isEditMode && !hasLoadedTask) {
                         finish()
                     }
@@ -123,31 +182,32 @@ class AddEditTaskActivity : AppCompatActivity() {
         }
     }
 
+    private fun populateForm(task: Task) {
+        initialTaskTitle = task.title
+        initialTaskDescription = task.description
+        formDueDate = task.dueDate.takeIf { it > 0L }
+        formDueTime = task.dueTime.takeIf { it > 0L }
+        formPriority = task.priority
+        formStatus = task.status
+        formRecurrence = task.recurrenceType
+        formReminderMinutes = task.reminderMinutes
+    }
+
     private fun showDatePicker() {
-        val initialDate = selectedDueDate ?: System.currentTimeMillis()
-        val calendar = Calendar.getInstance().apply {
-            timeInMillis = initialDate
-        }
+        val initialDate = formDueDate ?: System.currentTimeMillis()
+        val calendar = Calendar.getInstance().apply { timeInMillis = initialDate }
 
         val dialog = DatePickerDialog(
             this,
             { _, year, month, dayOfMonth ->
                 val newDate = makeDate(year, month, dayOfMonth)
-                val oldTime = selectedDueTime?.let {
+                val oldTime = formDueTime?.let {
                     Calendar.getInstance().apply { timeInMillis = it }
                 }
-
-                selectedDueDate = newDate
-                selectedDueTime = oldTime?.let {
-                    makeDateTime(
-                        newDate,
-                        it.get(Calendar.HOUR_OF_DAY),
-                        it.get(Calendar.MINUTE)
-                    )
+                formDueDate = newDate
+                formDueTime = oldTime?.let {
+                    makeDateTime(newDate, it.get(Calendar.HOUR_OF_DAY), it.get(Calendar.MINUTE))
                 }
-
-                updateDateButton()
-                updateTimeButton()
             },
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
@@ -157,26 +217,24 @@ class AddEditTaskActivity : AppCompatActivity() {
         if (!isEditMode) {
             dialog.datePicker.minDate = startOfDay(System.currentTimeMillis())
         }
-
         dialog.show()
     }
 
     private fun showTimePicker() {
-        val dueDate = selectedDueDate
+        val dueDate = formDueDate
         if (dueDate == null) {
-            Toast.makeText(this, "Hãy chọn ngày hạn trước.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Please select due date first.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val currentTime = selectedDueTime?.let {
+        val currentTime = formDueTime?.let {
             Calendar.getInstance().apply { timeInMillis = it }
         } ?: Calendar.getInstance()
 
         TimePickerDialog(
             this,
             { _, hourOfDay, minute ->
-                selectedDueTime = makeDateTime(dueDate, hourOfDay, minute)
-                updateTimeButton()
+                formDueTime = makeDateTime(dueDate, hourOfDay, minute)
             },
             currentTime.get(Calendar.HOUR_OF_DAY),
             currentTime.get(Calendar.MINUTE),
@@ -184,123 +242,57 @@ class AddEditTaskActivity : AppCompatActivity() {
         ).show()
     }
 
-    private fun saveTask() {
-        val title = binding.titleEditText.text?.toString().orEmpty()
-        val description = binding.descriptionEditText.text?.toString().orEmpty()
-        val dueDate = selectedDueDate
+    private fun saveTask(title: String, description: String) {
+        val trimmedTitle = title.trim()
+        val trimmedDescription = description.trim()
+        val dueDate = formDueDate
 
-        binding.titleEditText.error = null
-        binding.descriptionEditText.error = null
-
-        if (title.isBlank()) {
-            binding.titleEditText.error = "Vui lòng nhập tiêu đề."
-            binding.titleEditText.requestFocus()
+        if (trimmedTitle.isBlank()) {
+            Toast.makeText(this, "Please enter task title.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        if (title.length > 200) {
-            binding.titleEditText.error = "Tiêu đề tối đa 200 ký tự."
+        if (trimmedTitle.length > 200) {
+            Toast.makeText(this, "Title maximum 200 characters.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        if (description.length > 1000) {
-            binding.descriptionEditText.error = "Mô tả tối đa 1000 ký tự."
+        if (trimmedDescription.length > 1000) {
+            Toast.makeText(this, "Description maximum 1000 characters.", Toast.LENGTH_SHORT).show()
             return
         }
 
         if (dueDate == null) {
-            Toast.makeText(this, "Vui lòng chọn ngày hạn.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Please select a due date.", Toast.LENGTH_SHORT).show()
             return
         }
 
         if (!isEditMode && dueDate < startOfDay(System.currentTimeMillis())) {
-            Toast.makeText(this, "Ngày hạn không được ở quá khứ.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Due date cannot be in the past.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val time = selectedDueTime ?: 0L
+        val time = formDueTime ?: 0L
         if (
             time > 0L &&
             startOfDay(dueDate) == startOfDay(System.currentTimeMillis()) &&
             time <= System.currentTimeMillis()
         ) {
-            Toast.makeText(this, "Giờ hạn phải ở tương lai.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Due time must be in the future.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val priority = selectedValue(
-            binding.prioritySpinner,
-            priorities,
-            Priority.MEDIUM
-        )
-        val status = selectedValue(
-            binding.statusSpinner,
-            statuses,
-            TaskStatus.TODO
-        )
-        val recurrence = selectedValue(
-            binding.recurrenceSpinner,
-            recurrenceTypes,
-            RecurrenceType.NONE
-        )
-        val reminderMinutes = reminderValues.getOrElse(
-            binding.reminderSpinner.selectedItemPosition
-        ) { 0 }
-
         viewModel.saveTask(
             taskId = if (isEditMode) taskId else -1L,
-            title = title,
-            description = description,
+            title = trimmedTitle,
+            description = trimmedDescription,
             dueDate = startOfDay(dueDate),
             dueTime = time,
-            priority = priority,
-            status = status,
-            recurrenceType = recurrence,
-            reminderMinutes = reminderMinutes
+            priority = formPriority,
+            status = formStatus,
+            recurrenceType = formRecurrence,
+            reminderMinutes = formReminderMinutes
         )
-    }
-
-    private fun populateForm(task: Task) {
-        binding.titleEditText.setText(task.title)
-        binding.descriptionEditText.setText(task.description)
-
-        selectedDueDate = task.dueDate.takeIf { it > 0L }
-        selectedDueTime = task.dueTime.takeIf { it > 0L }
-
-        updateDateButton()
-        updateTimeButton()
-
-        binding.prioritySpinner.setSelection(
-            priorities.indexOf(task.priority).coerceAtLeast(0)
-        )
-        binding.statusSpinner.setSelection(
-            statuses.indexOf(task.status).coerceAtLeast(0)
-        )
-        binding.recurrenceSpinner.setSelection(
-            recurrenceTypes.indexOf(task.recurrenceType).coerceAtLeast(0)
-        )
-
-        val reminderIndex = reminderValues.indexOf(task.reminderMinutes)
-        binding.reminderSpinner.setSelection(reminderIndex.coerceAtLeast(0))
-    }
-
-    private fun updateDateButton() {
-        val date = selectedDueDate
-        binding.dueDateButton.text = if (date == null) {
-            "Chọn ngày hạn"
-        } else {
-            SimpleDateFormat("EEE, dd/MM/yyyy", Locale.getDefault()).format(Date(date))
-        }
-    }
-
-    private fun updateTimeButton() {
-        val time = selectedDueTime
-        binding.dueTimeButton.text = if (time == null) {
-            "Chọn giờ hạn (không bắt buộc)"
-        } else {
-            "Giờ hạn: " +
-                    SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(time))
-        }
     }
 
     private fun makeDate(year: Int, month: Int, day: Int): Long =
@@ -311,10 +303,7 @@ class AddEditTaskActivity : AppCompatActivity() {
         }.timeInMillis
 
     private fun makeDateTime(dateMillis: Long, hour: Int, minute: Int): Long {
-        val date = Calendar.getInstance().apply {
-            timeInMillis = dateMillis
-        }
-
+        val date = Calendar.getInstance().apply { timeInMillis = dateMillis }
         return Calendar.getInstance().apply {
             clear()
             set(
@@ -338,42 +327,548 @@ class AddEditTaskActivity : AppCompatActivity() {
             set(Calendar.MILLISECOND, 0)
         }.timeInMillis
 
-    private fun enumLabel(value: String): String =
-        value.lowercase(Locale.getDefault())
-            .replaceFirstChar { it.titlecase(Locale.getDefault()) }
-
-    private fun <T> setSpinnerItems(
-        spinner: Spinner,
-        values: Array<T>,
-        label: (T) -> String
-    ) {
-        val adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_item,
-            values.map(label)
-        )
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinner.adapter = adapter
-    }
-
-    private fun setStringSpinnerItems(spinner: Spinner, values: List<String>) {
-        val adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_item,
-            values
-        )
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinner.adapter = adapter
-    }
-
-    private fun <T> selectedValue(
-        spinner: Spinner,
-        values: Array<T>,
-        fallback: T
-    ): T = values.getOrNull(spinner.selectedItemPosition) ?: fallback
-
     companion object {
-        // Dùng cùng key "extra_task_id" với Constants.EXTRA_TASK_ID trong source.
         const val EXTRA_TASK_ID = "extra_task_id"
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditTaskContent(
+    isEditMode: Boolean,
+    initialTitle: String,
+    initialDescription: String,
+    dueDate: Long?,
+    dueTime: Long?,
+    priority: Priority,
+    onPriorityChange: (Priority) -> Unit,
+    status: TaskStatus,
+    onStatusChange: (TaskStatus) -> Unit,
+    recurrence: RecurrenceType,
+    onRecurrenceChange: (RecurrenceType) -> Unit,
+    reminderMinutes: Int,
+    onReminderChange: (Int) -> Unit,
+    isSaving: Boolean,
+    onPickDate: () -> Unit,
+    onPickTime: () -> Unit,
+    onSave: (String, String) -> Unit,
+    onBack: () -> Unit
+) {
+    val focusManager = LocalFocusManager.current
+    var titleValue by remember(initialTitle) {
+        mutableStateOf(TextFieldValue(initialTitle, TextRange(initialTitle.length)))
+    }
+    var descriptionValue by remember(initialDescription) {
+        mutableStateOf(TextFieldValue(initialDescription, TextRange(initialDescription.length)))
+    }
+
+    var statusDropdownExpanded by remember { mutableStateOf(false) }
+    var reminderDropdownExpanded by remember { mutableStateOf(false) }
+
+    fun formatDate(millis: Long?): String {
+        if (millis == null || millis <= 0L) return "Select due date"
+        val sdf = SimpleDateFormat("EEE, MMM dd, yyyy", Locale.US)
+        return sdf.format(Date(millis))
+    }
+
+    fun formatTime(millis: Long?): String {
+        if (millis == null || millis <= 0L) return "Select due time (optional)"
+        val sdf = SimpleDateFormat("hh:mm a", Locale.US)
+        return "Due time: " + sdf.format(Date(millis))
+    }
+
+    fun reminderLabel(minutes: Int): String {
+        return when (minutes) {
+            0 -> "No reminder"
+            5 -> "5 mins before"
+            10 -> "10 mins before"
+            15 -> "15 mins before"
+            30 -> "30 mins before"
+            60 -> "1 hour before"
+            else -> "$minutes mins before"
+        }
+    }
+
+    fun statusLabel(st: TaskStatus): String {
+        return when (st) {
+            TaskStatus.TODO -> "Todo"
+            TaskStatus.IN_PROGRESS -> "In Progress"
+            TaskStatus.COMPLETED -> "Completed"
+            TaskStatus.OVERDUE -> "Overdue"
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF8FAFC))
+            .statusBarsPadding()
+            .navigationBarsPadding()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 12.dp)
+        ) {
+            // ── Top Navigation Bar ──────────────────────────────────────────
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color(0xFF1E293B),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "TaskFlow",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TaskFlowPrimary,
+                    modifier = Modifier
+                        .clickable(onClick = onBack)
+                        .padding(vertical = 8.dp)
+                )
+            }
+
+            // ── Screen Title & Subtitle ─────────────────────────────────────
+            Text(
+                text = if (isEditMode) "Edit Task" else "Create Task",
+                fontSize = 26.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1E293B)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Update task details, deadline, priority, and reminders.",
+                fontSize = 13.sp,
+                color = Color(0xFF64748B)
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // ── Card 1: Title & Description ─────────────────────────────────
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column(modifier = Modifier.padding(18.dp)) {
+                    Text(
+                        text = "TASK TITLE",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF94A3B8),
+                        letterSpacing = 0.5.sp
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    TextField(
+                        value = titleValue,
+                        onValueChange = { titleValue = it },
+                        placeholder = {
+                            Text("e.g., Chuẩn bị slide, Team meeting...", color = Color(0xFF9CA3AF), fontSize = 15.sp)
+                        },
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Sentences,
+                            keyboardType = KeyboardType.Text,
+                            autoCorrectEnabled = false
+                        ),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            focusedIndicatorColor = TaskFlowPrimary,
+                            unfocusedIndicatorColor = Color(0xFFF1F5F9)
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+                    HorizontalDivider(color = Color(0xFFF1F5F9), thickness = 1.dp)
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = "TASK DESCRIPTION",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF94A3B8),
+                        letterSpacing = 0.5.sp
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    TextField(
+                        value = descriptionValue,
+                        onValueChange = { descriptionValue = it },
+                        placeholder = {
+                            Text("Add detailed notes, ghi chú chi tiết (optional)...", color = Color(0xFF9CA3AF), fontSize = 14.sp)
+                        },
+                        minLines = 3,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Sentences,
+                            keyboardType = KeyboardType.Text,
+                            autoCorrectEnabled = false
+                        ),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ── Card 2: Due Date & Due Time ─────────────────────────────────
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column(modifier = Modifier.padding(18.dp)) {
+                    Text(
+                        text = "SCHEDULE & DEADLINE",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF94A3B8),
+                        letterSpacing = 0.5.sp
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        // Date picker button
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(12.dp))
+                                .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(12.dp))
+                                .background(Color(0xFFF8FAFC))
+                                .clickable { onPickDate() }
+                                .padding(vertical = 12.dp, horizontal = 14.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Outlined.CalendarToday,
+                                    contentDescription = null,
+                                    tint = TaskFlowPrimary,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text(
+                                        text = "Due Date",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color(0xFF94A3B8)
+                                    )
+                                    Text(
+                                        text = formatDate(dueDate),
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF1E293B)
+                                    )
+                                }
+                            }
+                        }
+
+                        // Time picker button
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(12.dp))
+                                .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(12.dp))
+                                .background(Color(0xFFF8FAFC))
+                                .clickable { onPickTime() }
+                                .padding(vertical = 12.dp, horizontal = 14.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Outlined.AccessTime,
+                                    contentDescription = null,
+                                    tint = TaskFlowPrimary,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text(
+                                        text = "Due Time",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color(0xFF94A3B8)
+                                    )
+                                    Text(
+                                        text = formatTime(dueTime),
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF1E293B)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ── Card 3: Priority Selection ──────────────────────────────────
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column(modifier = Modifier.padding(18.dp)) {
+                    Text(
+                        text = "PRIORITY",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF6B7280),
+                        letterSpacing = 0.5.sp
+                    )
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf(
+                            Priority.LOW to "Low",
+                            Priority.MEDIUM to "Medium",
+                            Priority.HIGH to "High",
+                            Priority.URGENT to "Urgent"
+                        ).forEach { (p, label) ->
+                            val isSelected = priority == p
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(44.dp)
+                                    .clip(RoundedCornerShape(22.dp))
+                                    .clickable { onPriorityChange(p) },
+                                shape = RoundedCornerShape(22.dp),
+                                color = if (isSelected) TaskFlowPrimary else Color.Transparent,
+                                border = if (isSelected) null else BorderStroke(1.dp, Color(0xFFE5E7EB))
+                            ) {
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    Text(
+                                        text = label,
+                                        fontSize = 13.sp,
+                                        maxLines = 1,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) Color.White else Color(0xFF374151)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ── Card 4: Status, Reminder & Recurrence ────────────────────────
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column(modifier = Modifier.padding(18.dp)) {
+                    // Status row
+                    Text(
+                        text = "TASK STATUS",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF94A3B8),
+                        letterSpacing = 0.5.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    ExposedDropdownMenuBox(
+                        expanded = statusDropdownExpanded,
+                        onExpandedChange = { statusDropdownExpanded = !statusDropdownExpanded }
+                    ) {
+                        OutlinedTextField(
+                            value = statusLabel(status),
+                            onValueChange = {},
+                            readOnly = true,
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = statusDropdownExpanded) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(MenuAnchorType.PrimaryNotEditable),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        ExposedDropdownMenu(
+                            expanded = statusDropdownExpanded,
+                            onDismissRequest = { statusDropdownExpanded = false }
+                        ) {
+                            listOf(
+                                TaskStatus.TODO,
+                                TaskStatus.IN_PROGRESS,
+                                TaskStatus.COMPLETED
+                            ).forEach { st ->
+                                DropdownMenuItem(
+                                    text = { Text(statusLabel(st)) },
+                                    onClick = {
+                                        onStatusChange(st)
+                                        statusDropdownExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+                    HorizontalDivider(color = Color(0xFFF1F5F9), thickness = 1.dp)
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Reminder row
+                    Text(
+                        text = "REMIND BEFORE",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF94A3B8),
+                        letterSpacing = 0.5.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    ExposedDropdownMenuBox(
+                        expanded = reminderDropdownExpanded,
+                        onExpandedChange = { reminderDropdownExpanded = !reminderDropdownExpanded }
+                    ) {
+                        OutlinedTextField(
+                            value = reminderLabel(reminderMinutes),
+                            onValueChange = {},
+                            readOnly = true,
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = reminderDropdownExpanded) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(MenuAnchorType.PrimaryNotEditable),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        ExposedDropdownMenu(
+                            expanded = reminderDropdownExpanded,
+                            onDismissRequest = { reminderDropdownExpanded = false }
+                        ) {
+                            listOf(0, 5, 10, 15, 30, 60).forEach { mins ->
+                                DropdownMenuItem(
+                                    text = { Text(reminderLabel(mins)) },
+                                    onClick = {
+                                        onReminderChange(mins)
+                                        reminderDropdownExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+                    HorizontalDivider(color = Color(0xFFF1F5F9), thickness = 1.dp)
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Recurrence row
+                    Text(
+                        text = "RECURRENCE",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF94A3B8),
+                        letterSpacing = 0.5.sp
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf(
+                            RecurrenceType.NONE to "None",
+                            RecurrenceType.DAILY to "Daily",
+                            RecurrenceType.WEEKLY to "Weekly",
+                            RecurrenceType.MONTHLY to "Monthly"
+                        ).forEach { (rec, label) ->
+                            val isSelected = recurrence == rec
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(38.dp)
+                                    .clip(RoundedCornerShape(19.dp))
+                                    .clickable { onRecurrenceChange(rec) },
+                                shape = RoundedCornerShape(19.dp),
+                                color = if (isSelected) TaskFlowPrimary else Color(0xFFF1F5F9)
+                            ) {
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    Text(
+                                        text = label,
+                                        fontSize = 11.sp,
+                                        maxLines = 1,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) Color.White else Color(0xFF475569)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // ── Bottom Action Button ────────────────────────────────────────
+            Button(
+                onClick = {
+                    focusManager.clearFocus()
+                    onSave(titleValue.text, descriptionValue.text)
+                },
+                enabled = !isSaving,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = TaskFlowPrimary)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Check,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = if (isSaving) "Saving..." else if (isEditMode) "Update Task" else "Save Task",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+        }
     }
 }

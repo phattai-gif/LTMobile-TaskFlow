@@ -1,5 +1,9 @@
 package com.team.taskmanagementapp.ui.settings
 
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings as AndroidSettings
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,11 +29,12 @@ import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.Dialpad
-import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.Fingerprint
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Upload
+import androidx.compose.material.icons.outlined.Restore
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -54,19 +59,29 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.google.firebase.auth.FirebaseAuth
+import com.team.taskmanagementapp.ui.pin.PinScreenMode
+import com.team.taskmanagementapp.ui.pin.SetPinScreen
 import com.team.taskmanagementapp.ui.theme.TaskFlowPrimary
+import com.team.taskmanagementapp.util.PinManager
 import java.util.Locale
 
 @Composable
 fun SettingsScreen(
     modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
-    onLogout: () -> Unit = {}
+    onLogout: () -> Unit = {},
+    onNavigateToExport: () -> Unit = {},
+    onNavigateToRestore: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val pinManager = remember { PinManager.getInstance(context) }
     val auth = remember { FirebaseAuth.getInstance() }
     var currentUser by remember { mutableStateOf(auth.currentUser) }
 
@@ -80,13 +95,13 @@ fun SettingsScreen(
         }
     }
 
-    // Preferences states
-    var pinLockEnabled by rememberSaveable { mutableStateOf(true) }
-    var biometricEnabled by rememberSaveable { mutableStateOf(false) }
+    // Security & Preferences states
+    var pinLockEnabled by remember { mutableStateOf(pinManager.isPinLockEnabled()) }
+    var biometricEnabled by remember { mutableStateOf(pinManager.isBiometricEnabled()) }
     var taskRemindersEnabled by rememberSaveable { mutableStateOf(true) }
-    var dailySummaryEnabled by rememberSaveable { mutableStateOf(false) }
 
-    // Dialog states
+    // Dialog & PIN Screen states
+    var activePinMode by remember { mutableStateOf<PinScreenMode?>(null) }
     var showLogoutDialog by rememberSaveable { mutableStateOf(false) }
     var featureNoticeMessage by rememberSaveable { mutableStateOf<String?>(null) }
 
@@ -167,6 +182,41 @@ fun SettingsScreen(
                 }
             }
         )
+    }
+
+    if (activePinMode != null) {
+        Dialog(
+            onDismissRequest = { activePinMode = null },
+            properties = DialogProperties(
+                usePlatformDefaultWidth = false,
+                dismissOnBackPress = true
+            )
+        ) {
+            SetPinScreen(
+                mode = activePinMode!!,
+                onSuccess = {
+                    val completedMode = activePinMode
+                    activePinMode = null
+                    when (completedMode) {
+                        PinScreenMode.SET_NEW -> {
+                            pinLockEnabled = true
+                            featureNoticeMessage = "PIN lock has been enabled."
+                        }
+                        PinScreenMode.CHANGE -> {
+                            featureNoticeMessage = "Security PIN updated successfully."
+                        }
+                        PinScreenMode.VERIFY_TO_DISABLE -> {
+                            pinLockEnabled = false
+                            biometricEnabled = false
+                            pinManager.setBiometricEnabled(false)
+                            featureNoticeMessage = "PIN lock has been disabled."
+                        }
+                        PinScreenMode.UNLOCK, null -> {}
+                    }
+                },
+                onBack = { activePinMode = null }
+            )
+        }
     }
 
     Column(
@@ -331,25 +381,50 @@ fun SettingsScreen(
                     SettingsSwitchRow(
                         icon = Icons.Outlined.Lock,
                         title = "PIN Lock",
-                        subtitle = "Require a PIN when opening TaskFlow",
+                        subtitle = if (pinLockEnabled) "Require a PIN when opening TaskFlow" else "Enable to protect your tasks with a PIN",
                         checked = pinLockEnabled,
-                        onCheckedChange = { pinLockEnabled = it }
+                        onCheckedChange = { enable ->
+                            if (enable) {
+                                if (pinManager.hasPin()) {
+                                    pinManager.setPinLockEnabled(true)
+                                    pinLockEnabled = true
+                                } else {
+                                    activePinMode = PinScreenMode.SET_NEW
+                                }
+                            } else {
+                                activePinMode = PinScreenMode.VERIFY_TO_DISABLE
+                            }
+                        }
                     )
                     HorizontalDivider(color = Color(0xFFF1F5F9), thickness = 1.dp)
                     SettingsClickableRow(
                         icon = Icons.Outlined.Dialpad,
                         title = "Change PIN",
-                        subtitle = "Create or update your security PIN",
-                        onClick = { featureNoticeMessage = "PIN modification will be available in next update." }
+                        subtitle = if (pinLockEnabled) "Create or update your security PIN" else "Enable PIN Lock to change your PIN",
+                        enabled = pinLockEnabled,
+                        onClick = {
+                            if (pinLockEnabled) {
+                                activePinMode = PinScreenMode.CHANGE
+                            } else {
+                                featureNoticeMessage = "Please turn on PIN Lock first."
+                            }
+                        }
                     )
                     HorizontalDivider(color = Color(0xFFF1F5F9), thickness = 1.dp)
                     SettingsSwitchRow(
                         icon = Icons.Outlined.Fingerprint,
-                        iconTint = Color(0xFF2563EB),
+                        iconTint = if (pinLockEnabled) Color(0xFF2563EB) else Color(0xFF94A3B8),
                         title = "Biometric Unlock",
-                        subtitle = "Unlock with fingerprint or face recognition",
-                        checked = biometricEnabled,
-                        onCheckedChange = { biometricEnabled = it }
+                        subtitle = if (pinLockEnabled) "Unlock with fingerprint or face recognition" else "Enable PIN Lock to use biometric unlock",
+                        checked = biometricEnabled && pinLockEnabled,
+                        onCheckedChange = { enable ->
+                            if (pinLockEnabled) {
+                                biometricEnabled = enable
+                                pinManager.setBiometricEnabled(enable)
+                            } else {
+                                featureNoticeMessage = "Please turn on PIN Lock first."
+                            }
+                        }
                     )
                 }
             }
@@ -372,18 +447,32 @@ fun SettingsScreen(
                         onCheckedChange = { taskRemindersEnabled = it }
                     )
                     HorizontalDivider(color = Color(0xFFF1F5F9), thickness = 1.dp)
-                    SettingsSwitchRow(
-                        icon = Icons.Outlined.AccessTime,
-                        title = "Daily Summary",
-                        subtitle = "Receive a daily overview of your tasks",
-                        checked = dailySummaryEnabled,
-                        onCheckedChange = { dailySummaryEnabled = it }
+                    SettingsClickableRow(
+                        icon = Icons.Outlined.Settings,
+                        title = "System permissions",
+                        subtitle = "Manage notification access in Android",
+                        onClick = {
+                            try {
+                                val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                    Intent(AndroidSettings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                                        putExtra(AndroidSettings.EXTRA_APP_PACKAGE, context.packageName)
+                                    }
+                                } else {
+                                    Intent(AndroidSettings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                        data = Uri.fromParts("package", context.packageName, null)
+                                    }
+                                }
+                                context.startActivity(intent)
+                            } catch (_: Exception) {
+                                featureNoticeMessage = "Unable to open system notification settings."
+                            }
+                        }
                     )
                 }
             }
 
-            // ── Section 3: Backup & Restore ───────────────────────────────────
-            SettingsSectionHeader(title = "Backup & Restore")
+            // ── Section 3: Data ───────────────────────────────────────────────
+            SettingsSectionHeader(title = "Data")
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -393,17 +482,17 @@ fun SettingsScreen(
             ) {
                 Column {
                     SettingsClickableRow(
-                        icon = Icons.Outlined.Upload,
-                        title = "Export Tasks",
-                        subtitle = "Save your tasks to a backup file",
-                        onClick = { featureNoticeMessage = "Task export completed. File saved to downloads." }
+                        icon = Icons.Outlined.FileDownload,
+                        title = "Export JSON backup",
+                        subtitle = "Save a copy of your task data",
+                        onClick = onNavigateToExport
                     )
                     HorizontalDivider(color = Color(0xFFF1F5F9), thickness = 1.dp)
                     SettingsClickableRow(
-                        icon = Icons.Outlined.Download,
-                        title = "Import Tasks",
+                        icon = Icons.Outlined.Restore,
+                        title = "Restore JSON backup",
                         subtitle = "Import tasks from a backup file",
-                        onClick = { featureNoticeMessage = "Select a valid TaskFlow JSON backup file to import." }
+                        onClick = onNavigateToRestore
                     )
                 }
             }
@@ -572,7 +661,8 @@ private fun SettingsClickableRow(
     title: String,
     subtitle: String,
     onClick: () -> Unit,
-    iconTint: Color = Color(0xFF4B5563)
+    enabled: Boolean = true,
+    iconTint: Color = if (enabled) Color(0xFF4B5563) else Color(0xFFCBD5E1)
 ) {
     Row(
         modifier = Modifier
@@ -593,19 +683,19 @@ private fun SettingsClickableRow(
                 text = title,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF1F2937)
+                color = if (enabled) Color(0xFF1F2937) else Color(0xFF94A3B8)
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = subtitle,
                 fontSize = 12.sp,
-                color = Color(0xFF6B7280)
+                color = if (enabled) Color(0xFF6B7280) else Color(0xFF94A3B8)
             )
         }
         Icon(
             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
             contentDescription = null,
-            tint = Color(0xFF9CA3AF),
+            tint = if (enabled) Color(0xFF9CA3AF) else Color(0xFFE2E8F0),
             modifier = Modifier.size(20.dp)
         )
     }

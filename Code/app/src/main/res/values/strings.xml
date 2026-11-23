@@ -30,8 +30,8 @@
     <string name="theme_demo_dialog_title">Xác nhận kiểm tra</string>
     <string name="theme_demo_dialog_message">Bạn muốn xác nhận thao tác mẫu này?</string>
     <string name="theme_demo_confirmed">Đã xác nhận thao tác mẫu.</string>
-    <string name="task_title_label">Tiêu đề công việc</string>
-    <string name="task_description_label">Mô tả</string>
+    <string name="task_title_label">Task Title</string>
+    <string name="task_description_label">Description</string>
     <!-- Màn hình Home -->
     <string name="home_today_tasks">Today\'s Tasks</string>
     <string name="home_upcoming_tasks">Upcoming</string>
@@ -61,7 +61,7 @@
     <string name="task_status_in_progress">IN PROGRESS</string>
     <string name="task_status_completed">COMPLETED</string>
     <string name="task_status_overdue">OVERDUE</string>
-    <string name="action_back">Quay lại</string>
+    <string name="action_back">Back</string>
     <string name="action_delete">Xóa</string>
     <string name="task_detail_not_found">Công việc này không còn tồn tại.</string>
 
@@ -136,9 +136,9 @@
     <!-- Create Task Screen Strings (Figma Wireframe) -->
     <string name="create_task_screen_title">Create New Task</string>
     <string name="create_task_title_label_upper">TASK TITLE</string>
-    <string name="create_task_title_hint">e.g., Database Migration</string>
+    <string name="create_task_title_hint">e.g., Chuẩn bị slide, Team meeting...</string>
     <string name="create_task_desc_label_upper">DESCRIPTION</string>
-    <string name="create_task_desc_hint">Add notes, links, or context...</string>
+    <string name="create_task_desc_hint">Add notes, ghi chú chi tiết hoặc context...</string>
     <string name="create_task_schedule_label">SCHEDULE</string>
     <string name="create_task_priority_label">PRIORITY</string>
     <string name="create_task_initial_status_label">INITIAL STATUS</string>

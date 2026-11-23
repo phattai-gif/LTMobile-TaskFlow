@@ -15,6 +15,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import com.team.taskmanagementapp.ui.components.TaskFlowTextField
 import com.team.taskmanagementapp.ui.theme.TaskFlowDimensions
 import com.team.taskmanagementapp.R
@@ -28,8 +30,12 @@ fun TaskDetailEditDialog(
     onSave: (String, String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var title by rememberSaveable(task.id) { mutableStateOf(task.title) }
-    var description by rememberSaveable(task.id) { mutableStateOf(task.description) }
+    var titleValue by rememberSaveable(task.id, stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue(task.title, TextRange(task.title.length)))
+    }
+    var descriptionValue by rememberSaveable(task.id, stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue(task.description, TextRange(task.description.length)))
+    }
 
     AlertDialog(
         onDismissRequest = { if (!isBusy) onDismiss() },
@@ -41,17 +47,17 @@ fun TaskDetailEditDialog(
                 verticalArrangement = Arrangement.spacedBy(TaskFlowDimensions.spacing12)
             ) {
                 TaskFlowTextField(
-                    value = title,
-                    onValueChange = { title = it },
+                    value = titleValue,
+                    onValueChange = { titleValue = it },
                     label = stringResource(R.string.task_title_label),
                     enabled = !isBusy,
-                    errorMessage = if (title.isBlank()) {
+                    errorMessage = if (titleValue.text.isBlank()) {
                         stringResource(R.string.task_detail_title_required)
                     } else null
                 )
                 TaskFlowTextField(
-                    value = description,
-                    onValueChange = { description = it },
+                    value = descriptionValue,
+                    onValueChange = { descriptionValue = it },
                     label = stringResource(R.string.task_description_label),
                     singleLine = false,
                     enabled = !isBusy
@@ -66,8 +72,8 @@ fun TaskDetailEditDialog(
         },
         confirmButton = {
             TextButton(
-                onClick = { onSave(title, description) },
-                enabled = !isBusy && title.isNotBlank()
+                onClick = { onSave(titleValue.text, descriptionValue.text) },
+                enabled = !isBusy && titleValue.text.isNotBlank()
             ) {
                 Text(stringResource(R.string.task_detail_save))
             }

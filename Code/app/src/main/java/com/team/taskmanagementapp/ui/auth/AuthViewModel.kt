@@ -1,14 +1,18 @@
 package com.team.taskmanagementapp.ui.auth
 
+import android.os.Bundle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.UserProfileChangeRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 data class AuthUiState(
     val isLoading: Boolean = false,
@@ -53,22 +57,45 @@ class AuthViewModel(
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         auth.signInWithEmailAndPassword(trimmedEmail, pass)
             .addOnSuccessListener { result ->
-                if (result.user?.displayName.isNullOrBlank()) {
+                val user = result.user
+
+                // Track immediate login event in Firebase Analytics
+                try {
+                    val context = auth.app.applicationContext
+                    val analytics = FirebaseAnalytics.getInstance(context)
+                    analytics.setUserId(user?.uid)
+                    analytics.setUserProperty("user_email", trimmedEmail)
+                    analytics.setUserProperty("auth_provider", "password")
+                    val params = Bundle().apply {
+                        putString(FirebaseAnalytics.Param.METHOD, "email")
+                    }
+                    analytics.logEvent(FirebaseAnalytics.Event.LOGIN, params)
+                } catch (_: Exception) {}
+
+                if (user != null && user.displayName.isNullOrBlank()) {
                     val defaultName = trimmedEmail.substringBefore('@')
                         .split('.', '_', '-')
                         .filter { it.isNotBlank() }
-                        .joinToString(" ") { it.replaceFirstChar { c -> if (c.isLowerCase()) c.titlecase(java.util.Locale.getDefault()) else c.toString() } }
-                    val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
+                        .joinToString(" ") { it.replaceFirstChar { c -> if (c.isLowerCase()) c.titlecase(Locale.getDefault()) else c.toString() } }
+                    val profileUpdates = UserProfileChangeRequest.Builder()
                         .setDisplayName(defaultName)
                         .build()
-                    result.user?.updateProfile(profileUpdates)
+                    user.updateProfile(profileUpdates).addOnCompleteListener {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            user = auth.currentUser,
+                            errorMessage = null
+                        )
+                        onSuccess()
+                    }
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        user = user,
+                        errorMessage = null
+                    )
+                    onSuccess()
                 }
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    user = result.user,
-                    errorMessage = null
-                )
-                onSuccess()
             }
             .addOnFailureListener { exception ->
                 _uiState.value = _uiState.value.copy(
@@ -109,20 +136,43 @@ class AuthViewModel(
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         auth.createUserWithEmailAndPassword(trimmedEmail, pass)
             .addOnSuccessListener { result ->
+                val user = result.user
+
+                // Track registration & active user in Firebase Analytics
+                try {
+                    val context = auth.app.applicationContext
+                    val analytics = FirebaseAnalytics.getInstance(context)
+                    analytics.setUserId(user?.uid)
+                    analytics.setUserProperty("user_email", trimmedEmail)
+                    analytics.setUserProperty("auth_provider", "password")
+                    val params = Bundle().apply {
+                        putString(FirebaseAnalytics.Param.METHOD, "email")
+                    }
+                    analytics.logEvent(FirebaseAnalytics.Event.SIGN_UP, params)
+                } catch (_: Exception) {}
+
                 val defaultName = trimmedEmail.substringBefore('@')
                     .split('.', '_', '-')
                     .filter { it.isNotBlank() }
-                    .joinToString(" ") { it.replaceFirstChar { c -> if (c.isLowerCase()) c.titlecase(java.util.Locale.getDefault()) else c.toString() } }
-                val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
+                    .joinToString(" ") { it.replaceFirstChar { c -> if (c.isLowerCase()) c.titlecase(Locale.getDefault()) else c.toString() } }
+                val profileUpdates = UserProfileChangeRequest.Builder()
                     .setDisplayName(defaultName)
                     .build()
-                result.user?.updateProfile(profileUpdates)
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    user = result.user,
-                    errorMessage = null
-                )
-                onSuccess()
+                user?.updateProfile(profileUpdates)?.addOnCompleteListener {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        user = auth.currentUser,
+                        errorMessage = null
+                    )
+                    onSuccess()
+                } ?: run {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        user = user,
+                        errorMessage = null
+                    )
+                    onSuccess()
+                }
             }
             .addOnFailureListener { exception ->
                 _uiState.value = _uiState.value.copy(
@@ -160,9 +210,24 @@ class AuthViewModel(
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         auth.signInWithCredential(credential)
             .addOnSuccessListener { result ->
+                val user = result.user
+
+                // Track Google login event in Firebase Analytics
+                try {
+                    val context = auth.app.applicationContext
+                    val analytics = FirebaseAnalytics.getInstance(context)
+                    analytics.setUserId(user?.uid)
+                    analytics.setUserProperty("user_email", user?.email ?: "")
+                    analytics.setUserProperty("auth_provider", "google.com")
+                    val params = Bundle().apply {
+                        putString(FirebaseAnalytics.Param.METHOD, "google")
+                    }
+                    analytics.logEvent(FirebaseAnalytics.Event.LOGIN, params)
+                } catch (_: Exception) {}
+
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    user = result.user,
+                    user = user,
                     errorMessage = null
                 )
                 onSuccess()
@@ -176,6 +241,11 @@ class AuthViewModel(
     }
 
     fun signOut() {
+        try {
+            val context = auth.app.applicationContext
+            val analytics = FirebaseAnalytics.getInstance(context)
+            analytics.setUserId(null)
+        } catch (_: Exception) {}
         auth.signOut()
         _uiState.value = AuthUiState(user = null)
     }

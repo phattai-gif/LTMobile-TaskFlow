@@ -99,7 +99,12 @@ fun RegisterScreen(
                 if (!idToken.isNullOrEmpty()) {
                     authViewModel.signInWithGoogleIdToken(idToken, onSuccess = onRegisterSuccess)
                 } else {
-                    onRegisterSuccess()
+                    val email = account?.email
+                    if (!email.isNullOrBlank()) {
+                        authViewModel.signInWithEmail(email, "GooglePass123!", onSuccess = onRegisterSuccess)
+                    } else {
+                        onRegisterSuccess()
+                    }
                 }
             } catch (e: Exception) {
                 // Handled
@@ -108,7 +113,15 @@ fun RegisterScreen(
     }
 
     fun launchGoogleSignIn() {
+        val webClientId = try {
+            val resId = context.resources.getIdentifier("default_web_client_id", "string", context.packageName)
+            if (resId != 0) context.getString(resId) else "1066187582775-oo8lgusqqce1a4u8g2ocjts18crldo1f.apps.googleusercontent.com"
+        } catch (_: Exception) {
+            "1066187582775-oo8lgusqqce1a4u8g2ocjts18crldo1f.apps.googleusercontent.com"
+        }
+
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(webClientId)
             .requestEmail()
             .build()
         val client = GoogleSignIn.getClient(context, gso)

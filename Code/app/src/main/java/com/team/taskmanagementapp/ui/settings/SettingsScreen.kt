@@ -43,6 +43,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,7 +68,17 @@ fun SettingsScreen(
     onLogout: () -> Unit = {}
 ) {
     val auth = remember { FirebaseAuth.getInstance() }
-    val currentUser = auth.currentUser
+    var currentUser by remember { mutableStateOf(auth.currentUser) }
+
+    DisposableEffect(auth) {
+        val listener = FirebaseAuth.AuthStateListener { fbAuth ->
+            currentUser = fbAuth.currentUser
+        }
+        auth.addAuthStateListener(listener)
+        onDispose {
+            auth.removeAuthStateListener(listener)
+        }
+    }
 
     // Preferences states
     var pinLockEnabled by rememberSaveable { mutableStateOf(true) }
@@ -84,9 +95,10 @@ fun SettingsScreen(
         currentUser?.providerData?.any { it.providerId == "google.com" } == true
     }
     val resolvedEmail = remember(currentUser) {
-        currentUser?.email?.takeIf { it.isNotBlank() } ?: "user@taskflow.app"
+        currentUser?.email?.takeIf { it.isNotBlank() }
+            ?: if (currentUser != null) "" else "user@taskflow.app"
     }
-    val resolvedName = remember(currentUser) {
+    val resolvedName = remember(currentUser, resolvedEmail) {
         currentUser?.displayName?.takeIf { it.isNotBlank() }
             ?: run {
                 val prefix = resolvedEmail.substringBefore('@')
@@ -95,8 +107,10 @@ fun SettingsScreen(
                     words.joinToString(" ") { word ->
                         word.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
                     }
-                } else {
+                } else if (prefix.isNotBlank()) {
                     prefix.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+                } else {
+                    "User"
                 }
             }
     }
@@ -160,21 +174,12 @@ fun SettingsScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // ── Top Bar: Back Button & Title ──────────────────────────────────────
-        Row(
+        // ── Top Bar: Title ───────────────────────────────────────────────────
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 20.dp, vertical = 14.dp)
         ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color(0xFF1F2937)
-                )
-            }
-            Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = "Settings",
                 fontSize = 24.sp,
@@ -235,7 +240,32 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 // Linked Account Badge Pill
-                if (isGoogleAccount) {
+                if (currentUser == null) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color(0xFFF3F4F6),
+                        border = BorderStroke(1.dp, Color(0xFFE5E7EB))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "•",
+                                color = Color(0xFF6B7280),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Guest Mode",
+                                color = Color(0xFF4B5563),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                } else if (isGoogleAccount) {
                     Surface(
                         shape = RoundedCornerShape(12.dp),
                         color = Color(0xFFECFDF5),

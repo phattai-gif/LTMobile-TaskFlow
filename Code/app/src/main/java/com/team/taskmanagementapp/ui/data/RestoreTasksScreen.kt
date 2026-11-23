@@ -615,11 +615,16 @@ fun RestoreTasksScreen(
                         isRestoring = true
                         scope.launch {
                             try {
-                                val count = backupManager.restoreBackupFromJson(repository, content)
+                                val count = backupManager.restoreBackupFromJson(
+                                    repository = repository,
+                                    jsonString = content,
+                                    mergeWithExisting = mergeTasksOption,
+                                    preserveHistory = preserveHistoryOption
+                                )
                                 restoredCount = count
                                 showSuccessDialog = true
-                            } catch (_: Exception) {
-                                snackbarHostState.showSnackbar("Invalid backup format or damaged JSON file.")
+                            } catch (e: Exception) {
+                                snackbarHostState.showSnackbar(e.localizedMessage ?: "Invalid backup format or damaged JSON file.")
                             } finally {
                                 isRestoring = false
                             }

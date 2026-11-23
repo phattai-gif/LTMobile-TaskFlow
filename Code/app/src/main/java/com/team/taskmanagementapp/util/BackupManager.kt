@@ -5,7 +5,9 @@ import android.content.SharedPreferences
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.team.taskmanagementapp.data.local.entity.Task
+import com.team.taskmanagementapp.data.model.ValidationResult
 import com.team.taskmanagementapp.data.repository.TaskRepository
+import com.team.taskmanagementapp.data.validator.BackupValidator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -78,15 +80,56 @@ class BackupManager private constructor(private val context: Context) {
         info
     }
 
-    suspend fun restoreBackupFromJson(repository: TaskRepository, jsonString: String): Int =
-        withContext(Dispatchers.IO) {
-            val type = object : TypeToken<List<Task>>() {}.type
-            val tasks: List<Task> = gson.fromJson(jsonString, type)
-            if (tasks.isNotEmpty()) {
-                repository.insertAllTasks(tasks)
-            }
-            tasks.size
+    suspend fun restoreBackupFromJson(
+        repository: TaskRepository,
+        jsonString: String,
+        mergeWithExisting: Boolean = true,
+        preserveHistory: Boolean = true
+    ): Int = withContext(Dispatchers.IO) {
+        // Thẩm định tính toàn vẹn 5 bước theo kiến trúc
+        val validation = BackupValidator.validate(jsonString)
+        if (validation is ValidationResult.Error) {
+            throw IllegalArgumentException("Tệp sao lưu không hợp lệ (Bước ${validation.step}): ${validation.message}")
         }
+
+        val type = object : TypeToken<List<Task>>() {}.type
+        val tasks: List<Task> = gson.fromJson(jsonString, type)
+        if (tasks.isEmpty()) {
+            return@withContext 0
+        }
+
+        val processedTasks = if (!preserveHistory) {
+            tasks.map { task ->
+                if (task.isCompleted) {
+                    task.copy(completedAt = null)
+                } else {
+                    task
+                }
+            }
+        } else {
+            tasks
+        }
+
+        if (!mergeWithExisting) {
+            repository.deleteAllTasks()
+        }
+
+        repository.insertAllTasks(processedTasks)
+        processedTasks.size
+    }
+
+    fun verifyBackupFile(filePath: String): ValidationResult {
+        val file = File(filePath)
+        if (!file.exists()) {
+            return ValidationResult.Error("Tệp sao lưu không tồn tại trên bộ nhớ thiết bị.", step = 1)
+        }
+        return BackupValidator.validate(file.readText())
+    }
+
+    fun getBackupFile(fileName: String): File? {
+        val file = File(backupDir, fileName)
+        return if (file.exists()) file else null
+    }
 
     fun getLastBackup(): BackupFileInfo? {
         val name = prefs.getString(KEY_LAST_BACKUP_NAME, null) ?: return getRecentBackups().firstOrNull()

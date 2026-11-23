@@ -1,5 +1,9 @@
 package com.team.taskmanagementapp.ui.settings
 
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings as AndroidSettings
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,6 +33,7 @@ import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Fingerprint
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Upload
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -92,7 +97,6 @@ fun SettingsScreen(
     var pinLockEnabled by remember { mutableStateOf(pinManager.isPinLockEnabled()) }
     var biometricEnabled by remember { mutableStateOf(pinManager.isBiometricEnabled()) }
     var taskRemindersEnabled by rememberSaveable { mutableStateOf(true) }
-    var dailySummaryEnabled by rememberSaveable { mutableStateOf(false) }
 
     // Dialog & PIN Screen states
     var activePinMode by remember { mutableStateOf<PinScreenMode?>(null) }
@@ -441,12 +445,26 @@ fun SettingsScreen(
                         onCheckedChange = { taskRemindersEnabled = it }
                     )
                     HorizontalDivider(color = Color(0xFFF1F5F9), thickness = 1.dp)
-                    SettingsSwitchRow(
-                        icon = Icons.Outlined.AccessTime,
-                        title = "Daily Summary",
-                        subtitle = "Receive a daily overview of your tasks",
-                        checked = dailySummaryEnabled,
-                        onCheckedChange = { dailySummaryEnabled = it }
+                    SettingsClickableRow(
+                        icon = Icons.Outlined.Settings,
+                        title = "System permissions",
+                        subtitle = "Manage notification access in Android",
+                        onClick = {
+                            try {
+                                val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                    Intent(AndroidSettings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                                        putExtra(AndroidSettings.EXTRA_APP_PACKAGE, context.packageName)
+                                    }
+                                } else {
+                                    Intent(AndroidSettings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                        data = Uri.fromParts("package", context.packageName, null)
+                                    }
+                                }
+                                context.startActivity(intent)
+                            } catch (_: Exception) {
+                                featureNoticeMessage = "Unable to open system notification settings."
+                            }
+                        }
                     )
                 }
             }

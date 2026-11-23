@@ -17,8 +17,11 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -73,6 +76,7 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
         RepositoryTaskDetailSource(repository, database)
     }
     val navController = rememberNavController()
+    var showAiAssistantBottomSheet by rememberSaveable { mutableStateOf(false) }
     val auth = remember { com.google.firebase.auth.FirebaseAuth.getInstance() }
     val startDestination = remember {
         if (auth.currentUser != null) TaskFlowRoutes.HOME else TaskFlowRoutes.WELCOME
@@ -130,11 +134,7 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
                 // Floating AI Chatbot Avatar at bottom right positioned cleanly above bottom bar
                 androidx.compose.material3.Surface(
                     onClick = {
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar(
-                                "AI Assistant is ready to help!"
-                            )
-                        }
+                        showAiAssistantBottomSheet = true
                     },
                     shape = CircleShape,
                     color = Color.Transparent,
@@ -297,5 +297,23 @@ fun TaskFlowApp(modifier: Modifier = Modifier) {
                 )
             }
         }
+    }
+
+    if (showAiAssistantBottomSheet) {
+        AiAssistantBottomSheet(
+            onDismissRequest = { showAiAssistantBottomSheet = false },
+            onNavigateToCreateTask = {
+                showAiAssistantBottomSheet = false
+                navController.navigate(TaskFlowRoutes.CREATE_TASK) {
+                    launchSingleTop = true
+                }
+            },
+            onNavigateToTodayTasks = {
+                showAiAssistantBottomSheet = false
+                navController.navigate(TaskFlowRoutes.HOME) {
+                    launchSingleTop = true
+                }
+            }
+        )
     }
 }

@@ -29,12 +29,12 @@ import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.Dialpad
-import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.Fingerprint
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Restore
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Upload
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -469,8 +469,8 @@ fun SettingsScreen(
                 }
             }
 
-            // ── Section 3: Backup & Restore ───────────────────────────────────
-            SettingsSectionHeader(title = "Backup & Restore")
+            // ── Section 3: Data ───────────────────────────────────────────────
+            SettingsSectionHeader(title = "Data")
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -480,15 +480,15 @@ fun SettingsScreen(
             ) {
                 Column {
                     SettingsClickableRow(
-                        icon = Icons.Outlined.Upload,
-                        title = "Export Tasks",
-                        subtitle = "Save your tasks to a backup file",
+                        icon = Icons.Outlined.FileDownload,
+                        title = "Export JSON backup",
+                        subtitle = "Save a copy of your task data",
                         onClick = { featureNoticeMessage = "Task export completed. File saved to downloads." }
                     )
                     HorizontalDivider(color = Color(0xFFF1F5F9), thickness = 1.dp)
                     SettingsClickableRow(
-                        icon = Icons.Outlined.Download,
-                        title = "Import Tasks",
+                        icon = Icons.Outlined.Restore,
+                        title = "Restore JSON backup",
                         subtitle = "Import tasks from a backup file",
                         onClick = { featureNoticeMessage = "Select a valid TaskFlow JSON backup file to import." }
                     )

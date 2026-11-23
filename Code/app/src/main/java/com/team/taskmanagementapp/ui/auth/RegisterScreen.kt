@@ -329,19 +329,37 @@ fun RegisterScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp)
-                    .shadow(4.dp, RoundedCornerShape(14.dp)),
+                    .shadow(
+                        elevation = if (uiState.isLoading) 2.dp else 6.dp,
+                        shape = RoundedCornerShape(14.dp),
+                        spotColor = TaskFlowPrimary.copy(alpha = 0.45f)
+                    ),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = TaskFlowPrimary,
-                    contentColor = Color.White
+                    contentColor = Color.White,
+                    disabledContainerColor = TaskFlowPrimary.copy(alpha = 0.85f),
+                    disabledContentColor = Color.White
                 )
             ) {
                 if (uiState.isLoading) {
-                    CircularProgressIndicator(
-                        color = Color.White,
-                        modifier = Modifier.size(24.dp),
-                        strokeWidth = 2.dp
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.5.dp
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = "Creating account…",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
                 } else {
                     Text(
                         text = stringResource(R.string.register_btn_signup),
@@ -379,10 +397,10 @@ fun RegisterScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp)
-                    .shadow(2.dp, RoundedCornerShape(14.dp))
-                    .clickable { launchGoogleSignIn() },
+                    .shadow(if (uiState.isLoading) 1.dp else 2.dp, RoundedCornerShape(14.dp))
+                    .clickable(enabled = !uiState.isLoading) { launchGoogleSignIn() },
                 shape = RoundedCornerShape(14.dp),
-                color = Color.White,
+                color = if (uiState.isLoading) Color(0xFFF9FAFB) else Color.White,
                 border = BorderStroke(1.5.dp, Color(0xFFE2E8F0))
             ) {
                 Row(

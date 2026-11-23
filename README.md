@@ -64,10 +64,10 @@ Hệ thống tuân thủ nghiêm ngặt các tiêu chuẩn kỹ thuật hiện �
 
 ## 2. Danh Sách Thành Viên Nhóm
 
-| STT | Họ và Tên | Mã Số Sinh Viên | Vai Trò Đảm Nhiệm | Kênh Liên Hệ / Email |
-| :---: | :--- | :---: | :---: | :--- |
-| 1 | **Trần Phát Tài** | `086206011804` | **Team Leader** & Full-stack Mobile Dev | taiphattran2006@gmail.com |
-| 2 | **Nguyễn Quốc Thái** | `087206004822` | **Core Member** & QA / Mobile Developer | thai.nguyen@example.com |
+| STT | Họ và Tên | Mã Số Sinh Viên | Vai Trò Đảm Nhiệm |
+| :---: | :--- | :---: | :---: |
+| 1 | **Trần Phát Tài** | `086206011804` | **Team Leader** & Full-stack Mobile Dev |
+| 2 | **Nguyễn Quốc Thái** | `087206004822` | **Core Member** & QA / Mobile Developer |
 
 ---
 

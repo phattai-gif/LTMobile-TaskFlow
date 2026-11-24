@@ -83,16 +83,17 @@ fun SetPinScreen(
     var currentStep by remember { mutableIntStateOf(0) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    // Auto-prompt Biometric when opening in UNLOCK mode
-    LaunchedEffect(mode) {
-        if (mode == PinScreenMode.UNLOCK && pinManager.isBiometricEnabled() && fragmentActivity != null) {
+    val isOnlyBiometric = mode == PinScreenMode.UNLOCK && pinManager.isBiometricEnabled() && !pinManager.isPinLockEnabled()
+
+    fun triggerBiometricPrompt() {
+        if (fragmentActivity != null && pinManager.isBiometricEnabled()) {
             val status = BiometricAuthHelper.checkBiometricStatus(context)
             if (status == BiometricAuthHelper.BiometricStatus.READY) {
                 BiometricAuthHelper.showBiometricPrompt(
                     activity = fragmentActivity,
                     title = "Biometric Unlock",
                     subtitle = "Scan your fingerprint to unlock TaskFlow",
-                    negativeButtonText = "Use PIN",
+                    negativeButtonText = if (pinManager.isPinLockEnabled()) "Use PIN" else "Cancel",
                     onSuccess = { onSuccess() },
                     onError = { errorCode, errString ->
                         if (errorCode != BiometricPrompt.ERROR_USER_CANCELED &&
@@ -101,7 +102,26 @@ fun SetPinScreen(
                         }
                     }
                 )
+            } else {
+                when (status) {
+                    BiometricAuthHelper.BiometricStatus.NOT_ENROLLED -> {
+                        errorMessage = "No fingerprints enrolled in device settings."
+                    }
+                    BiometricAuthHelper.BiometricStatus.NO_HARDWARE -> {
+                        errorMessage = "Biometric hardware is not available on this device."
+                    }
+                    else -> {
+                        errorMessage = "Biometric sensor is currently unavailable."
+                    }
+                }
             }
+        }
+    }
+
+    // Auto-prompt Biometric when opening in UNLOCK mode
+    LaunchedEffect(mode) {
+        if (mode == PinScreenMode.UNLOCK && pinManager.isBiometricEnabled()) {
+            triggerBiometricPrompt()
         }
     }
 
@@ -147,7 +167,11 @@ fun SetPinScreen(
             "Enter Current PIN" to "Enter your 4-digit PIN to turn off PIN Lock"
         }
         PinScreenMode.UNLOCK -> {
-            "Enter Your PIN" to "Enter your 4-digit security PIN to continue"
+            if (isOnlyBiometric) {
+                "Fingerprint Unlock" to "Touch the fingerprint sensor to unlock TaskFlow"
+            } else {
+                "Enter Your PIN" to "Enter your 4-digit security PIN to continue"
+            }
         }
     }
 
@@ -299,8 +323,8 @@ fun SetPinScreen(
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        imageVector = Icons.Filled.CheckCircle,
-                        contentDescription = "Security PIN",
+                        imageVector = if (isOnlyBiometric) Icons.Outlined.Fingerprint else Icons.Filled.CheckCircle,
+                        contentDescription = if (isOnlyBiometric) "Fingerprint Unlock" else "Security PIN",
                         tint = TaskFlowPrimary,
                         modifier = Modifier.size(36.dp)
                     )
@@ -343,139 +367,164 @@ fun SetPinScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(34.dp))
+        if (isOnlyBiometric) {
+            Spacer(modifier = Modifier.weight(0.7f))
 
-        // ── 4 PIN Indicator Dots with Shake Animation ───────────────────────
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .offset { IntOffset(shakeOffset.value.roundToInt(), 0) },
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            for (i in 0 until 4) {
-                val isFilled = i < enteredPin.length
-                PinIndicatorDot(isFilled = isFilled)
-                if (i < 3) {
-                    Spacer(modifier = Modifier.width(18.dp))
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        // ── Numeric Keypad (Dialpad) Matching Wireframe ─────────────────────
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Row 1: 1, 2 (ABC), 3 (DEF)
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                KeypadButton(number = "1", subtext = "", onClick = { onDigitClick("1") })
-                KeypadButton(number = "2", subtext = "ABC", onClick = { onDigitClick("2") })
-                KeypadButton(number = "3", subtext = "DEF", onClick = { onDigitClick("3") })
-            }
-
-            // Row 2: 4 (GHI), 5 (JKL), 6 (MNO)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                KeypadButton(number = "4", subtext = "GHI", onClick = { onDigitClick("4") })
-                KeypadButton(number = "5", subtext = "JKL", onClick = { onDigitClick("5") })
-                KeypadButton(number = "6", subtext = "MNO", onClick = { onDigitClick("6") })
-            }
-
-            // Row 3: 7 (PQRS), 8 (TUV), 9 (WXYZ)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                KeypadButton(number = "7", subtext = "PQRS", onClick = { onDigitClick("7") })
-                KeypadButton(number = "8", subtext = "TUV", onClick = { onDigitClick("8") })
-                KeypadButton(number = "9", subtext = "WXYZ", onClick = { onDigitClick("9") })
-            }
-
-            // Row 4: Biometric, 0, Backspace
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Biometric / Fingerprint button
                 Surface(
-                    onClick = {
-                        if (pinManager.isBiometricEnabled()) {
-                            if (fragmentActivity != null) {
-                                val status = BiometricAuthHelper.checkBiometricStatus(context)
-                                when (status) {
-                                    BiometricAuthHelper.BiometricStatus.READY -> {
-                                        BiometricAuthHelper.showBiometricPrompt(
-                                            activity = fragmentActivity,
-                                            title = "Biometric Unlock",
-                                            subtitle = "Scan your fingerprint to unlock TaskFlow",
-                                            negativeButtonText = "Use PIN",
-                                            onSuccess = { onSuccess() },
-                                            onError = { errorCode, errString ->
-                                                if (errorCode != BiometricPrompt.ERROR_USER_CANCELED &&
-                                                    errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
-                                                    errorMessage = errString.toString()
-                                                }
-                                            }
-                                        )
-                                    }
-                                    BiometricAuthHelper.BiometricStatus.NOT_ENROLLED -> {
-                                        errorMessage = "No fingerprints enrolled in device settings."
-                                    }
-                                    BiometricAuthHelper.BiometricStatus.NO_HARDWARE -> {
-                                        errorMessage = "Biometric hardware is not available on this device."
-                                    }
-                                    else -> {
-                                        errorMessage = "Biometric sensor is currently unavailable."
-                                    }
-                                }
-                            }
-                        } else {
-                            errorMessage = "Biometric unlock is not enabled in Settings."
-                        }
-                    },
+                    onClick = { triggerBiometricPrompt() },
                     shape = CircleShape,
-                    color = Color.Transparent,
-                    modifier = Modifier.size(76.dp)
+                    color = Color(0xFFEFF6FF),
+                    border = BorderStroke(1.5.dp, Color(0xFFBFDBFE)),
+                    modifier = Modifier.size(108.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Outlined.Fingerprint,
-                            contentDescription = "Biometric Unlock",
-                            tint = if (pinManager.isBiometricEnabled()) TaskFlowPrimary else Color(0xFF94A3B8),
-                            modifier = Modifier.size(28.dp)
+                            contentDescription = "Scan Fingerprint",
+                            tint = TaskFlowPrimary,
+                            modifier = Modifier.size(60.dp)
                         )
                     }
                 }
 
-                // 0 Button
-                KeypadButton(number = "0", subtext = "", onClick = { onDigitClick("0") })
+                Spacer(modifier = Modifier.height(28.dp))
 
-                // Backspace Button
-                Surface(
-                    onClick = { onBackspaceClick() },
-                    shape = CircleShape,
-                    color = Color.Transparent,
-                    modifier = Modifier.size(76.dp)
+                androidx.compose.material3.Button(
+                    onClick = { triggerBiometricPrompt() },
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = TaskFlowPrimary
+                    ),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.Backspace,
-                            contentDescription = "Delete",
-                            tint = Color(0xFF475569),
-                            modifier = Modifier.size(26.dp)
-                        )
+                    Icon(
+                        imageVector = Icons.Outlined.Fingerprint,
+                        contentDescription = null,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "Scan Fingerprint",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.weight(1.3f))
+        } else {
+            Spacer(modifier = Modifier.height(34.dp))
+
+            // ── 4 PIN Indicator Dots with Shake Animation ───────────────────────
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .offset { IntOffset(shakeOffset.value.roundToInt(), 0) },
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                for (i in 0 until 4) {
+                    val isFilled = i < enteredPin.length
+                    PinIndicatorDot(isFilled = isFilled)
+                    if (i < 3) {
+                        Spacer(modifier = Modifier.width(18.dp))
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // ── Numeric Keypad (Dialpad) Matching Wireframe ─────────────────────
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 28.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Row 1: 1, 2 (ABC), 3 (DEF)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    KeypadButton(number = "1", subtext = "", onClick = { onDigitClick("1") })
+                    KeypadButton(number = "2", subtext = "ABC", onClick = { onDigitClick("2") })
+                    KeypadButton(number = "3", subtext = "DEF", onClick = { onDigitClick("3") })
+                }
+
+                // Row 2: 4 (GHI), 5 (JKL), 6 (MNO)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    KeypadButton(number = "4", subtext = "GHI", onClick = { onDigitClick("4") })
+                    KeypadButton(number = "5", subtext = "JKL", onClick = { onDigitClick("5") })
+                    KeypadButton(number = "6", subtext = "MNO", onClick = { onDigitClick("6") })
+                }
+
+                // Row 3: 7 (PQRS), 8 (TUV), 9 (WXYZ)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    KeypadButton(number = "7", subtext = "PQRS", onClick = { onDigitClick("7") })
+                    KeypadButton(number = "8", subtext = "TUV", onClick = { onDigitClick("8") })
+                    KeypadButton(number = "9", subtext = "WXYZ", onClick = { onDigitClick("9") })
+                }
+
+                // Row 4: Biometric, 0, Backspace
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Biometric / Fingerprint button
+                    Surface(
+                        onClick = {
+                            if (pinManager.isBiometricEnabled()) {
+                                triggerBiometricPrompt()
+                            } else {
+                                errorMessage = "Biometric unlock is not enabled in Settings."
+                            }
+                        },
+                        shape = CircleShape,
+                        color = Color.Transparent,
+                        modifier = Modifier.size(76.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Outlined.Fingerprint,
+                                contentDescription = "Biometric Unlock",
+                                tint = if (pinManager.isBiometricEnabled()) TaskFlowPrimary else Color(0xFF94A3B8),
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                    }
+
+                    // 0 Button
+                    KeypadButton(number = "0", subtext = "", onClick = { onDigitClick("0") })
+
+                    // Backspace Button
+                    Surface(
+                        onClick = { onBackspaceClick() },
+                        shape = CircleShape,
+                        color = Color.Transparent,
+                        modifier = Modifier.size(76.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Outlined.Backspace,
+                                contentDescription = "Delete",
+                                tint = Color(0xFF475569),
+                                modifier = Modifier.size(26.dp)
+                            )
+                        }
                     }
                 }
             }

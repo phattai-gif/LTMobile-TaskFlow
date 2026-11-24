@@ -214,8 +214,6 @@ fun SettingsScreen(
                         }
                         PinScreenMode.VERIFY_TO_DISABLE -> {
                             pinLockEnabled = false
-                            biometricEnabled = false
-                            pinManager.setBiometricEnabled(false)
                             featureNoticeMessage = "PIN lock has been disabled."
                         }
                         PinScreenMode.UNLOCK, null -> {}
@@ -420,15 +418,11 @@ fun SettingsScreen(
                     HorizontalDivider(color = Color(0xFFF1F5F9), thickness = 1.dp)
                     SettingsSwitchRow(
                         icon = Icons.Outlined.Fingerprint,
-                        iconTint = if (pinLockEnabled) Color(0xFF2563EB) else Color(0xFF94A3B8),
+                        iconTint = Color(0xFF2563EB),
                         title = "Biometric Unlock",
-                        subtitle = if (pinLockEnabled) "Unlock with fingerprint or face recognition" else "Enable PIN Lock to use biometric unlock",
-                        checked = biometricEnabled && pinLockEnabled,
+                        subtitle = "Unlock with fingerprint",
+                        checked = biometricEnabled,
                         onCheckedChange = { enable ->
-                            if (!pinLockEnabled) {
-                                featureNoticeMessage = "Please turn on PIN Lock first."
-                                return@SettingsSwitchRow
-                            }
                             if (enable) {
                                 val status = BiometricAuthHelper.checkBiometricStatus(context)
                                 when (status) {

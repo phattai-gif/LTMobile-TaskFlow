@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Backspace
@@ -82,10 +83,12 @@ fun SetPinScreen(
     var tempNewPin by remember { mutableStateOf("") }
     var currentStep by remember { mutableIntStateOf(0) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isSuccessAnim by remember { mutableStateOf(false) }
 
     val isOnlyBiometric = mode == PinScreenMode.UNLOCK && pinManager.isBiometricEnabled() && !pinManager.isPinLockEnabled()
 
     fun triggerBiometricPrompt() {
+        if (isSuccessAnim) return
         if (fragmentActivity != null && pinManager.isBiometricEnabled()) {
             val status = BiometricAuthHelper.checkBiometricStatus(context)
             if (status == BiometricAuthHelper.BiometricStatus.READY) {
@@ -94,7 +97,14 @@ fun SetPinScreen(
                     title = "Biometric Unlock",
                     subtitle = "Scan your fingerprint to unlock TaskFlow",
                     negativeButtonText = if (pinManager.isPinLockEnabled()) "Use PIN" else "Cancel",
-                    onSuccess = { onSuccess() },
+                    onSuccess = {
+                        isSuccessAnim = true
+                        errorMessage = null
+                        coroutineScope.launch {
+                            kotlinx.coroutines.delay(500)
+                            onSuccess()
+                        }
+                    },
                     onError = { errorCode, errString ->
                         if (errorCode != BiometricPrompt.ERROR_USER_CANCELED &&
                             errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
@@ -241,7 +251,12 @@ fun SetPinScreen(
             }
             PinScreenMode.UNLOCK -> {
                 if (pinManager.verifyPin(pin)) {
-                    onSuccess()
+                    isSuccessAnim = true
+                    errorMessage = null
+                    coroutineScope.launch {
+                        kotlinx.coroutines.delay(450)
+                        onSuccess()
+                    }
                 } else {
                     errorMessage = "Incorrect PIN. Please try again."
                     triggerShake()
@@ -252,13 +267,14 @@ fun SetPinScreen(
     }
 
     fun onDigitClick(digit: String) {
+        if (isSuccessAnim) return
         if (enteredPin.length < 4) {
             errorMessage = null
             val newPin = enteredPin + digit
             enteredPin = newPin
             if (newPin.length == 4) {
                 coroutineScope.launch {
-                    delay(120)
+                    kotlinx.coroutines.delay(120)
                     handlePinComplete(newPin)
                 }
             }
@@ -266,6 +282,7 @@ fun SetPinScreen(
     }
 
     fun onBackspaceClick() {
+        if (isSuccessAnim) return
         if (enteredPin.isNotEmpty()) {
             errorMessage = null
             enteredPin = enteredPin.dropLast(1)
@@ -316,16 +333,16 @@ fun SetPinScreen(
         ) {
             Surface(
                 shape = RoundedCornerShape(18.dp),
-                color = Color.White,
-                border = BorderStroke(1.2.dp, Color(0xFFE2E8F0)),
+                color = if (isSuccessAnim) Color(0xFFDCFCE7) else Color.White,
+                border = BorderStroke(1.2.dp, if (isSuccessAnim) Color(0xFF86EFAC) else Color(0xFFE2E8F0)),
                 shadowElevation = 2.dp,
                 modifier = Modifier.size(72.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        imageVector = if (isOnlyBiometric) Icons.Outlined.Fingerprint else Icons.Filled.CheckCircle,
-                        contentDescription = if (isOnlyBiometric) "Fingerprint Unlock" else "Security PIN",
-                        tint = TaskFlowPrimary,
+                        imageVector = if (isSuccessAnim) Icons.Filled.CheckCircle else if (isOnlyBiometric) Icons.Outlined.Fingerprint else Icons.Filled.CheckCircle,
+                        contentDescription = if (isSuccessAnim) "Success" else if (isOnlyBiometric) "Fingerprint Unlock" else "Security PIN",
+                        tint = if (isSuccessAnim) Color(0xFF16A34A) else TaskFlowPrimary,
                         modifier = Modifier.size(36.dp)
                     )
                 }
@@ -336,10 +353,10 @@ fun SetPinScreen(
 
         // ── Title & Subtitle ────────────────────────────────────────────────
         Text(
-            text = title,
+            text = if (isSuccessAnim) "Verified!" else title,
             fontSize = 25.sp,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFF111827),
+            color = if (isSuccessAnim) Color(0xFF16A34A) else Color(0xFF111827),
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )
@@ -347,9 +364,9 @@ fun SetPinScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = subtitle,
+            text = if (isSuccessAnim) "Opening TaskFlow..." else subtitle,
             fontSize = 13.5.sp,
-            color = Color(0xFF6B7280),
+            color = if (isSuccessAnim) Color(0xFF15803D) else Color(0xFF6B7280),
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )
@@ -375,17 +392,17 @@ fun SetPinScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Surface(
-                    onClick = { triggerBiometricPrompt() },
+                    onClick = { if (!isSuccessAnim) triggerBiometricPrompt() },
                     shape = CircleShape,
-                    color = Color(0xFFEFF6FF),
-                    border = BorderStroke(1.5.dp, Color(0xFFBFDBFE)),
+                    color = if (isSuccessAnim) Color(0xFFDCFCE7) else Color(0xFFEFF6FF),
+                    border = BorderStroke(1.5.dp, if (isSuccessAnim) Color(0xFF86EFAC) else Color(0xFFBFDBFE)),
                     modifier = Modifier.size(108.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
-                            imageVector = Icons.Outlined.Fingerprint,
+                            imageVector = if (isSuccessAnim) Icons.Filled.CheckCircle else Icons.Outlined.Fingerprint,
                             contentDescription = "Scan Fingerprint",
-                            tint = TaskFlowPrimary,
+                            tint = if (isSuccessAnim) Color(0xFF16A34A) else TaskFlowPrimary,
                             modifier = Modifier.size(60.dp)
                         )
                     }
@@ -393,27 +410,38 @@ fun SetPinScreen(
 
                 Spacer(modifier = Modifier.height(28.dp))
 
-                androidx.compose.material3.Button(
-                    onClick = { triggerBiometricPrompt() },
-                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                        containerColor = TaskFlowPrimary
-                    ),
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Fingerprint,
-                        contentDescription = null,
-                        modifier = Modifier.size(22.dp)
+                if (isSuccessAnim) {
+                    androidx.compose.material3.LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth(0.55f)
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp)),
+                        color = Color(0xFF16A34A),
+                        trackColor = Color(0xFFDCFCE7)
                     )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "Scan Fingerprint",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 16.sp
-                    )
+                } else {
+                    androidx.compose.material3.Button(
+                        onClick = { triggerBiometricPrompt() },
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                            containerColor = TaskFlowPrimary
+                        ),
+                        shape = RoundedCornerShape(14.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Fingerprint,
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = "Scan Fingerprint",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 16.sp
+                        )
+                    }
                 }
             }
 
@@ -430,8 +458,11 @@ fun SetPinScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 for (i in 0 until 4) {
-                    val isFilled = i < enteredPin.length
-                    PinIndicatorDot(isFilled = isFilled)
+                    val isFilled = if (isSuccessAnim) true else (i < enteredPin.length)
+                    PinIndicatorDot(
+                        isFilled = isFilled,
+                        customColor = if (isSuccessAnim) Color(0xFF16A34A) else null
+                    )
                     if (i < 3) {
                         Spacer(modifier = Modifier.width(18.dp))
                     }
@@ -533,11 +564,11 @@ fun SetPinScreen(
 }
 
 @Composable
-private fun PinIndicatorDot(isFilled: Boolean) {
+private fun PinIndicatorDot(isFilled: Boolean, customColor: Color? = null) {
     if (isFilled) {
         Surface(
             shape = CircleShape,
-            color = TaskFlowPrimary,
+            color = customColor ?: TaskFlowPrimary,
             modifier = Modifier.size(14.dp)
         ) {}
     } else {

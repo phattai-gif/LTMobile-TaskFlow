@@ -2,7 +2,7 @@ package com.team.taskmanagementapp
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.google.firebase.analytics.FirebaseAnalytics
@@ -11,7 +11,7 @@ import com.team.taskmanagementapp.ui.TaskFlowApp
 import com.team.taskmanagementapp.ui.theme.TaskFLowTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     private val openPomodoro = MutableStateFlow(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {

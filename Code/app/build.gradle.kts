@@ -55,6 +55,9 @@ dependencies {
     // AndroidX AppCompat (Cần thiết cho AppCompatActivity)
     implementation("androidx.appcompat:appcompat:1.7.0")
 
+    // Biometric Authentication (Fingerprint / Face)
+    implementation("androidx.biometric:biometric:1.2.0-alpha05")
+
     // Jetpack Compose & Core
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)

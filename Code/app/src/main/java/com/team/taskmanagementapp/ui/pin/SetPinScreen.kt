@@ -47,7 +47,11 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.team.taskmanagementapp.ui.theme.TaskFlowPrimary
+import com.team.taskmanagementapp.util.BiometricAuthHelper
 import com.team.taskmanagementapp.util.PinManager
+import android.content.ContextWrapper
+import androidx.biometric.BiometricPrompt
+import androidx.fragment.app.FragmentActivity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -69,11 +73,37 @@ fun SetPinScreen(
     val context = LocalContext.current
     val pinManager = remember { PinManager.getInstance(context) }
     val coroutineScope = rememberCoroutineScope()
+    val fragmentActivity = remember(context) {
+        context as? FragmentActivity
+            ?: (context as? ContextWrapper)?.baseContext as? FragmentActivity
+    }
 
     var enteredPin by remember { mutableStateOf("") }
     var tempNewPin by remember { mutableStateOf("") }
     var currentStep by remember { mutableIntStateOf(0) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    // Auto-prompt Biometric when opening in UNLOCK mode
+    LaunchedEffect(mode) {
+        if (mode == PinScreenMode.UNLOCK && pinManager.isBiometricEnabled() && fragmentActivity != null) {
+            val status = BiometricAuthHelper.checkBiometricStatus(context)
+            if (status == BiometricAuthHelper.BiometricStatus.READY) {
+                BiometricAuthHelper.showBiometricPrompt(
+                    activity = fragmentActivity,
+                    title = "Biometric Unlock",
+                    subtitle = "Scan your fingerprint to unlock TaskFlow",
+                    negativeButtonText = "Use PIN",
+                    onSuccess = { onSuccess() },
+                    onError = { errorCode, errString ->
+                        if (errorCode != BiometricPrompt.ERROR_USER_CANCELED &&
+                            errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
+                            errorMessage = errString.toString()
+                        }
+                    }
+                )
+            }
+        }
+    }
 
     // Shake animation for incorrect PIN
     val shakeOffset = remember { Animatable(0f) }
@@ -382,7 +412,35 @@ fun SetPinScreen(
                 Surface(
                     onClick = {
                         if (pinManager.isBiometricEnabled()) {
-                            onSuccess()
+                            if (fragmentActivity != null) {
+                                val status = BiometricAuthHelper.checkBiometricStatus(context)
+                                when (status) {
+                                    BiometricAuthHelper.BiometricStatus.READY -> {
+                                        BiometricAuthHelper.showBiometricPrompt(
+                                            activity = fragmentActivity,
+                                            title = "Biometric Unlock",
+                                            subtitle = "Scan your fingerprint to unlock TaskFlow",
+                                            negativeButtonText = "Use PIN",
+                                            onSuccess = { onSuccess() },
+                                            onError = { errorCode, errString ->
+                                                if (errorCode != BiometricPrompt.ERROR_USER_CANCELED &&
+                                                    errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
+                                                    errorMessage = errString.toString()
+                                                }
+                                            }
+                                        )
+                                    }
+                                    BiometricAuthHelper.BiometricStatus.NOT_ENROLLED -> {
+                                        errorMessage = "No fingerprints enrolled in device settings."
+                                    }
+                                    BiometricAuthHelper.BiometricStatus.NO_HARDWARE -> {
+                                        errorMessage = "Biometric hardware is not available on this device."
+                                    }
+                                    else -> {
+                                        errorMessage = "Biometric sensor is currently unavailable."
+                                    }
+                                }
+                            }
                         } else {
                             errorMessage = "Biometric unlock is not enabled in Settings."
                         }

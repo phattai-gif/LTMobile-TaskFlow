@@ -1,9 +1,12 @@
 package com.team.taskmanagementapp.ui.settings
 
+import android.content.ContextWrapper
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings as AndroidSettings
+import androidx.fragment.app.FragmentActivity
+import com.team.taskmanagementapp.util.BiometricAuthHelper
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -81,6 +84,10 @@ fun SettingsScreen(
     onNavigateToRestore: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val fragmentActivity = remember(context) {
+        context as? FragmentActivity
+            ?: (context as? ContextWrapper)?.baseContext as? FragmentActivity
+    }
     val pinManager = remember { PinManager.getInstance(context) }
     val auth = remember { FirebaseAuth.getInstance() }
     var currentUser by remember { mutableStateOf(auth.currentUser) }
@@ -418,11 +425,49 @@ fun SettingsScreen(
                         subtitle = if (pinLockEnabled) "Unlock with fingerprint or face recognition" else "Enable PIN Lock to use biometric unlock",
                         checked = biometricEnabled && pinLockEnabled,
                         onCheckedChange = { enable ->
-                            if (pinLockEnabled) {
-                                biometricEnabled = enable
-                                pinManager.setBiometricEnabled(enable)
-                            } else {
+                            if (!pinLockEnabled) {
                                 featureNoticeMessage = "Please turn on PIN Lock first."
+                                return@SettingsSwitchRow
+                            }
+                            if (enable) {
+                                val status = BiometricAuthHelper.checkBiometricStatus(context)
+                                when (status) {
+                                    BiometricAuthHelper.BiometricStatus.NO_HARDWARE -> {
+                                        featureNoticeMessage = "Biometric hardware is not available on this device."
+                                    }
+                                    BiometricAuthHelper.BiometricStatus.NOT_ENROLLED -> {
+                                        featureNoticeMessage = "No biometric credentials enrolled in device Settings."
+                                    }
+                                    BiometricAuthHelper.BiometricStatus.HW_UNAVAILABLE -> {
+                                        featureNoticeMessage = "Biometric sensor is currently unavailable."
+                                    }
+                                    BiometricAuthHelper.BiometricStatus.READY -> {
+                                        if (fragmentActivity != null) {
+                                            BiometricAuthHelper.showBiometricPrompt(
+                                                activity = fragmentActivity,
+                                                title = "Confirm Fingerprint",
+                                                subtitle = "Scan your fingerprint to enable biometric unlock",
+                                                negativeButtonText = "Cancel",
+                                                onSuccess = {
+                                                    biometricEnabled = true
+                                                    pinManager.setBiometricEnabled(true)
+                                                    featureNoticeMessage = "Biometric unlock enabled successfully."
+                                                },
+                                                onError = { _, errString ->
+                                                    featureNoticeMessage = "Biometric verification failed: $errString"
+                                                }
+                                            )
+                                        } else {
+                                            biometricEnabled = true
+                                            pinManager.setBiometricEnabled(true)
+                                            featureNoticeMessage = "Biometric unlock enabled."
+                                        }
+                                    }
+                                }
+                            } else {
+                                biometricEnabled = false
+                                pinManager.setBiometricEnabled(false)
+                                featureNoticeMessage = "Biometric unlock disabled."
                             }
                         }
                     )

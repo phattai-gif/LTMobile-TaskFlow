@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Locale
+import com.team.taskmanagementapp.util.StreakCalculator
 
 class HomeViewModel(
     private val taskSource: HomeTaskSource
@@ -156,12 +157,12 @@ class HomeViewModel(
             }
             .sortedByDescending { it.completedAt ?: it.dueDate }
 
-        // Build streak week days (Monday to Sunday)
-        val streakWeekDays = buildStreakWeekDays(now)
+        // Calculate dynamic streak based on completed tasks
+        val streakResult = StreakCalculator.calculateForHomeTasks(tasks, now)
         val streakInfo = HomeStreakInfo(
-            currentStreak = if (completedCount > 0) 1 else 0,
-            bestStreak = 1,
-            weekDays = streakWeekDays
+            currentStreak = streakResult.currentStreak,
+            bestStreak = streakResult.bestStreak,
+            weekDays = streakResult.weekDays
         )
 
         val resolvedUserName = resolveUserName(user)
@@ -195,34 +196,6 @@ class HomeViewModel(
             return prefix.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
         }
         return ""
-    }
-
-    private fun buildStreakWeekDays(now: Long): List<StreakDayUiModel> {
-        val calendar = Calendar.getInstance().apply {
-            timeInMillis = now
-            firstDayOfWeek = Calendar.MONDAY
-        }
-        val currentDayOfYear = calendar.get(Calendar.DAY_OF_YEAR)
-
-        calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-
-        val dayLetters = listOf("T", "T", "T", "T", "T", "T", "C")
-        val days = mutableListOf<StreakDayUiModel>()
-
-        for (i in 0 until 7) {
-            val dayNum = calendar.get(Calendar.DAY_OF_MONTH)
-            val isToday = calendar.get(Calendar.DAY_OF_YEAR) == currentDayOfYear
-            days.add(
-                StreakDayUiModel(
-                    dayLetter = dayLetters[i],
-                    dayNumber = dayNum,
-                    isToday = isToday,
-                    isCompleted = false
-                )
-            )
-            calendar.add(Calendar.DAY_OF_MONTH, 1)
-        }
-        return days
     }
 
     private fun startOfDay(timestamp: Long): Long {

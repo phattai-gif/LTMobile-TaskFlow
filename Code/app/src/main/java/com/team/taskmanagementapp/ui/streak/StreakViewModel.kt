@@ -3,9 +3,9 @@ package com.team.taskmanagementapp.ui.streak
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.team.taskmanagementapp.data.local.entity.Task
-import com.team.taskmanagementapp.data.model.enums.TaskStatus
 import com.team.taskmanagementapp.data.repository.TaskRepository
 import com.team.taskmanagementapp.ui.home.StreakDayUiModel
+import com.team.taskmanagementapp.util.StreakCalculator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -34,8 +34,10 @@ class StreakViewModel(
         reminderMinute
     ) { tasks: List<Task>, protectionEnabled: Boolean, hour: Int, minute: Int ->
         val now = System.currentTimeMillis()
-        val weekDays = buildStreakWeekDays(now)
-        val (currentStreak, bestStreak) = calculateStreak(tasks)
+        val streakResult = StreakCalculator.calculateForEntities(tasks, now)
+        val currentStreak = streakResult.currentStreak
+        val bestStreak = streakResult.bestStreak
+        val weekDays = streakResult.weekDays
         val badgeName = when {
             currentStreak >= 7 -> "Gold Badge"
             currentStreak >= 4 -> "Silver Badge"
@@ -58,7 +60,7 @@ class StreakViewModel(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = StreakUiState(
-            weekDays = buildStreakWeekDays(System.currentTimeMillis()),
+            weekDays = StreakCalculator.buildStreakWeekDays(System.currentTimeMillis()),
             isLoading = true
         )
     )
@@ -70,69 +72,6 @@ class StreakViewModel(
     fun setReminderTime(hour: Int, minute: Int) {
         reminderHour.value = hour
         reminderMinute.value = minute
-    }
-
-    private fun calculateStreak(tasks: List<Task>): Pair<Int, Int> {
-        val zoneId = ZoneId.systemDefault()
-        val completedDates = tasks
-            .filter { it.isCompleted || it.status == TaskStatus.COMPLETED }
-            .mapNotNull { it.completedAt ?: it.dueDate.takeIf { d -> d > 0L } }
-            .map { Instant.ofEpochMilli(it).atZone(zoneId).toLocalDate() }
-            .toSet()
-
-        val today = LocalDate.now(zoneId)
-        var streak = 0
-        var checkDate = if (completedDates.contains(today)) today else today.minusDays(1)
-
-        while (completedDates.contains(checkDate)) {
-            streak++
-            checkDate = checkDate.minusDays(1)
-        }
-
-        val sortedDates = completedDates.sorted()
-        var maxRun = 0
-        var run = 0
-        var prevDate: LocalDate? = null
-        for (date in sortedDates) {
-            if (prevDate == null || date == prevDate.plusDays(1)) {
-                run++
-            } else if (date != prevDate) {
-                run = 1
-            }
-            if (run > maxRun) maxRun = run
-            prevDate = date
-        }
-        val best = maxOf(streak, maxRun, 1)
-
-        return Pair(streak, best)
-    }
-
-    private fun buildStreakWeekDays(now: Long): List<StreakDayUiModel> {
-        val calendar = Calendar.getInstance().apply {
-            timeInMillis = now
-            firstDayOfWeek = Calendar.MONDAY
-        }
-        val currentDayOfYear = calendar.get(Calendar.DAY_OF_YEAR)
-
-        calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-
-        val dayLetters = listOf("T", "T", "T", "T", "T", "T", "C")
-        val days = mutableListOf<StreakDayUiModel>()
-
-        for (i in 0 until 7) {
-            val dayNum = calendar.get(Calendar.DAY_OF_MONTH)
-            val isToday = calendar.get(Calendar.DAY_OF_YEAR) == currentDayOfYear
-            days.add(
-                StreakDayUiModel(
-                    dayLetter = dayLetters[i],
-                    dayNumber = dayNum,
-                    isToday = isToday,
-                    isCompleted = false
-                )
-            )
-            calendar.add(Calendar.DAY_OF_MONTH, 1)
-        }
-        return days
     }
 
     private fun formatReminderTime(hour: Int, minute: Int): String {

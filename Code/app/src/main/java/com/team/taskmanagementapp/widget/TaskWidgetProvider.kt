@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.RemoteViews
+import com.team.taskmanagementapp.MainActivity
 import com.team.taskmanagementapp.R
 import com.team.taskmanagementapp.ui.activity.AddEditTaskActivity
 import com.team.taskmanagementapp.util.TaskCompletionHelper
@@ -39,10 +40,24 @@ class TaskWidgetProvider : AppWidgetProvider() {
             // Set up ListView service intent with unique Uri to avoid intent caching
             val serviceIntent = Intent(context, TaskWidgetService::class.java).apply {
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-                data = Uri.parse(toUri(Intent.URI_INTENT_SCHEME))
+                data = Uri.parse("taskflow://widget/id/$appWidgetId")
             }
             views.setRemoteAdapter(R.id.widget_list_view, serviceIntent)
             views.setEmptyView(R.id.widget_list_view, R.id.widget_empty_view)
+
+            // PendingIntent for clicking App Title or Header (opens MainActivity)
+            val openAppIntent = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+            val openAppPendingIntent = PendingIntent.getActivity(
+                context,
+                100,
+                openAppIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            views.setOnClickPendingIntent(R.id.widget_title, openAppPendingIntent)
+            views.setOnClickPendingIntent(R.id.widget_date, openAppPendingIntent)
+            views.setOnClickPendingIntent(R.id.widget_empty_view, openAppPendingIntent)
 
             // PendingIntent for clicking "+" (opens AddEditTaskActivity)
             val addIntent = Intent(context, AddEditTaskActivity::class.java).apply {
@@ -92,6 +107,7 @@ class TaskWidgetProvider : AppWidgetProvider() {
         for (appWidgetId in appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId)
         }
+        appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.widget_list_view)
         super.onUpdate(context, appWidgetManager, appWidgetIds)
     }
 

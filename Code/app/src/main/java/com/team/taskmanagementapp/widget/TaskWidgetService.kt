@@ -51,7 +51,7 @@ class TaskRemoteViewsFactory(
             val endOfDay = calendar.timeInMillis
 
             // Fetch tasks for today + any overdue uncompleted tasks
-            val allTasks = kotlinx.coroutines.runBlocking {
+            val allTasks = kotlinx.coroutines.runBlocking(kotlinx.coroutines.Dispatchers.IO) {
                 dao.getAllTasksSync()
             }
             tasks = allTasks.filter { task ->

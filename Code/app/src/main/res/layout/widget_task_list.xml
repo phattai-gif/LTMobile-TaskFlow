@@ -9,6 +9,7 @@
 
     <!-- Header Section -->
     <LinearLayout
+        android:id="@+id/widget_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
@@ -44,7 +45,6 @@
             android:id="@+id/widget_btn_refresh"
             android:layout_width="32dp"
             android:layout_height="32dp"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="Refresh tasks"
             android:padding="6dp"
             android:src="@drawable/ic_widget_refresh" />
@@ -55,13 +55,13 @@
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_marginStart="4dp"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="Add new task"
             android:padding="5dp"
             android:src="@drawable/ic_widget_add" />
     </LinearLayout>
 
-    <View
+    <!-- Divider Line (Must be ImageView in RemoteViews, bare <View> is prohibited) -->
+    <ImageView
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="#F1F5F9" />

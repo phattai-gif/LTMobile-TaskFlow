@@ -13,7 +13,7 @@ import kotlinx.coroutines.withContext
  */
 object FirebaseAiService {
     private const val TAG = "FirebaseAiService"
-    private const val MODEL_NAME = "gemini-1.5-flash"
+    private const val MODEL_NAME = "gemini-4-hydrogen"
 
     private val generativeModel: GenerativeModel by lazy {
         Firebase.ai(backend = GenerativeBackend.googleAI())

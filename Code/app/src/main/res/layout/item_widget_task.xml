@@ -20,8 +20,9 @@
         android:padding="2dp"
         android:src="@drawable/ic_widget_circle_outline" />
 
-    <!-- Task details -->
+    <!-- Task details (Clickable to view details) -->
     <LinearLayout
+        android:id="@+id/widget_item_content"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -59,4 +60,14 @@
         android:paddingBottom="2dp"
         android:textSize="10sp"
         android:textStyle="bold" />
+
+    <!-- Edit Button (Clickable to edit task directly) -->
+    <ImageView
+        android:id="@+id/widget_item_btn_edit"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_marginStart="6dp"
+        android:contentDescription="Edit task"
+        android:padding="5dp"
+        android:src="@drawable/ic_widget_edit" />
 </LinearLayout>

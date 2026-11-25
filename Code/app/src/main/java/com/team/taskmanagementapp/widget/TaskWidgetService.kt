@@ -113,12 +113,28 @@ class TaskRemoteViewsFactory(
         views.setTextViewText(R.id.widget_item_priority, priorityText)
         views.setTextColor(R.id.widget_item_priority, priorityColor)
 
-        // Set up FillInIntent for toggle checkbox and item row
-        val fillInIntent = Intent().apply {
+        // 1. Toggle checkbox click -> TASK_ACTION_TOGGLE
+        val toggleIntent = Intent().apply {
             putExtra(TaskWidgetProvider.EXTRA_TASK_ID, task.id)
+            putExtra(TaskWidgetProvider.EXTRA_TASK_ACTION, TaskWidgetProvider.TASK_ACTION_TOGGLE)
         }
-        views.setOnClickFillInIntent(R.id.widget_item_checkbox, fillInIntent)
-        views.setOnClickFillInIntent(R.id.widget_item_container, fillInIntent)
+        views.setOnClickFillInIntent(R.id.widget_item_checkbox, toggleIntent)
+
+        // 2. Content click (title & details) -> TASK_ACTION_VIEW_DETAIL
+        val viewDetailIntent = Intent().apply {
+            putExtra(TaskWidgetProvider.EXTRA_TASK_ID, task.id)
+            putExtra(TaskWidgetProvider.EXTRA_TASK_ACTION, TaskWidgetProvider.TASK_ACTION_VIEW_DETAIL)
+        }
+        views.setOnClickFillInIntent(R.id.widget_item_content, viewDetailIntent)
+        views.setOnClickFillInIntent(R.id.widget_item_title, viewDetailIntent)
+        views.setOnClickFillInIntent(R.id.widget_item_time, viewDetailIntent)
+
+        // 3. Edit button click -> TASK_ACTION_EDIT
+        val editIntent = Intent().apply {
+            putExtra(TaskWidgetProvider.EXTRA_TASK_ID, task.id)
+            putExtra(TaskWidgetProvider.EXTRA_TASK_ACTION, TaskWidgetProvider.TASK_ACTION_EDIT)
+        }
+        views.setOnClickFillInIntent(R.id.widget_item_btn_edit, editIntent)
 
         return views
     }

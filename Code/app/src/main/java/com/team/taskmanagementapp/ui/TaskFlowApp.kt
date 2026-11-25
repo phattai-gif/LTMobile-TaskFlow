@@ -78,7 +78,9 @@ import com.team.taskmanagementapp.data.repository.TaskRepository
 fun TaskFlowApp(
     modifier: Modifier = Modifier,
     openPomodoro: Flow<Boolean> = emptyFlow(),
-    onPomodoroOpened: () -> Unit = {}
+    onPomodoroOpened: () -> Unit = {},
+    openTaskId: Flow<Long?> = emptyFlow(),
+    onTaskOpened: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val appContext = context.applicationContext
@@ -129,6 +131,20 @@ fun TaskFlowApp(
                         launchSingleTop = true
                     }
                     onPomodoroOpened()
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(navController, openTaskId) {
+        openTaskId.collect { taskId ->
+            if (taskId != null && taskId > 0L) {
+                when (navController.currentDestination?.route) {
+                    null, TaskFlowRoutes.WELCOME, TaskFlowRoutes.LOGIN, TaskFlowRoutes.REGISTER -> Unit
+                    else -> {
+                        openTaskDetail(taskId)
+                        onTaskOpened()
+                    }
                 }
             }
         }

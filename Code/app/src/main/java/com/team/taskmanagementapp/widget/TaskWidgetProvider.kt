@@ -22,9 +22,14 @@ import java.util.Locale
 class TaskWidgetProvider : AppWidgetProvider() {
 
     companion object {
+        const val ACTION_ITEM_CLICK = "com.team.taskmanagementapp.widget.ACTION_ITEM_CLICK"
         const val ACTION_TOGGLE_TASK = "com.team.taskmanagementapp.widget.ACTION_TOGGLE_TASK"
         const val ACTION_REFRESH_WIDGET = "com.team.taskmanagementapp.widget.ACTION_REFRESH_WIDGET"
         const val EXTRA_TASK_ID = "com.team.taskmanagementapp.widget.EXTRA_TASK_ID"
+        const val EXTRA_TASK_ACTION = "com.team.taskmanagementapp.widget.EXTRA_TASK_ACTION"
+        const val TASK_ACTION_TOGGLE = "action_toggle"
+        const val TASK_ACTION_VIEW_DETAIL = "action_view_detail"
+        const val TASK_ACTION_EDIT = "action_edit"
 
         fun updateAppWidget(
             context: Context,
@@ -85,7 +90,7 @@ class TaskWidgetProvider : AppWidgetProvider() {
 
             // PendingIntent template for items in the list
             val itemClickIntent = Intent(context, TaskWidgetProvider::class.java).apply {
-                action = ACTION_TOGGLE_TASK
+                action = ACTION_ITEM_CLICK
             }
             val itemClickPendingIntent = PendingIntent.getBroadcast(
                 context,
@@ -114,18 +119,38 @@ class TaskWidgetProvider : AppWidgetProvider() {
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         when (intent.action) {
-            ACTION_TOGGLE_TASK -> {
+            ACTION_ITEM_CLICK, ACTION_TOGGLE_TASK -> {
                 val taskId = intent.getIntExtra(EXTRA_TASK_ID, -1)
+                val taskAction = intent.getStringExtra(EXTRA_TASK_ACTION) ?: TASK_ACTION_TOGGLE
                 if (taskId != -1) {
-                    val pendingResult = goAsync()
-                    CoroutineScope(Dispatchers.IO).launch {
-                        try {
-                            TaskCompletionHelper.toggleById(context, taskId)
-                            WidgetUpdater.updateAllWidgets(context)
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        } finally {
-                            pendingResult.finish()
+                    when (taskAction) {
+                        TASK_ACTION_TOGGLE -> {
+                            val pendingResult = goAsync()
+                            CoroutineScope(Dispatchers.IO).launch {
+                                try {
+                                    TaskCompletionHelper.toggleById(context, taskId)
+                                    WidgetUpdater.updateAllWidgets(context)
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                } finally {
+                                    pendingResult.finish()
+                                }
+                            }
+                        }
+                        TASK_ACTION_VIEW_DETAIL -> {
+                            val detailIntent = Intent(context, MainActivity::class.java).apply {
+                                action = MainActivity.ACTION_OPEN_TASK_DETAIL
+                                putExtra(MainActivity.EXTRA_VIEW_TASK_ID, taskId.toLong())
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                            }
+                            context.startActivity(detailIntent)
+                        }
+                        TASK_ACTION_EDIT -> {
+                            val editIntent = Intent(context, AddEditTaskActivity::class.java).apply {
+                                putExtra(AddEditTaskActivity.EXTRA_TASK_ID, taskId.toLong())
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                            }
+                            context.startActivity(editIntent)
                         }
                     }
                 }

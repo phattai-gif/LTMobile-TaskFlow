@@ -98,7 +98,7 @@ fun TaskFlowApp(
     val pinManager = remember(appContext) { PinManager.getInstance(appContext) }
     val auth = remember { com.google.firebase.auth.FirebaseAuth.getInstance() }
     var isAppLocked by rememberSaveable {
-        mutableStateOf(pinManager.isPinLockEnabled() && auth.currentUser != null)
+        mutableStateOf((pinManager.isPinLockEnabled() || pinManager.isBiometricEnabled()) && auth.currentUser != null)
     }
     val startDestination = remember {
         if (auth.currentUser != null) TaskFlowRoutes.HOME else TaskFlowRoutes.WELCOME
@@ -366,7 +366,7 @@ fun TaskFlowApp(
             composable(TaskFlowRoutes.LOGIN) {
                 LoginScreen(
                     onLoginSuccess = {
-                        if (pinManager.isPinLockEnabled()) {
+                        if (pinManager.isPinLockEnabled() || pinManager.isBiometricEnabled()) {
                             isAppLocked = true
                         }
                         navController.navigate(TaskFlowRoutes.HOME) {
@@ -387,7 +387,7 @@ fun TaskFlowApp(
             composable(TaskFlowRoutes.REGISTER) {
                 RegisterScreen(
                     onRegisterSuccess = {
-                        if (pinManager.isPinLockEnabled()) {
+                        if (pinManager.isPinLockEnabled() || pinManager.isBiometricEnabled()) {
                             isAppLocked = true
                         }
                         navController.navigate(TaskFlowRoutes.HOME) {
@@ -425,7 +425,7 @@ fun TaskFlowApp(
         )
     }
 
-    if (isAppLocked && pinManager.isPinLockEnabled()) {
+    if (isAppLocked && (pinManager.isPinLockEnabled() || pinManager.isBiometricEnabled())) {
         SetPinScreen(
             mode = PinScreenMode.UNLOCK,
             onSuccess = {

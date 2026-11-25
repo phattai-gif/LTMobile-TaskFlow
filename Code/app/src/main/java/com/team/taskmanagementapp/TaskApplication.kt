@@ -13,6 +13,18 @@ class TaskApplication : Application() {
         FirebaseApp.initializeApp(this)
         TaskReminderRecovery.observeTasks(this)
 
+        // Observe database changes to automatically refresh Home Screen Widgets
+        try {
+            val db = com.team.taskmanagementapp.data.local.db.AppDatabase.getInstance(this)
+            db.invalidationTracker.addObserver(
+                object : androidx.room.InvalidationTracker.Observer("tasks") {
+                    override fun onInvalidated(tables: Set<String>) {
+                        com.team.taskmanagementapp.widget.WidgetUpdater.updateAllWidgets(this@TaskApplication)
+                    }
+                }
+            )
+        } catch (_: Exception) {}
+
         // Initialize Firebase Analytics & log immediate App Open event
         try {
             val analytics = FirebaseAnalytics.getInstance(this)

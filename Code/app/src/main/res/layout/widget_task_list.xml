@@ -3,9 +3,9 @@
     android:id="@+id/widget_root_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/widget_bg"
+    android:background="@drawable/bg_widget_card"
     android:orientation="vertical"
-    android:padding="12dp">
+    android:padding="14dp">
 
     <!-- Header Section -->
     <LinearLayout
@@ -14,7 +14,7 @@
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingBottom="8dp">
+        android:paddingBottom="10dp">
 
         <LinearLayout
             android:layout_width="0dp"
@@ -27,14 +27,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="TaskFlow"
-                android:textColor="#1E293B"
-                android:textSize="15sp"
+                android:textColor="#0F172A"
+                android:textSize="16sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/widget_date"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
                 android:text="Today"
                 android:textColor="#64748B"
                 android:textSize="12sp" />
@@ -45,6 +46,7 @@
             android:id="@+id/widget_btn_refresh"
             android:layout_width="32dp"
             android:layout_height="32dp"
+            android:background="@drawable/bg_widget_btn_icon"
             android:contentDescription="Refresh tasks"
             android:padding="6dp"
             android:src="@drawable/ic_widget_refresh" />
@@ -54,13 +56,14 @@
             android:id="@+id/widget_btn_add"
             android:layout_width="32dp"
             android:layout_height="32dp"
-            android:layout_marginStart="4dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_widget_btn_add"
             android:contentDescription="Add new task"
-            android:padding="5dp"
-            android:src="@drawable/ic_widget_add" />
+            android:padding="6dp"
+            android:src="@drawable/ic_widget_add_white" />
     </LinearLayout>
 
-    <!-- Divider Line (Must be ImageView in RemoteViews, bare <View> is prohibited) -->
+    <!-- Subtle divider -->
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="1dp"
@@ -71,7 +74,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:paddingTop="4dp">
+        android:paddingTop="6dp">
 
         <ListView
             android:id="@+id/widget_list_view"
@@ -94,25 +97,25 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="🎉"
-                android:textSize="24sp" />
+                android:text="✨"
+                android:textSize="26sp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="No tasks for today"
-                android:textColor="#94A3B8"
-                android:textSize="13sp"
+                android:layout_marginTop="6dp"
+                android:text="All tasks completed!"
+                android:textColor="#0F172A"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="Tap + to add a task"
-                android:textColor="#CBD5E1"
-                android:textSize="11sp" />
+                android:layout_marginTop="3dp"
+                android:text="Tap + to add a task for today"
+                android:textColor="#94A3B8"
+                android:textSize="12sp" />
         </LinearLayout>
     </FrameLayout>
 </LinearLayout>

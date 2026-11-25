@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.RemoteViews
+import com.team.taskmanagementapp.MainActivity
 import com.team.taskmanagementapp.R
 import com.team.taskmanagementapp.ui.activity.AddEditTaskActivity
 import com.team.taskmanagementapp.util.TaskCompletionHelper
@@ -21,9 +22,14 @@ import java.util.Locale
 class TaskWidgetProvider : AppWidgetProvider() {
 
     companion object {
+        const val ACTION_ITEM_CLICK = "com.team.taskmanagementapp.widget.ACTION_ITEM_CLICK"
         const val ACTION_TOGGLE_TASK = "com.team.taskmanagementapp.widget.ACTION_TOGGLE_TASK"
         const val ACTION_REFRESH_WIDGET = "com.team.taskmanagementapp.widget.ACTION_REFRESH_WIDGET"
         const val EXTRA_TASK_ID = "com.team.taskmanagementapp.widget.EXTRA_TASK_ID"
+        const val EXTRA_TASK_ACTION = "com.team.taskmanagementapp.widget.EXTRA_TASK_ACTION"
+        const val TASK_ACTION_TOGGLE = "action_toggle"
+        const val TASK_ACTION_VIEW_DETAIL = "action_view_detail"
+        const val TASK_ACTION_EDIT = "action_edit"
 
         fun updateAppWidget(
             context: Context,
@@ -39,10 +45,24 @@ class TaskWidgetProvider : AppWidgetProvider() {
             // Set up ListView service intent with unique Uri to avoid intent caching
             val serviceIntent = Intent(context, TaskWidgetService::class.java).apply {
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-                data = Uri.parse(toUri(Intent.URI_INTENT_SCHEME))
+                data = Uri.parse("taskflow://widget/id/$appWidgetId")
             }
             views.setRemoteAdapter(R.id.widget_list_view, serviceIntent)
             views.setEmptyView(R.id.widget_list_view, R.id.widget_empty_view)
+
+            // PendingIntent for clicking App Title or Header (opens MainActivity)
+            val openAppIntent = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+            val openAppPendingIntent = PendingIntent.getActivity(
+                context,
+                100,
+                openAppIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            views.setOnClickPendingIntent(R.id.widget_title, openAppPendingIntent)
+            views.setOnClickPendingIntent(R.id.widget_date, openAppPendingIntent)
+            views.setOnClickPendingIntent(R.id.widget_empty_view, openAppPendingIntent)
 
             // PendingIntent for clicking "+" (opens AddEditTaskActivity)
             val addIntent = Intent(context, AddEditTaskActivity::class.java).apply {
@@ -70,7 +90,7 @@ class TaskWidgetProvider : AppWidgetProvider() {
 
             // PendingIntent template for items in the list
             val itemClickIntent = Intent(context, TaskWidgetProvider::class.java).apply {
-                action = ACTION_TOGGLE_TASK
+                action = ACTION_ITEM_CLICK
             }
             val itemClickPendingIntent = PendingIntent.getBroadcast(
                 context,
@@ -92,24 +112,45 @@ class TaskWidgetProvider : AppWidgetProvider() {
         for (appWidgetId in appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId)
         }
+        appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.widget_list_view)
         super.onUpdate(context, appWidgetManager, appWidgetIds)
     }
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         when (intent.action) {
-            ACTION_TOGGLE_TASK -> {
+            ACTION_ITEM_CLICK, ACTION_TOGGLE_TASK -> {
                 val taskId = intent.getIntExtra(EXTRA_TASK_ID, -1)
+                val taskAction = intent.getStringExtra(EXTRA_TASK_ACTION) ?: TASK_ACTION_TOGGLE
                 if (taskId != -1) {
-                    val pendingResult = goAsync()
-                    CoroutineScope(Dispatchers.IO).launch {
-                        try {
-                            TaskCompletionHelper.toggleById(context, taskId)
-                            WidgetUpdater.updateAllWidgets(context)
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        } finally {
-                            pendingResult.finish()
+                    when (taskAction) {
+                        TASK_ACTION_TOGGLE -> {
+                            val pendingResult = goAsync()
+                            CoroutineScope(Dispatchers.IO).launch {
+                                try {
+                                    TaskCompletionHelper.toggleById(context, taskId)
+                                    WidgetUpdater.updateAllWidgets(context)
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                } finally {
+                                    pendingResult.finish()
+                                }
+                            }
+                        }
+                        TASK_ACTION_VIEW_DETAIL -> {
+                            val detailIntent = Intent(context, MainActivity::class.java).apply {
+                                action = MainActivity.ACTION_OPEN_TASK_DETAIL
+                                putExtra(MainActivity.EXTRA_VIEW_TASK_ID, taskId.toLong())
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                            }
+                            context.startActivity(detailIntent)
+                        }
+                        TASK_ACTION_EDIT -> {
+                            val editIntent = Intent(context, AddEditTaskActivity::class.java).apply {
+                                putExtra(AddEditTaskActivity.EXTRA_TASK_ID, taskId.toLong())
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                            }
+                            context.startActivity(editIntent)
                         }
                     }
                 }

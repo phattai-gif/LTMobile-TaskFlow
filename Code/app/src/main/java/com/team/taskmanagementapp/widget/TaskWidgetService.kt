@@ -51,7 +51,7 @@ class TaskRemoteViewsFactory(
             val endOfDay = calendar.timeInMillis
 
             // Fetch tasks for today + any overdue uncompleted tasks
-            val allTasks = kotlinx.coroutines.runBlocking {
+            val allTasks = kotlinx.coroutines.runBlocking(kotlinx.coroutines.Dispatchers.IO) {
                 dao.getAllTasksSync()
             }
             tasks = allTasks.filter { task ->
@@ -103,22 +103,39 @@ class TaskRemoteViewsFactory(
         }
         views.setTextViewText(R.id.widget_item_time, timeStr)
 
-        // Priority badge
-        val (priorityText, priorityColor) = when (task.priority) {
-            Priority.URGENT -> "URGENT" to Color.parseColor("#EF4444")
-            Priority.HIGH -> "HIGH" to Color.parseColor("#F97316")
-            Priority.MEDIUM -> "MED" to Color.parseColor("#3B82F6")
-            Priority.LOW -> "LOW" to Color.parseColor("#64748B")
+        // Priority badge with pill background
+        val (priorityText, priorityTextColor, priorityBg) = when (task.priority) {
+            Priority.URGENT -> Triple("URGENT", Color.parseColor("#DC2626"), R.drawable.bg_widget_priority_urgent)
+            Priority.HIGH -> Triple("HIGH", Color.parseColor("#EA580C"), R.drawable.bg_widget_priority_high)
+            Priority.MEDIUM -> Triple("MED", Color.parseColor("#2563EB"), R.drawable.bg_widget_priority_medium)
+            Priority.LOW -> Triple("LOW", Color.parseColor("#64748B"), R.drawable.bg_widget_priority_low)
         }
         views.setTextViewText(R.id.widget_item_priority, priorityText)
-        views.setTextColor(R.id.widget_item_priority, priorityColor)
+        views.setTextColor(R.id.widget_item_priority, priorityTextColor)
+        views.setInt(R.id.widget_item_priority, "setBackgroundResource", priorityBg)
 
-        // Set up FillInIntent for toggle checkbox and item row
-        val fillInIntent = Intent().apply {
+        // 1. Toggle checkbox click -> TASK_ACTION_TOGGLE
+        val toggleIntent = Intent().apply {
             putExtra(TaskWidgetProvider.EXTRA_TASK_ID, task.id)
+            putExtra(TaskWidgetProvider.EXTRA_TASK_ACTION, TaskWidgetProvider.TASK_ACTION_TOGGLE)
         }
-        views.setOnClickFillInIntent(R.id.widget_item_checkbox, fillInIntent)
-        views.setOnClickFillInIntent(R.id.widget_item_container, fillInIntent)
+        views.setOnClickFillInIntent(R.id.widget_item_checkbox, toggleIntent)
+
+        // 2. Content click (title & details) -> TASK_ACTION_VIEW_DETAIL
+        val viewDetailIntent = Intent().apply {
+            putExtra(TaskWidgetProvider.EXTRA_TASK_ID, task.id)
+            putExtra(TaskWidgetProvider.EXTRA_TASK_ACTION, TaskWidgetProvider.TASK_ACTION_VIEW_DETAIL)
+        }
+        views.setOnClickFillInIntent(R.id.widget_item_content, viewDetailIntent)
+        views.setOnClickFillInIntent(R.id.widget_item_title, viewDetailIntent)
+        views.setOnClickFillInIntent(R.id.widget_item_time, viewDetailIntent)
+
+        // 3. Edit button click -> TASK_ACTION_EDIT
+        val editIntent = Intent().apply {
+            putExtra(TaskWidgetProvider.EXTRA_TASK_ID, task.id)
+            putExtra(TaskWidgetProvider.EXTRA_TASK_ACTION, TaskWidgetProvider.TASK_ACTION_EDIT)
+        }
+        views.setOnClickFillInIntent(R.id.widget_item_btn_edit, editIntent)
 
         return views
     }

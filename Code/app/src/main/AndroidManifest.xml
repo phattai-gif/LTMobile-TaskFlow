@@ -68,6 +68,7 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.team.taskmanagementapp.widget.ACTION_ITEM_CLICK" />
                 <action android:name="com.team.taskmanagementapp.widget.ACTION_TOGGLE_TASK" />
                 <action android:name="com.team.taskmanagementapp.widget.ACTION_REFRESH_WIDGET" />
             </intent-filter>
@@ -79,7 +80,7 @@
         <service
             android:name=".widget.TaskWidgetService"
             android:permission="android.permission.BIND_REMOTEVIEWS"
-            android:exported="false" />
+            android:exported="true" />
 
         <service
             android:name=".pomodoro.PomodoroService"

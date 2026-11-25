@@ -4,10 +4,12 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="center_vertical"
-    android:minHeight="44dp"
+    android:minHeight="48dp"
     android:orientation="horizontal"
-    android:paddingVertical="6dp"
-    android:paddingHorizontal="4dp">
+    android:paddingLeft="4dp"
+    android:paddingTop="7dp"
+    android:paddingRight="4dp"
+    android:paddingBottom="7dp">
 
     <!-- Clickable checkbox to toggle completion -->
     <ImageView
@@ -18,11 +20,12 @@
         android:padding="2dp"
         android:src="@drawable/ic_widget_circle_outline" />
 
-    <!-- Task details -->
+    <!-- Task details (Clickable to view details) -->
     <LinearLayout
+        android:id="@+id/widget_item_content"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="10dp"
         android:layout_weight="1"
         android:orientation="vertical">
 
@@ -32,27 +35,40 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textColor="#1E293B"
-            android:textSize="13sp"
-            android:textStyle="normal" />
+            android:textColor="#0F172A"
+            android:textSize="13.5sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/widget_item_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="1dp"
+            android:layout_marginTop="2dp"
             android:textColor="#64748B"
-            android:textSize="11sp" />
+            android:textSize="11.5sp" />
     </LinearLayout>
 
-    <!-- Priority tag -->
+    <!-- Priority tag with rounded pill background -->
     <TextView
         android:id="@+id/widget_item_priority"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="6dp"
-        android:paddingHorizontal="6dp"
-        android:paddingVertical="2dp"
+        android:layout_marginStart="8dp"
+        android:paddingLeft="8dp"
+        android:paddingTop="3dp"
+        android:paddingRight="8dp"
+        android:paddingBottom="3dp"
         android:textSize="10sp"
         android:textStyle="bold" />
+
+    <!-- Edit Button (Clickable to edit task directly) -->
+    <ImageView
+        android:id="@+id/widget_item_btn_edit"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/bg_widget_btn_icon"
+        android:contentDescription="Edit task"
+        android:padding="6dp"
+        android:src="@drawable/ic_widget_edit" />
 </LinearLayout>

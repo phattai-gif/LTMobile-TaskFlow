@@ -12,13 +12,19 @@ import com.team.taskmanagementapp.ui.theme.TaskFLowTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 
 class MainActivity : FragmentActivity() {
+    companion object {
+        const val ACTION_OPEN_TASK_DETAIL = "com.team.taskmanagementapp.ACTION_OPEN_TASK_DETAIL"
+        const val EXTRA_VIEW_TASK_ID = "extra_view_task_id"
+    }
+
     private val openPomodoro = MutableStateFlow(false)
+    private val openTaskId = MutableStateFlow<Long?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge()
-        handlePomodoroIntent(intent)
+        handleIntent(intent)
 
         try {
             val analytics = FirebaseAnalytics.getInstance(this)
@@ -33,7 +39,9 @@ class MainActivity : FragmentActivity() {
             TaskFLowTheme {
                 TaskFlowApp(
                     openPomodoro = openPomodoro,
-                    onPomodoroOpened = { openPomodoro.value = false }
+                    onPomodoroOpened = { openPomodoro.value = false },
+                    openTaskId = openTaskId,
+                    onTaskOpened = { openTaskId.value = null }
                 )
             }
         }
@@ -42,13 +50,18 @@ class MainActivity : FragmentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        handlePomodoroIntent(intent)
+        handleIntent(intent)
     }
 
-    private fun handlePomodoroIntent(intent: Intent?) {
+    private fun handleIntent(intent: Intent?) {
         if (intent?.action == PomodoroService.ACTION_OPEN_TIMER) {
             intent.action = null
             openPomodoro.value = true
+        }
+        val taskId = intent?.getLongExtra(EXTRA_VIEW_TASK_ID, -1L) ?: -1L
+        if (taskId > 0L) {
+            intent?.removeExtra(EXTRA_VIEW_TASK_ID)
+            openTaskId.value = taskId
         }
     }
 }

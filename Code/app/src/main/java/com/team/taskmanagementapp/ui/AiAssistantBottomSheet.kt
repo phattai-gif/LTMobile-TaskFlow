@@ -31,6 +31,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MicOff
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -63,6 +64,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.team.taskmanagementapp.R
+import com.team.taskmanagementapp.ai.FirebaseAiService
 import com.team.taskmanagementapp.ui.theme.TaskFlowPrimary
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -99,38 +101,44 @@ fun AiAssistantBottomSheet(
 
     var inputTextValue by remember { mutableStateOf(TextFieldValue("")) }
     var isListening by remember { mutableStateOf(false) }
+    var isThinking by remember { mutableStateOf(false) }
 
     fun sendMessage(text: String) {
         val trimmed = text.trim()
-        if (trimmed.isBlank()) return
+        if (trimmed.isBlank() || isThinking) return
 
         messages.add(AiChatMessage(text = trimmed, isFromUser = true))
         inputTextValue = TextFieldValue("")
+        isThinking = true
 
         coroutineScope.launch {
             delay(100)
-            listState.animateScrollToItem(messages.size - 1)
+            listState.animateScrollToItem(messages.size)
 
-            // Simulate intelligent assistant response
-            delay(500)
-            val lower = trimmed.lowercase()
-            val reply = when {
-                lower.contains("create") || lower.contains("add task") -> {
-                    "I can help you create a task right away. Tap below or type the title, priority, and due date."
-                }
-                lower.contains("today") -> {
-                    "You have today's tasks ready on your dashboard. Focus on the high-priority ones first to maintain your streak!"
-                }
-                lower.contains("progress") || lower.contains("update") -> {
-                    "To update task progress, tell me which task you want to mark as In Progress or Completed."
-                }
-                lower.contains("hello") || lower.contains("hi") -> {
-                    "Hello! How can I boost your productivity today?"
-                }
-                else -> {
-                    "I've received your request: \"$trimmed\". I'm analyzing your tasks to assist you with the best workflow!"
+            val reply = try {
+                FirebaseAiService.generateResponse(trimmed)
+            } catch (e: Exception) {
+                val lower = trimmed.lowercase()
+                when {
+                    lower.contains("create") || lower.contains("add task") || lower.contains("tạo") -> {
+                        "Tôi có thể hỗ trợ bạn tạo task ngay. Bạn có thể nhấn vào nút gợi ý bên dưới hoặc nhập tiêu đề, mức độ ưu tiên và ngày đến hạn."
+                    }
+                    lower.contains("today") || lower.contains("hôm nay") -> {
+                        "Các công việc hôm nay đã sẵn sàng trên màn hình chính. Hãy hoàn thành các task ưu tiên cao trước để duy trì chuỗi streak nhé!"
+                    }
+                    lower.contains("progress") || lower.contains("update") || lower.contains("tiến độ") -> {
+                        "Để cập nhật tiến độ công việc, bạn có thể cho tôi biết task nào cần chuyển sang In Progress hoặc Completed."
+                    }
+                    lower.contains("hello") || lower.contains("hi") || lower.contains("chào") -> {
+                        "Xin chào! Tôi là trợ lý AI TaskFlow, tôi có thể hỗ trợ gì cho bạn hôm nay?"
+                    }
+                    else -> {
+                        "Tôi đã nhận được yêu cầu: \"$trimmed\".\n(Lưu ý: Không thể kết nối trực tiếp đến Firebase Gemini: ${e.localizedMessage ?: "Vui lòng kiểm tra kết nối mạng hoặc token App Check"})."
+                    }
                 }
             }
+
+            isThinking = false
             messages.add(AiChatMessage(text = reply, isFromUser = false))
             delay(100)
             listState.animateScrollToItem(messages.size - 1)
@@ -278,6 +286,43 @@ fun AiAssistantBottomSheet(
                         }
                     }
                 }
+
+                if (isThinking) {
+                    item {
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(
+                                    topStart = 18.dp,
+                                    topEnd = 18.dp,
+                                    bottomStart = 4.dp,
+                                    bottomEnd = 18.dp
+                                ),
+                                color = Color(0xFFF3F4F6),
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(16.dp),
+                                        strokeWidth = 2.dp,
+                                        color = TaskFlowPrimary
+                                    )
+                                    Text(
+                                        text = "AI is thinking...",
+                                        fontSize = 13.sp,
+                                        color = Color(0xFF6B7280)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(14.dp))
@@ -381,10 +426,12 @@ fun AiAssistantBottomSheet(
                 // Send Button
                 Surface(
                     onClick = {
-                        sendMessage(inputTextValue.text)
+                        if (!isThinking) {
+                            sendMessage(inputTextValue.text)
+                        }
                     },
                     shape = CircleShape,
-                    color = if (inputTextValue.text.isNotBlank()) TaskFlowPrimary else TaskFlowPrimary.copy(alpha = 0.5f),
+                    color = if (inputTextValue.text.isNotBlank() && !isThinking) TaskFlowPrimary else TaskFlowPrimary.copy(alpha = 0.5f),
                     modifier = Modifier.size(48.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {

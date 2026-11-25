@@ -5,7 +5,11 @@ import android.os.Bundle
 import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import com.google.firebase.Firebase
 import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.appcheck.appCheck
+import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory
+import com.google.firebase.initialize
 import com.team.taskmanagementapp.pomodoro.PomodoroService
 import com.team.taskmanagementapp.ui.TaskFlowApp
 import com.team.taskmanagementapp.ui.theme.TaskFLowTheme
@@ -25,6 +29,15 @@ class MainActivity : FragmentActivity() {
 
         enableEdgeToEdge()
         handleIntent(intent)
+
+        try {
+            Firebase.initialize(context = this)
+            Firebase.appCheck.installAppCheckProviderFactory(
+                DebugAppCheckProviderFactory.getInstance(),
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
 
         try {
             val analytics = FirebaseAnalytics.getInstance(this)

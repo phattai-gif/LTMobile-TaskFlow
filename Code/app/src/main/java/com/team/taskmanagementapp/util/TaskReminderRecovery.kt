@@ -86,6 +86,9 @@ internal object TaskReminderRecovery {
                         scheduledTimes.remove(task.id)
                     }
                 }
+                if (restore) {
+                    StreakProtectionManager.scheduleStreakReminder(context)
+                }
             }
         } catch (error: CancellationException) {
             throw error

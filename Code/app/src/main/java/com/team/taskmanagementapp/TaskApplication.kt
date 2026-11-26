@@ -12,6 +12,7 @@ class TaskApplication : Application() {
         super.onCreate()
         FirebaseApp.initializeApp(this)
         TaskReminderRecovery.observeTasks(this)
+        com.team.taskmanagementapp.util.StreakProtectionManager.scheduleStreakReminder(this)
 
         // Observe database changes to automatically refresh Home Screen Widgets
         try {

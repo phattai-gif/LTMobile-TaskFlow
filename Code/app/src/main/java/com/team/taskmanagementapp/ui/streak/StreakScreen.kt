@@ -66,7 +66,7 @@ fun StreakScreen(
     }
 
     val viewModel = viewModel<StreakViewModel> {
-        StreakViewModel(repository)
+        StreakViewModel(context.applicationContext, repository)
     }
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

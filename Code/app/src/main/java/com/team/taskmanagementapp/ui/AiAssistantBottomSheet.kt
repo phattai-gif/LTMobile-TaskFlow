@@ -1,5 +1,10 @@
 package com.team.taskmanagementapp.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -30,6 +35,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material.icons.filled.Refresh
@@ -45,6 +51,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -230,16 +237,26 @@ fun AiAssistantBottomSheet(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // ── Chat Messages List ───────────────────────────────────────────
-            LazyColumn(
-                state = listState,
+            val showScrollToBottom by remember {
+                derivedStateOf {
+                    listState.canScrollForward
+                }
+            }
+
+            // ── Chat Messages Container with Floating Scroll-Down Button ─────
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f, fill = false)
                     .height(340.dp)
-                    .padding(horizontal = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
                 items(messages, key = { it.id }) { message ->
                     if (message.isFromUser) {
                         Box(
@@ -472,7 +489,42 @@ fun AiAssistantBottomSheet(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            // ── Floating Scroll-to-Bottom Button ──────────────────────────────
+            androidx.compose.animation.AnimatedVisibility(
+                visible = showScrollToBottom,
+                enter = fadeIn() + scaleIn(),
+                exit = fadeOut() + scaleOut(),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 6.dp)
+            ) {
+                Surface(
+                    onClick = {
+                        coroutineScope.launch {
+                            if (messages.isNotEmpty()) {
+                                listState.animateScrollToItem(messages.size - 1)
+                            }
+                        }
+                    },
+                    shape = CircleShape,
+                    color = Color.White,
+                    shadowElevation = 6.dp,
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                    modifier = Modifier.size(38.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = "Scroll to bottom",
+                            tint = TaskFlowPrimary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
 
             // ── Suggestion Pills: "Today's tasks", "Create a task", "Update progress"
             Row(

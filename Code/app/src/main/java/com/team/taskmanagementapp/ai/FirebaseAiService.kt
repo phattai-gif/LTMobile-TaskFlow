@@ -21,7 +21,7 @@ import java.util.Locale
 object FirebaseAiService {
     private const val TAG = "FirebaseAiService"
     private const val MODEL_NAME = "gemini-4-hydrogen"
-    private const val FALLBACK_MODEL_NAME = "gemini-1.5-flash"
+    private const val FALLBACK_MODEL_NAME = "gemini-3.8-flash"
 
     private val generativeModel: GenerativeModel by lazy {
         Firebase.ai(backend = GenerativeBackend.googleAI())

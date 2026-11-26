@@ -28,6 +28,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MicOff
@@ -54,6 +55,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -65,7 +67,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.team.taskmanagementapp.R
 import com.team.taskmanagementapp.ai.FirebaseAiService
+import com.team.taskmanagementapp.data.local.entity.Task
+import com.team.taskmanagementapp.data.model.enums.Priority
 import com.team.taskmanagementapp.ui.theme.TaskFlowPrimary
+import com.team.taskmanagementapp.util.DateTimeUtils
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -74,7 +79,9 @@ data class AiChatMessage(
     val id: String = UUID.randomUUID().toString(),
     val text: String,
     val isFromUser: Boolean,
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    val actionTask: Task? = null,
+    val actionType: String? = null
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -84,8 +91,10 @@ fun AiAssistantBottomSheet(
     modifier: Modifier = Modifier,
     onNavigateToCreateTask: (() -> Unit)? = null,
     onNavigateToTodayTasks: (() -> Unit)? = null,
-    onNavigateToStats: (() -> Unit)? = null
+    onNavigateToStats: (() -> Unit)? = null,
+    onNavigateToTaskDetail: ((Long) -> Unit)? = null
 ) {
+    val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
@@ -93,7 +102,7 @@ fun AiAssistantBottomSheet(
     val messages = remember {
         mutableStateListOf(
             AiChatMessage(
-                text = "Hi! I can create tasks, update Todo / In Progress / Completed, change due dates or priority, and find your tasks. What would you like to do?",
+                text = "Xin chào! Mình là trợ lý AI TaskFlow. Mình có thể trực tiếp tạo task, lên lịch, đánh dấu hoàn thành hoặc tra cứu công việc cho bạn. Bạn cần hỗ trợ gì?",
                 isFromUser = false
             )
         )
@@ -115,11 +124,20 @@ fun AiAssistantBottomSheet(
             delay(100)
             listState.animateScrollToItem(messages.size)
 
-            val reply = try {
-                FirebaseAiService.generateResponse(trimmed)
+            try {
+                val result = FirebaseAiService.generateActionableResponse(context, trimmed)
+                isThinking = false
+                messages.add(
+                    AiChatMessage(
+                        text = result.cleanText,
+                        isFromUser = false,
+                        actionTask = result.executedTask,
+                        actionType = result.actionType
+                    )
+                )
             } catch (e: Exception) {
                 val lower = trimmed.lowercase()
-                when {
+                val reply = when {
                     lower.contains("create") || lower.contains("add task") || lower.contains("tạo") -> {
                         "Tôi có thể hỗ trợ bạn tạo task ngay. Bạn có thể nhấn vào nút gợi ý bên dưới hoặc nhập tiêu đề, mức độ ưu tiên và ngày đến hạn."
                     }
@@ -136,10 +154,10 @@ fun AiAssistantBottomSheet(
                         "Tôi đã nhận được yêu cầu: \"$trimmed\".\n(Lưu ý: Không thể kết nối trực tiếp đến Firebase Gemini: ${e.localizedMessage ?: "Vui lòng kiểm tra kết nối mạng hoặc token App Check"})."
                     }
                 }
+                isThinking = false
+                messages.add(AiChatMessage(text = reply, isFromUser = false))
             }
 
-            isThinking = false
-            messages.add(AiChatMessage(text = reply, isFromUser = false))
             delay(100)
             listState.animateScrollToItem(messages.size - 1)
         }
@@ -275,13 +293,155 @@ fun AiAssistantBottomSheet(
                                 color = Color(0xFFF3F4F6),
                                 modifier = Modifier.fillMaxWidth(0.92f)
                             ) {
-                                Text(
-                                    text = message.text,
-                                    fontSize = 14.sp,
-                                    color = Color(0xFF1F2937),
-                                    lineHeight = 21.sp,
+                                Column(
                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 13.dp)
-                                )
+                                ) {
+                                    Text(
+                                        text = message.text,
+                                        fontSize = 14.sp,
+                                        color = Color(0xFF1F2937),
+                                        lineHeight = 21.sp
+                                    )
+
+                                    if (message.actionTask != null && message.actionType == "CREATED") {
+                                        val task = message.actionTask
+                                        Spacer(modifier = Modifier.height(10.dp))
+                                        Surface(
+                                            shape = RoundedCornerShape(14.dp),
+                                            color = Color.White,
+                                            border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Column(modifier = Modifier.padding(12.dp)) {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    modifier = Modifier.fillMaxWidth()
+                                                ) {
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                                    ) {
+                                                        Icon(
+                                                            imageVector = Icons.Default.CheckCircle,
+                                                            contentDescription = "Success",
+                                                            tint = Color(0xFF16A34A),
+                                                            modifier = Modifier.size(16.dp)
+                                                        )
+                                                        Text(
+                                                            text = "Đã lưu vào TaskFlow",
+                                                            fontSize = 12.sp,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = Color(0xFF16A34A)
+                                                        )
+                                                    }
+
+                                                    val (badgeBg, badgeText) = when (task.priority) {
+                                                        Priority.URGENT, Priority.HIGH -> Pair(Color(0xFFFEE2E2), Color(0xFFDC2626))
+                                                        Priority.MEDIUM -> Pair(Color(0xFFFEF3C7), Color(0xFFD97706))
+                                                        Priority.LOW -> Pair(Color(0xFFE0E7FF), Color(0xFF4F46E5))
+                                                    }
+                                                    Surface(
+                                                        shape = RoundedCornerShape(6.dp),
+                                                        color = badgeBg
+                                                    ) {
+                                                        Text(
+                                                            text = task.priority.name,
+                                                            fontSize = 10.5.sp,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = badgeText,
+                                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                        )
+                                                    }
+                                                }
+
+                                                Spacer(modifier = Modifier.height(6.dp))
+                                                Text(
+                                                    text = task.title,
+                                                    fontSize = 14.5.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = Color(0xFF0F172A)
+                                                )
+
+                                                if (task.description.isNotBlank()) {
+                                                    Spacer(modifier = Modifier.height(2.dp))
+                                                    Text(
+                                                        text = task.description,
+                                                        fontSize = 12.5.sp,
+                                                        color = Color(0xFF64748B),
+                                                        maxLines = 2
+                                                    )
+                                                }
+
+                                                Spacer(modifier = Modifier.height(8.dp))
+                                                val dueCombined = DateTimeUtils.getCombinedDueTimestamp(task.dueDate, task.dueTime)
+                                                if (dueCombined > 0L) {
+                                                    val formattedDue = DateTimeUtils.formatTimestamp(dueCombined, "HH:mm - EEEE, dd/MM/yyyy")
+                                                    Text(
+                                                        text = "⏰ $formattedDue",
+                                                        fontSize = 12.sp,
+                                                        fontWeight = FontWeight.Medium,
+                                                        color = Color(0xFF2563EB)
+                                                    )
+                                                }
+
+                                                if (onNavigateToTaskDetail != null) {
+                                                    Spacer(modifier = Modifier.height(10.dp))
+                                                    Surface(
+                                                        onClick = {
+                                                            onNavigateToTaskDetail.invoke(task.id.toLong())
+                                                        },
+                                                        shape = RoundedCornerShape(8.dp),
+                                                        color = TaskFlowPrimary.copy(alpha = 0.08f),
+                                                        border = BorderStroke(1.dp, TaskFlowPrimary.copy(alpha = 0.25f)),
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .height(36.dp)
+                                                    ) {
+                                                        Box(contentAlignment = Alignment.Center) {
+                                                            Text(
+                                                                text = "Xem chi tiết task",
+                                                                fontSize = 12.5.sp,
+                                                                fontWeight = FontWeight.SemiBold,
+                                                                color = TaskFlowPrimary
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } else if (message.actionTask != null && (message.actionType == "COMPLETED" || message.actionType == "DELETED")) {
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Surface(
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = if (message.actionType == "COMPLETED") Color(0xFFDCFCE7) else Color(0xFFFEE2E2),
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.CheckCircle,
+                                                    contentDescription = null,
+                                                    tint = if (message.actionType == "COMPLETED") Color(0xFF16A34A) else Color(0xFFDC2626),
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                                Text(
+                                                    text = if (message.actionType == "COMPLETED") {
+                                                        "Đã hoàn thành: ${message.actionTask.title}"
+                                                    } else {
+                                                        "Đã xóa: ${message.actionTask.title}"
+                                                    },
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = if (message.actionType == "COMPLETED") Color(0xFF166534) else Color(0xFF991B1B)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

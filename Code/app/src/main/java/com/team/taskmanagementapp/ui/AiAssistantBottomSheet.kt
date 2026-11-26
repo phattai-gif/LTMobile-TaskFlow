@@ -102,7 +102,7 @@ fun AiAssistantBottomSheet(
     val messages = remember {
         mutableStateListOf(
             AiChatMessage(
-                text = "Xin chào! Mình là trợ lý AI TaskFlow. Mình có thể trực tiếp tạo task, lên lịch, đánh dấu hoàn thành hoặc tra cứu công việc cho bạn. Bạn cần hỗ trợ gì?",
+                text = "Hi! I can create tasks, update Todo / In Progress / Completed, change due dates or priority, and find your tasks. What would you like to do?",
                 isFromUser = false
             )
         )

@@ -63,7 +63,7 @@ object FirebaseAiService {
                When the user asks to create or schedule a task (e.g., "Tạo cho mình 1 task...", "Thêm việc...", "Nhắc mình...", "Lên lịch..."):
                - Calculate the exact target date (in YYYY-MM-DD format) based on current date $todayIso and user's intent (e.g. "thứ 6", "ngày mai", "tuần sau").
                - Determine target time (in HH:mm 24-hour format, e.g. "12:00", "09:00", "15:30").
-               - Determine priority: "HIGH", "MEDIUM", or "LOW".
+               - Determine priority: "URGENT", "HIGH", "MEDIUM", or "LOW".
                - You MUST output an action block formatted exactly like this:
                ```action
                {

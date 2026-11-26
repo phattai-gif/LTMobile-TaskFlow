@@ -7,6 +7,7 @@ import android.util.Log
 import com.team.taskmanagementapp.data.local.db.AppDatabase
 import com.team.taskmanagementapp.util.AlarmScheduler
 import com.team.taskmanagementapp.util.NotificationHelper
+import com.team.taskmanagementapp.util.StreakProtectionManager
 import com.team.taskmanagementapp.util.TaskReminderTiming
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -15,6 +16,25 @@ import kotlinx.coroutines.launch
 
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        val app = context.applicationContext
+
+        // Handle Streak Protection Reminder
+        if (intent.action == StreakProtectionManager.ACTION_STREAK_REMINDER) {
+            val pendingResult = goAsync()
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    StreakProtectionManager.checkAndShowStreakReminder(app)
+                    // Re-schedule for next day
+                    StreakProtectionManager.scheduleStreakReminder(app)
+                } catch (e: Exception) {
+                    Log.e("AlarmReceiver", "Error in streak protection reminder", e)
+                } finally {
+                    pendingResult.finish()
+                }
+            }
+            return
+        }
+
         if (intent.action != AlarmScheduler.ACTION_REMINDER ||
             !intent.hasExtra(AlarmScheduler.EXTRA_TASK_ID)
         ) {
@@ -24,7 +44,6 @@ class AlarmReceiver : BroadcastReceiver() {
         val triggerAt = intent.getLongExtra(AlarmScheduler.EXTRA_TRIGGER_AT, 0)
         if (triggerAt <= 0L) return
 
-        val app = context.applicationContext
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {

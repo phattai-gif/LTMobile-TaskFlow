@@ -1,31 +1,30 @@
 package com.team.taskmanagementapp.ui.streak
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.team.taskmanagementapp.data.local.entity.Task
 import com.team.taskmanagementapp.data.repository.TaskRepository
 import com.team.taskmanagementapp.ui.home.StreakDayUiModel
 import com.team.taskmanagementapp.util.StreakCalculator
+import com.team.taskmanagementapp.util.StreakProtectionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
 import java.util.Calendar
 import java.util.Locale
 
 class StreakViewModel(
+    private val context: Context,
     private val taskRepository: TaskRepository
 ) : ViewModel() {
 
-    private val streakProtectionEnabled = MutableStateFlow(true)
-    private val reminderHour = MutableStateFlow(20)
-    private val reminderMinute = MutableStateFlow(0)
+    private val streakProtectionEnabled = MutableStateFlow(StreakProtectionManager.isEnabled(context))
+    private val reminderHour = MutableStateFlow(StreakProtectionManager.getReminderHour(context))
+    private val reminderMinute = MutableStateFlow(StreakProtectionManager.getReminderMinute(context))
 
     val uiState: StateFlow<StreakUiState> = combine(
         taskRepository.getAllTasks(),
@@ -61,17 +60,26 @@ class StreakViewModel(
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = StreakUiState(
             weekDays = StreakCalculator.buildStreakWeekDays(System.currentTimeMillis()),
+            streakProtectionEnabled = StreakProtectionManager.isEnabled(context),
+            reminderHour = StreakProtectionManager.getReminderHour(context),
+            reminderMinute = StreakProtectionManager.getReminderMinute(context),
+            reminderTimeFormatted = formatReminderTime(
+                StreakProtectionManager.getReminderHour(context),
+                StreakProtectionManager.getReminderMinute(context)
+            ),
             isLoading = true
         )
     )
 
     fun toggleStreakProtection(enabled: Boolean) {
         streakProtectionEnabled.value = enabled
+        StreakProtectionManager.setEnabled(context, enabled)
     }
 
     fun setReminderTime(hour: Int, minute: Int) {
         reminderHour.value = hour
         reminderMinute.value = minute
+        StreakProtectionManager.setReminderTime(context, hour, minute)
     }
 
     private fun formatReminderTime(hour: Int, minute: Int): String {

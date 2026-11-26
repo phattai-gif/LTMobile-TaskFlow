@@ -35,7 +35,7 @@ sealed interface HomeUiState {
         val todayTasks: List<HomeTaskUiModel> = emptyList(),
         val upcomingTasks: List<HomeTaskUiModel> = emptyList(),
         val completedTasks: List<HomeTaskUiModel> = emptyList(),
-        val userName: String = "Alex"
+        val userName: String = ""
     ) : HomeUiState
 }
 

@@ -107,8 +107,11 @@ object AiChatHistoryManager {
                     lower.contains("progress") || lower.contains("update") || lower.contains("tiến độ") -> {
                         "Để cập nhật tiến độ, bạn có thể cho tôi biết task nào cần đánh dấu In Progress hoặc Completed."
                     }
+                    lower.contains("ăn") || lower.contains("phở") || lower.contains("cơm") || lower.contains("uống") -> {
+                        "Haha, nghe hấp dẫn quá! Mình là trợ lý số nên chưa nấu được món này cho bạn rồi, nhưng mình có thể tạo ngay task nhắc nhở bạn đi ăn uống đúng giờ nhé. Bạn có muốn mình tạo task không?"
+                    }
                     else -> {
-                        "Tôi đã ghi nhận câu hỏi của bạn. Dù là việc gì, TaskFlow luôn sẵn sàng giúp bạn lên lịch và quản lý công việc hiệu quả nhất!"
+                        "Mình đã lắng nghe câu hỏi của bạn! Với bất kỳ dự định hay ý tưởng nào, mình luôn sẵn sàng giúp bạn lên lịch, tạo task và quản lý mục tiêu trong TaskFlow thật hiệu quả. Bạn có muốn bắt đầu bằng một công việc cụ thể không?"
                     }
                 }
                 addMessage(context, AiChatMessage(text = fallbackReply, isFromUser = false))

@@ -98,6 +98,15 @@ object FirebaseAiService {
             4. GENERAL QUERIES & LISTING TASKS:
                When the user asks about their tasks or schedule, reference the User Tasks Context below to provide a helpful answer.
                
+            5. HANDLING OFF-TOPIC OR UNRELATED TOPICS (FOOD, CHIT-CHAT, TRIVIA, LIFE, ETC.):
+               If the user asks about topics outside task management (for example: asking for food like "Bạn có món phở bò không?", weather, small talk, casual jokes, or random questions):
+               - NEVER give a rigid, robotic refusal or say "I am only a task assistant".
+               - Be witty, warm, conversational, and charming. Respond naturally to their question first.
+               - THEN, smoothly and cleverly steer them back to TaskFlow's mission: task planning, reminders, Pomodoro focus, or scheduling.
+               - For instance, if asked "Bạn có món phở bò không?":
+                 Respond playfully: "Haha, mình là trợ lý ảo nên tiếc là không nấu phở bò phục vụ bạn được rồi! 🍜 Nhưng nếu bạn muốn thưởng thức, mình có thể tạo ngay một task \"Đi ăn phở bò\" hoặc hẹn giờ nhắc ăn trưa để bạn không bỏ bữa nhé. Bạn có muốn mình lên lịch ngay không?"
+               - Always be adaptive, natural, and never sound like a template.
+               
             Keep your conversational message concise, friendly, and helpful. Always respond in the user's language (Vietnamese or English).
         """.trimIndent()
 

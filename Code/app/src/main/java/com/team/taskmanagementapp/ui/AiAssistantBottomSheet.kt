@@ -9,7 +9,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,7 +25,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -248,7 +246,7 @@ fun AiAssistantBottomSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f, fill = false)
-                    .height(340.dp)
+                    .height(380.dp)
             ) {
                 LazyColumn(
                     state = listState,
@@ -526,39 +524,8 @@ fun AiAssistantBottomSheet(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-            // ── Suggestion Pills: "Today's tasks", "Create a task", "Update progress"
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                SuggestionChipPill(
-                    text = "Today's tasks",
-                    onClick = {
-                        sendMessage("Show me today's tasks")
-                        onNavigateToTodayTasks?.invoke()
-                    }
-                )
-                SuggestionChipPill(
-                    text = "Create a task",
-                    onClick = {
-                        sendMessage("I want to create a new task")
-                    }
-                )
-                SuggestionChipPill(
-                    text = "Update progress",
-                    onClick = {
-                        sendMessage("Update my task progress")
-                    }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // ── Input Area: Text Field, Voice/Mic, and Send Button ────────────
-            Row(
+        // ── Input Area: Text Field, Voice/Mic, and Send Button ────────────
+        Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp),
@@ -656,32 +623,6 @@ fun AiAssistantBottomSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
-            )
-        }
-    }
-}
-
-@Composable
-private fun SuggestionChipPill(
-    text: String,
-    onClick: () -> Unit
-) {
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(20.dp),
-        color = Color.White,
-        border = BorderStroke(1.2.dp, Color(0xFF93C5FD)),
-        modifier = Modifier.height(38.dp)
-    ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
-        ) {
-            Text(
-                text = text,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF2563EB)
             )
         }
     }

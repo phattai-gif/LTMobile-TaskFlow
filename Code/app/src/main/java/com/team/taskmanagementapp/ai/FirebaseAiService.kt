@@ -21,10 +21,16 @@ import java.util.Locale
 object FirebaseAiService {
     private const val TAG = "FirebaseAiService"
     private const val MODEL_NAME = "gemini-4-hydrogen"
+    private const val FALLBACK_MODEL_NAME = "gemini-1.5-flash"
 
     private val generativeModel: GenerativeModel by lazy {
         Firebase.ai(backend = GenerativeBackend.googleAI())
             .generativeModel(MODEL_NAME)
+    }
+
+    private val fallbackModel: GenerativeModel by lazy {
+        Firebase.ai(backend = GenerativeBackend.googleAI())
+            .generativeModel(FALLBACK_MODEL_NAME)
     }
 
     /**
@@ -108,7 +114,12 @@ object FirebaseAiService {
         }
 
         try {
-            val response = generativeModel.generateContent(fullPrompt)
+            val response = try {
+                generativeModel.generateContent(fullPrompt)
+            } catch (primaryError: Exception) {
+                Log.w(TAG, "Primary model $MODEL_NAME error, trying fallback $FALLBACK_MODEL_NAME", primaryError)
+                fallbackModel.generateContent(fullPrompt)
+            }
             val rawOutput = response.text?.trim() ?: ""
             if (rawOutput.isBlank()) {
                 return@withContext AiParsedActionResult(cleanText = "Không nhận được phản hồi từ AI, vui lòng thử lại.")

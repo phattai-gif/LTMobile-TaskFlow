@@ -2,11 +2,18 @@ package com.team.taskmanagementapp.ai
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.team.taskmanagementapp.ui.AiChatMessage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 /**
  * Manages persistent chat history for the AI Assistant across bottom sheet dismiss/reopen and app sessions.
@@ -23,6 +30,11 @@ object AiChatHistoryManager {
     private val gson = Gson()
     val messages: SnapshotStateList<AiChatMessage> = mutableStateListOf()
     private var isInitialized = false
+
+    var isThinking by mutableStateOf(false)
+        internal set
+
+    private val managerScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     fun initIfNeeded(context: Context) {
         if (isInitialized) return
@@ -63,9 +75,53 @@ object AiChatHistoryManager {
         saveMessages(context)
     }
 
+    fun sendUserMessage(context: Context, text: String, onMessageSent: (() -> Unit)? = null) {
+        val trimmed = text.trim()
+        if (trimmed.isBlank() || isThinking) return
+
+        addMessage(context, AiChatMessage(text = trimmed, isFromUser = true))
+        isThinking = true
+        onMessageSent?.invoke()
+
+        managerScope.launch {
+            try {
+                val result = FirebaseAiService.generateActionableResponse(context, trimmed)
+                addMessage(
+                    context,
+                    AiChatMessage(
+                        text = result.cleanText,
+                        isFromUser = false,
+                        actionTask = result.executedTask,
+                        actionType = result.actionType
+                    )
+                )
+            } catch (e: Exception) {
+                val lower = trimmed.lowercase()
+                val fallbackReply = when {
+                    lower.contains("create") || lower.contains("add task") || lower.contains("tạo") -> {
+                        "Tôi có thể hỗ trợ bạn tạo task ngay. Bạn hãy cho tôi biết tên công việc, thời gian và mức độ ưu tiên nhé!"
+                    }
+                    lower.contains("today") || lower.contains("hôm nay") -> {
+                        "Các công việc hôm nay đã sẵn sàng trên màn hình chính. Bạn hãy hoàn thành các task ưu tiên cao trước nhé!"
+                    }
+                    lower.contains("progress") || lower.contains("update") || lower.contains("tiến độ") -> {
+                        "Để cập nhật tiến độ, bạn có thể cho tôi biết task nào cần đánh dấu In Progress hoặc Completed."
+                    }
+                    else -> {
+                        "Tôi đã ghi nhận câu hỏi của bạn. Dù là việc gì, TaskFlow luôn sẵn sàng giúp bạn lên lịch và quản lý công việc hiệu quả nhất!"
+                    }
+                }
+                addMessage(context, AiChatMessage(text = fallbackReply, isFromUser = false))
+            } finally {
+                isThinking = false
+            }
+        }
+    }
+
     fun resetConversation(context: Context) {
         messages.clear()
         messages.add(defaultGreeting)
+        isThinking = false
         saveMessages(context)
     }
 

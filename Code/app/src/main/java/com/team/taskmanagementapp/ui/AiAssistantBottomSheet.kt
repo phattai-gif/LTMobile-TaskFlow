@@ -105,60 +105,27 @@ fun AiAssistantBottomSheet(
         AiChatHistoryManager.initIfNeeded(context)
     }
     val messages = AiChatHistoryManager.messages
+    val isThinking = AiChatHistoryManager.isThinking
+
+    LaunchedEffect(messages.size) {
+        if (messages.isNotEmpty()) {
+            listState.animateScrollToItem(messages.size - 1)
+        }
+    }
 
     var inputTextValue by remember { mutableStateOf(TextFieldValue("")) }
     var isListening by remember { mutableStateOf(false) }
-    var isThinking by remember { mutableStateOf(false) }
 
     fun sendMessage(text: String) {
         val trimmed = text.trim()
         if (trimmed.isBlank() || isThinking) return
 
-        AiChatHistoryManager.addMessage(context, AiChatMessage(text = trimmed, isFromUser = true))
         inputTextValue = TextFieldValue("")
-        isThinking = true
-
-        coroutineScope.launch {
-            delay(100)
-            listState.animateScrollToItem(messages.size)
-
-            try {
-                val result = FirebaseAiService.generateActionableResponse(context, trimmed)
-                isThinking = false
-                AiChatHistoryManager.addMessage(
-                    context,
-                    AiChatMessage(
-                        text = result.cleanText,
-                        isFromUser = false,
-                        actionTask = result.executedTask,
-                        actionType = result.actionType
-                    )
-                )
-            } catch (e: Exception) {
-                val lower = trimmed.lowercase()
-                val reply = when {
-                    lower.contains("create") || lower.contains("add task") || lower.contains("tạo") -> {
-                        "Tôi có thể hỗ trợ bạn tạo task ngay. Bạn có thể nhấn vào nút gợi ý bên dưới hoặc nhập tiêu đề, mức độ ưu tiên và ngày đến hạn."
-                    }
-                    lower.contains("today") || lower.contains("hôm nay") -> {
-                        "Các công việc hôm nay đã sẵn sàng trên màn hình chính. Hãy hoàn thành các task ưu tiên cao trước để duy trì chuỗi streak nhé!"
-                    }
-                    lower.contains("progress") || lower.contains("update") || lower.contains("tiến độ") -> {
-                        "Để cập nhật tiến độ công việc, bạn có thể cho tôi biết task nào cần chuyển sang In Progress hoặc Completed."
-                    }
-                    lower.contains("hello") || lower.contains("hi") || lower.contains("chào") -> {
-                        "Xin chào! Tôi là trợ lý AI TaskFlow, tôi có thể hỗ trợ gì cho bạn hôm nay?"
-                    }
-                    else -> {
-                        "Tôi đã nhận được yêu cầu: \"$trimmed\".\n(Lưu ý: Không thể kết nối trực tiếp đến Firebase Gemini: ${e.localizedMessage ?: "Vui lòng kiểm tra kết nối mạng hoặc token App Check"})."
-                    }
-                }
-                isThinking = false
-                AiChatHistoryManager.addMessage(context, AiChatMessage(text = reply, isFromUser = false))
+        AiChatHistoryManager.sendUserMessage(context, trimmed) {
+            coroutineScope.launch {
+                delay(100)
+                listState.animateScrollToItem(messages.size)
             }
-
-            delay(100)
-            listState.animateScrollToItem(messages.size - 1)
         }
     }
 

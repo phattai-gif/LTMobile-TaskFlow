@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MicOff
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -66,6 +67,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.team.taskmanagementapp.R
+import com.team.taskmanagementapp.ai.AiChatHistoryManager
 import com.team.taskmanagementapp.ai.FirebaseAiService
 import com.team.taskmanagementapp.data.local.entity.Task
 import com.team.taskmanagementapp.data.model.enums.Priority
@@ -99,14 +101,10 @@ fun AiAssistantBottomSheet(
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
-    val messages = remember {
-        mutableStateListOf(
-            AiChatMessage(
-                text = "Hi! I can create tasks, update Todo / In Progress / Completed, change due dates or priority, and find your tasks. What would you like to do?",
-                isFromUser = false
-            )
-        )
+    LaunchedEffect(Unit) {
+        AiChatHistoryManager.initIfNeeded(context)
     }
+    val messages = AiChatHistoryManager.messages
 
     var inputTextValue by remember { mutableStateOf(TextFieldValue("")) }
     var isListening by remember { mutableStateOf(false) }
@@ -116,7 +114,7 @@ fun AiAssistantBottomSheet(
         val trimmed = text.trim()
         if (trimmed.isBlank() || isThinking) return
 
-        messages.add(AiChatMessage(text = trimmed, isFromUser = true))
+        AiChatHistoryManager.addMessage(context, AiChatMessage(text = trimmed, isFromUser = true))
         inputTextValue = TextFieldValue("")
         isThinking = true
 
@@ -127,7 +125,8 @@ fun AiAssistantBottomSheet(
             try {
                 val result = FirebaseAiService.generateActionableResponse(context, trimmed)
                 isThinking = false
-                messages.add(
+                AiChatHistoryManager.addMessage(
+                    context,
                     AiChatMessage(
                         text = result.cleanText,
                         isFromUser = false,
@@ -155,7 +154,7 @@ fun AiAssistantBottomSheet(
                     }
                 }
                 isThinking = false
-                messages.add(AiChatMessage(text = reply, isFromUser = false))
+                AiChatHistoryManager.addMessage(context, AiChatMessage(text = reply, isFromUser = false))
             }
 
             delay(100)
@@ -227,17 +226,38 @@ fun AiAssistantBottomSheet(
                     )
                 }
 
-                // Close Button
-                IconButton(
-                    onClick = onDismissRequest,
-                    modifier = Modifier.size(36.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Close",
-                        tint = Color(0xFF4B5563),
-                        modifier = Modifier.size(22.dp)
-                    )
+                // Header Actions: New Chat / Refresh & Close Button
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = {
+                            AiChatHistoryManager.resetConversation(context)
+                            coroutineScope.launch {
+                                listState.scrollToItem(0)
+                            }
+                        },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "New Conversation",
+                            tint = Color(0xFF4B5563),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    IconButton(
+                        onClick = onDismissRequest,
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = Color(0xFF4B5563),
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
                 }
             }
 

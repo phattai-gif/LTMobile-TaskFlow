@@ -437,6 +437,10 @@ fun TaskFlowApp(
                 navController.navigate(TaskFlowRoutes.HOME) {
                     launchSingleTop = true
                 }
+            },
+            onNavigateToTaskDetail = { taskId ->
+                showAiAssistantBottomSheet = false
+                openTaskDetail(taskId)
             }
         )
     }

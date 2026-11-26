@@ -80,11 +80,13 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.gson)
 
-    // Firebase (BoM 33.1.0)
-    implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
+    // Firebase (BoM 34.0.0 with Firebase AI Logic & App Check)
+    implementation(platform("com.google.firebase:firebase-bom:34.0.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-database")
     implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-ai")
+    implementation("com.google.firebase:firebase-appcheck-debug")
 
     // Google Auth
     implementation(libs.play.services.auth)

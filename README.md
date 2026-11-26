@@ -1,6 +1,6 @@
 # 🚀 LTMobile-TaskFlow: Hệ Thống Quản Lý & Tối Ưu Năng Suất Công Việc Toàn Diện
 
-> **TaskFlow** là ứng dụng di động quản lý công việc và tối ưu năng suất cá nhân/đội ngũ phát triển trên nền tảng **Android Native (Kotlin & Jetpack Compose)**, hoạt động theo triết lý **Local-First & Offline-First** kết hợp với nền tảng điện toán đám mây **Firebase BaaS**. Ứng dụng tích hợp hệ thống đo lường thời gian tập trung Pomodoro chuyên sâu, trợ lý ảo thông minh AI, hệ thống Gamification vinh danh thành tích (Streak & Badges) cùng cơ chế bảo mật sinh trắc học và mã hóa dữ liệu đa lớp.
+> **TaskFlow** là ứng dụng di động quản lý công việc và tối ưu năng suất cá nhân/đội ngũ phát triển trên nền tảng **Android Native (Kotlin & Jetpack Compose)**, hoạt động theo triết lý **Local-First & Offline-First** kết hợp với nền tảng điện toán đám mây **Firebase BaaS**. Ứng dụng tích hợp hệ thống đo lường thời gian tập trung Pomodoro chuyên sâu (Foreground Service), trợ lý thông minh Firebase AI Logic (Gemini 4 Hydrogen / 3.8 Flash), hệ thống Gamification vinh danh thành tích (Streak Tracker & Badges), tiện ích màn hình chính (App Widget tương tác hai chiều) cùng cơ chế bảo mật sinh trắc học vân tay và mã PIN mã hóa đa lớp.
 
 ---
 
@@ -9,391 +9,520 @@
   - [1.1. Bối cảnh & Vấn đề thực tế](#11-bối-cảnh--vấn-đề-thực-tế)
   - [1.2. Giải pháp hệ thống TaskFlow](#12-giải-pháp-hệ-thống-taskflow)
   - [1.3. Bảng phân quyền đối tượng sử dụng](#13-bảng-phân-quyền-đối-tượng-sử-dụng)
-  - [1.4. Nguyên tắc thiết kế & Kiến trúc hệ thống](#14-nguyên-tắc-thiết-kế--kiến-trúc-hệ-thống)
-- [2. Danh Sách Thành Viên Nhóm](#2-danh-sách-thành-viên-nhóm)
+  - [1.4. Nguyên tắc thiết kế cốt lõi](#14-nguyên-tắc-thiết-kế-cốt-lõi)
+- [2. Kiến Trúc Ứng Dụng (MVVM Architecture & Data Flow)](#2-kiến-trúc-ứng-dụng-mvvm-architecture--data-flow)
+  - [2.1. Mô hình MVVM & Luồng Dữ liệu Một chiều (UDF)](#21-mô-hình-mvvm--luồng-dữ-liệu-một-chiều-udf)
+  - [2.2. Sơ đồ Kiến trúc Chi tiết (Architecture Diagram)](#22-sơ-đồ-kiến-trúc-chi-tiết-architecture-diagram)
 - [3. Bảng Tổng Hợp Các Tính Năng Chính](#3-bảng-tổng-hợp-các-tính-năng-chính)
-- [4. Bảng Công Nghệ Sử Dụng (Tech Stack)](#4-bảng-công-nghệ-sử-dụng-tech-stack)
-- [5. Quản Lý Database & Cấu Trúc Dữ Liệu](#5-quản-lý-database--cấu-trúc-dữ-liệu)
-  - [5.1. Cơ sở dữ liệu cục bộ (Room ORM / SQLite)](#51-cơ-sở-dữ-liệu-cục-bộ-room-orm--sqlite)
-  - [5.2. Cấu trúc SharedPreferences](#52-cấu-trúc-sharedpreferences)
-  - [5.3. Lưu trữ & Đồng bộ Đám mây (Firebase Cloud)](#53-lưu-trữ--đồng-bộ-đám-mây-firebase-cloud)
-- [6. Cấu Trúc Thư Mục (Project Structure)](#6-cấu-trúc-thư-mục-project-structure)
-- [7. Hướng Dẫn Cài Đặt & Khởi Chạy (How to Run)](#7-hướng-dẫn-cài-đặt--khởi-chạy-how-to-run)
-  - [7.1. Yêu cầu môi trường phát triển](#71-yêu-cầu-môi-trường-phát-triển)
-  - [7.2. Các bước Clone & Mở dự án](#72-các-bước-clone--mở-dự-án)
-  - [7.3. Cấu hình biến môi trường & Firebase Services](#73-cấu-hình-biến-môi-trường--firebase-services)
-  - [7.4. Biên dịch & Khởi chạy ứng dụng](#74-biên-dịch--khởi-chạy-ứng-dụng)
-  - [7.5. Xử lý các lỗi thường gặp (Troubleshooting)](#75-xử-lý-các-lỗi-thường-gặp-troubleshooting)
+- [4. Danh Sách Thành Viên Nhóm](#4-danh-sách-thành-viên-nhóm)
+- [5. Tiến Độ Triển Khai Dự Án](#5-tiến-độ-triển-khai-dự-án)
+- [6. Bảng Công Nghệ Sử Dụng (Tech Stack)](#6-bảng-công-nghệ-sử-dụng-tech-stack)
+- [7. Quản Lý Database & Cấu Trúc Dữ Liệu](#7-quản-lý-database--cấu-trúc-dữ-liệu)
+  - [7.1. Bảng `tasks` (Công việc)](#71-bảng-tasks-công-việc)
+  - [7.2. Bảng `pomodoro_sessions` (Phiên tập trung)](#72-bảng-pomodoro_sessions-phiên-tập-trung)
+  - [7.3. Lưu trữ Cấu hình Cục bộ (SharedPreferences)](#73-lưu-trữ-cấu-hình-cục-bộ-sharedpreferences)
+- [8. Cấu Trúc Thư Mục (Project Structure)](#8-cấu-trúc-thư-mục-project-structure)
+- [9. Hướng Dẫn Cài Đặt & Cách Chạy (How to Run)](#9-hướng-dẫn-cài-đặt--cách-chạy-how-to-run)
+  - [9.1. Yêu cầu môi trường](#91-yêu-cầu-môi-trường)
+  - [9.2. Clone source code](#92-clone-source-code)
+  - [9.3. Cấu hình biến môi trường & Firebase](#93-cấu-hình-biến-môi-trường--firebase)
+  - [9.4. Khởi chạy trên Máy ảo (Emulator) & Thiết bị thật](#94-khởi-chạy-trên-máy-ảo-emulator--thiết-bị-thật)
+  - [9.5. Lưu ý xử lý lỗi thường gặp (Troubleshooting)](#95-lưu-ý-xử-lý-lỗi-thường-gặp-troubleshooting)
 
 ---
 
 ## 1. Giới Thiệu Hệ Thống
 
 ### 1.1. Bối cảnh & Vấn đề thực tế
-Trong kỷ nguyên số hóa với lượng thông tin bùng nổ, cá nhân và đội nhóm thường xuyên đối mặt với:
-- **Tình trạng quá tải nhiệm vụ (Task Overload):** Thiếu công cụ phân loại mức độ ưu tiên khoa học, dẫn đến trễ hạn (overdue) và giảm sút hiệu suất làm việc.
-- **Sự gián đoạn kết nối mạng:** Nhiều ứng dụng quản lý hiện nay phụ thuộc 100% vào Internet. Khi người dùng di chuyển vào vùng sóng yếu, máy bay hoặc mất mạng, họ hoàn toàn bị cô lập khỏi dữ liệu công việc của chính mình.
-- **Mất tập trung & Rủi ro kiệt sức (Burnout):** Thiếu phương pháp cân bằng giữa thời gian làm việc sâu (Deep Work) và nghỉ ngơi khoa học.
-- **Vấn đề bảo mật thông tin cá nhân:** Các ghi chú, kế hoạch bảo mật nội bộ cần lớp khóa bảo vệ độc lập ngay cả khi thiết bị di động đã được mở khóa màn hình ngoài.
+Trong học tập và làm việc hiện đại, các cá nhân và nhóm nhỏ thường xuyên đối mặt với:
+- **Tình trạng quá tải công việc (Task Overload):** Thiếu công cụ phân loại mức độ ưu tiên khoa học (Low, Medium, High, Urgent), dẫn đến trễ hạn (Overdue) và suy giảm năng suất.
+- **Sự phụ thuộc mạng (Network Dependency):** Đa phần ứng dụng hiện nay phụ thuộc hoàn toàn vào kết nối Internet. Khi mất mạng, người dùng không thể xem hay ghi nhận công việc kịp thời.
+- **Mất tập trung & Kiệt sức (Burnout):** Thiếu cơ chế cân bằng giữa thời gian làm việc tập trung cao độ (Deep Work) và quãng nghỉ khoa học.
+- **Thiếu động lực duy trì thói quen:** Không có cơ chế kích thích tâm lý (Gamification) để duy trì tính liên tục của công việc mỗi ngày.
+- **Bảo mật dữ liệu cá nhân:** Cần một lớp bảo vệ độc lập (Mã PIN & Sinh trắc học) ngăn ngừa truy cập trái phép ngay cả khi thiết bị di động đã được mở khóa.
 
 ### 1.2. Giải pháp hệ thống TaskFlow
-**TaskFlow** được thiết kế để giải quyết triệt để các bài toán trên thông qua giải pháp công nghệ toàn diện:
-1. **Kiến trúc Local-First & Offline-First:** Ứng dụng hoạt động độc lập hoàn toàn trên thiết bị thông qua SQLite/Room Database. Người dùng có thể tạo, sửa, xóa, thống kê công việc mà không cần kết nối mạng. Dữ liệu sẽ đồng bộ đám mây và phân tích hành vi người dùng khi có kết nối Internet thông qua **Firebase Services**.
-2. **Hệ thống Quản lý Vòng đời Công việc Nâng cao:** Tích hợp quy tắc lặp lại thông minh (Recurring Logic), tự động sinh công việc kỳ hạn tiếp theo dựa trên chu kỳ ngày/tuần/tháng/năm kèm giới hạn ngày kết thúc hoặc số lần lặp.
-3. **Đồng hồ tập trung Pomodoro chuyên sâu:** Triển khai **Android Foreground Service** độc lập, duy trì đếm giờ chuẩn xác đến từng mili-giây ngay cả khi ứng dụng bị thu nhỏ hoặc màn hình tắt, hỗ trợ điều khiển trực tiếp trên thanh thông báo.
-4. **Hệ thống Gamification tăng động lực:** Tự động tính chuỗi ngày hoàn thành liên tiếp (Streak Tracker) và mở khóa **21 Huy hiệu danh hiệu** kích thích tinh thần làm việc.
-5. **Bảo mật đa tầng:** Mã hóa mã PIN bằng thuật toán băm **SHA-256 kèm Salt ngẫu nhiên**, kết hợp cơ chế khóa ứng dụng tự động và chống tấn công dò mã (Brute-force lockout).
+**TaskFlow** mang lại giải pháp công nghệ toàn diện giải quyết triệt để các bài toán trên:
+1. **Kiến trúc Local-First & Offline-First:** Ứng dụng vận hành trơn tru 100% khi không có mạng thông qua cơ sở dữ liệu Room Database (SQLite). Khi có kết nối mạng, ứng dụng đồng bộ xác thực và sao lưu đám mây với **Firebase BaaS**.
+2. **Trợ lý Ảo AI Assistant (Firebase AI Logic):** Tích hợp mô hình AI thế hệ mới `gemini-4-hydrogen` (với cơ chế dự phòng tự động `gemini-3.8-flash` và bảo mật Firebase App Check). AI có khả năng trò chuyện thông minh, khéo léo điều hướng về công việc và **trực tiếp tạo task vào Room DB** theo khẩu lệnh tự nhiên của người dùng.
+3. **Đồng hồ Pomodoro Focus Service:** Vận hành thông qua Android **Foreground Service** chuyên dụng, hỗ trợ đếm giờ chuẩn xác ngầm dưới nền, phát chuông báo, rung và điều khiển trực tiếp trên thanh Notification.
+4. **Hệ thống Gamification (Streak & Badges):** Tự động tính chuỗi ngày hoàn thành công việc liên tiếp (Streak Calculator). Tính năng **Streak Protection** cảnh báo bảo vệ chuỗi streak qua `AlarmManager` khi sắp hết ngày mà chưa hoàn thành việc nào. Bộ sưu tập **28 Huy hiệu thành tích** kích thích động lực hoàn thành mục tiêu.
+5. **Tiện ích Màn hình chính (HomeScreen App Widget):** Widget tương tác hai chiều hiển thị danh sách việc cần làm trong ngày, chạm checkbox để hoàn thành ngay tại màn hình chính, hoặc chạm để xem chi tiết / chỉnh sửa công việc.
+6. **Bảo mật Sinh trắc học & Mã PIN:** Hỗ trợ khóa ứng dụng bằng mã PIN 4-6 số mã hóa SHA-256 kèm Salt ngẫu nhiên và mở khóa tức thì bằng **Cảm biến Vân tay (BiometricPrompt)**.
+7. **Sao lưu & Khôi phục Dữ liệu Chuyên sâu:** Xuất dữ liệu ra file JSON chuẩn hóa và phục hồi dữ liệu qua quy trình kiểm định 5 bước nghiêm ngặt (`BackupValidator`), hỗ trợ cả chế độ ghi đè lẫn gộp dữ liệu.
 
 ### 1.3. Bảng phân quyền đối tượng sử dụng
-Hệ thống được thiết kế hướng tới hỗ trợ linh hoạt từ người dùng cá nhân đến mô hình tổ chức nhóm:
 
 | Đối tượng (Role) | Mô tả vai trò | Quyền hạn trong hệ thống |
 | :--- | :--- | :--- |
-| **Guest / Anonymous User** | Người dùng trải nghiệm cục bộ | - Sử dụng đầy đủ tính năng cốt lõi Offline (CRUD Task, Pomodoro, Calendar, Badges).<br>- Lưu trữ dữ liệu an toàn trên SQLite cục bộ.<br>- Khóa mã PIN bảo vệ ứng dụng. |
-| **Authenticated Member** | Thành viên đã đăng nhập tài khoản | - Kế thừa toàn bộ quyền của Guest.<br>- Đồng bộ thông tin danh tính qua Firebase Authentication (Email/Password hoặc Google Sign-In).<br>- Đồng bộ dữ liệu lên Firebase Realtime Database.<br>- Tự động sao lưu và phục hồi dữ liệu qua JSON Backup chuẩn SAF. |
-| **Team Leader / Project Owner** | Trưởng nhóm / Quản trị viên dự án | - Toàn quyền quản trị luồng công việc.<br>- Xuất báo cáo hiệu suất, tỷ lệ hoàn thành (Completion Rate), tổng giờ tập trung Pomodoro.<br>- Xuất file dữ liệu dự án chuẩn hóa phục vụ phân tích hoặc chuyển giao. |
+| **Guest / Offline User** | Người dùng trải nghiệm cục bộ không cần tài khoản | - Sử dụng đầy đủ tính năng cốt lõi Offline (CRUD Task, Pomodoro, Calendar, Badges).<br>- Lưu trữ dữ liệu an toàn trên SQLite/Room cục bộ.<br>- Đặt mã PIN & mở khóa vân tay bảo vệ ứng dụng.<br>- Xuất / nhập dữ liệu qua file JSON lưu trên bộ nhớ máy. |
+| **Authenticated Member** | Người dùng đã xác thực tài khoản qua Firebase | - Kế thừa toàn bộ quyền hạn của Guest.<br>- Xác thực an toàn qua Email/Password hoặc Google Sign-In.<br>- Định danh cá nhân hóa lời chào trên Dashboard.<br>- Tương tác với Trợ lý AI Assistant (tạo task, tìm việc, nhận gợi ý năng suất).<br>- Giám sát chỉ số thống kê & đồng bộ trạng thái đám mây. |
+| **Project Owner / Team Leader** | Trưởng nhóm / Người dùng quản lý tiến độ | - Toàn quyền phân loại mức độ ưu tiên (`LOW`, `MEDIUM`, `HIGH`, `URGENT`).<br>- Quản lý các công việc lặp lại định kỳ (Recurring Tasks).<br>- Theo dõi báo cáo hiệu suất, tỷ lệ hoàn thành (Completion Rate) và tổng số giờ tập trung Pomodoro theo tuần/tháng/toàn thời gian. |
 
-### 1.4. Nguyên tắc thiết kế & Kiến trúc hệ thống
-Hệ thống tuân thủ nghiêm ngặt các tiêu chuẩn kỹ thuật hiện đại của Google:
-- **Kiến trúc MVVM (Model - View - ViewModel):** Tách biệt rõ ràng tầng Giao diện (UI Layer), tầng Trình bày & Logic trạng thái (State & ViewModel Layer), và tầng Dữ liệu (Repository & Data Layer).
-- **Single Source of Truth (SSOT):** Room Database đóng vai trò là nguồn dữ liệu chuẩn mực duy nhất. Mọi luồng dữ liệu đều được phát ra dưới dạng reactive stream (`Flow<T>` / `StateFlow<T>`) từ Database lên UI.
-- **Unidirectional Data Flow (UDF):** Trạng thái (UI State) đi từ ViewModel xuống Composable; Sự kiện hành động (Events/User Actions) đi từ Composable ngược lên ViewModel.
-- **Material Design 3 (M3):** Thiết kế giao diện phẳng hiện đại, chuyển sắc dynamic color, bo góc tiêu chuẩn và tối ưu không gian hiển thị theo lưới tỉ lệ vàng Figma.
+### 1.4. Nguyên tắc thiết kế cốt lõi
+- **Offline-First:** Trải nghiệm người dùng luôn là ưu tiên số một; mọi thao tác dữ liệu đều ghi nhận tức thì vào Room Database cục bộ trước khi đồng bộ.
+- **Unidirectional Data Flow (UDF):** Luồng dữ liệu đi một chiều duy nhất: *Events đi lên ViewModel — UI State phát ra đi xuống UI*.
+- **Reactive State Management:** Sử dụng Kotlin Coroutines `StateFlow` và `Flow` để phản ánh thay đổi dữ liệu thời gian thực tới giao diện Jetpack Compose.
+- **Clean Architecture & Separation of Concerns:** Phân định rõ ràng trách nhiệm giữa UI, ViewModel, Repository, DAO và Services.
 
 ---
 
-## 2. Danh Sách Thành Viên Nhóm
+## 2. Kiến Trúc Ứng Dụng (MVVM Architecture & Data Flow)
 
-| STT | Họ và Tên | Mã Số Sinh Viên | Vai Trò Đảm Nhiệm |
-| :---: | :--- | :---: | :---: |
-| 1 | **Trần Phát Tài** | `086206011804` | **Team Leader** & Full-stack Mobile Dev |
-| 2 | **Nguyễn Quốc Thái** | `087206004822` | **Core Member** & QA / Mobile Developer |
+### 2.1. Mô hình MVVM & Luồng Dữ liệu Một chiều (UDF)
+Ứng dụng được thiết kế theo mô hình **Model - View - ViewModel (MVVM)** chuẩn Android Modern Architecture:
+1. **View (UI Layer):** Xây dựng 100% bằng **Jetpack Compose** (kết hợp ViewBinding cho một số form đặc thù). Tầng UI chỉ quan sát `uiState` phát ra từ ViewModel và gửi các sự kiện người dùng (User Actions) lên ViewModel.
+2. **ViewModel (Presentation/State Layer):** Tiếp nhận sự kiện, gọi tầng Repository xử lý nghiệp vụ, chuyển đổi dữ liệu thành các trạng thái bất biến (`UiState`) và phát ra qua `StateFlow`.
+3. **Repository (Domain/Data Layer):** Đóng vai trò làm cổng kết nối duy nhất (Single Source of Truth), điều phối dữ liệu giữa Local Database (Room DAO), Background Services và Cloud Services (Firebase).
+4. **Data Source Layer:** Lưu trữ dữ liệu vật lý với Room SQLite, SharedPreferences lưu cấu hình, và Firebase API.
+
+### 2.2. Sơ đồ Kiến trúc Chi tiết (Architecture Diagram)
+
+```mermaid
+flowchart TB
+    %% ────────────────────────────────────────────────────────────────────────
+    %% 1. TẦNG HIỂN THỊ (UI & PRESENTATION LAYER)
+    %% ────────────────────────────────────────────────────────────────────────
+    subgraph UI ["1. Tầng Hiển Thị (UI & Presentation Layer)"]
+        direction TB
+        subgraph SCREENS ["Màn Hình & Giao Diện Jetpack Compose"]
+            MainAct["MainActivity (Single Activity Host)"]
+            HomeScreen["HomeScreen / HomeContent"]
+            AddEditScreen["AddEditTaskActivity / CreateTaskScreen"]
+            DetailScreen["TaskDetailRoute / TaskDetailContent"]
+            CalendarScreen["CalendarScheduleScreen"]
+            PomodoroScreen["PomodoroScreen / PomodoroSettingsScreen"]
+            StatsScreen["StatsScreen"]
+            StreakScreen["StreakScreen"]
+            BadgesScreen["BadgesScreen"]
+            PinScreen["SetPinScreen (Dialpad & Biometric)"]
+            SettingsScreen["SettingsScreen"]
+            BackupScreen["DataManagementScreen / RestoreTasksScreen"]
+        end
+
+        subgraph WIDGETS ["Tiện Ích Màn Hình Chính & Dialogs"]
+            AppWidget["TaskWidgetProvider (HomeScreen Widget)"]
+            WidgetService["TaskWidgetService (RemoteViewsFactory)"]
+            AiSheet["AiAssistantBottomSheet"]
+            EditDialog["TaskDetailEditDialog"]
+            PomoSheet["PomodoroTaskSelectorBottomSheet"]
+        end
+    end
+
+    %% ────────────────────────────────────────────────────────────────────────
+    %% 2. TẦNG QUẢN LÝ TRẠNG THÁI (VIEWMODEL LAYER)
+    %% ────────────────────────────────────────────────────────────────────────
+    subgraph VM ["2. Tầng Quản Lý Trạng Thái (ViewModel Layer - StateFlow & UDF)"]
+        direction TB
+        HomeVM["HomeViewModel"]
+        TaskVM["TaskViewModel / AddEditTaskViewModel"]
+        DetailVM["TaskDetailViewModel"]
+        CalendarVM["CalendarViewModel"]
+        PomodoroVM["PomodoroViewModel"]
+        StatsVM["StatsViewModel"]
+        StreakVM["StreakViewModel"]
+        BadgesVM["BadgesViewModel"]
+        AuthVM["AuthViewModel"]
+        BackupVM["BackupViewModel"]
+    end
+
+    %% ────────────────────────────────────────────────────────────────────────
+    %% 3. TẦNG NGHIỆP VỤ & ĐIỀU PHỐI (REPOSITORY & SERVICES)
+    %% ────────────────────────────────────────────────────────────────────────
+    subgraph DOMAIN ["3. Tầng Nghiệp Vụ & Dữ Liệu (Repository & Domain Services)"]
+        direction TB
+        TaskRepo["TaskRepository"]
+        PomoRepo["PomodoroRepository"]
+        PomoSettingsRepo["PomodoroSettingsRepository"]
+        AiService["FirebaseAiService (Gemini API)"]
+        AiExecutor["AiActionExecutor (Direct DB Task Action)"]
+        PomoService["PomodoroService (Foreground Service)"]
+        PomoEngine["PomodoroTimerEngine"]
+        AlarmSched["AlarmScheduler / AlarmReceiver"]
+        StreakMgr["StreakProtectionManager"]
+        RecurHelper["RecurrenceHelper & TaskCompletionHelper"]
+        BackupMgr["BackupManager & BackupValidator"]
+        PinMgr["PinManager & BiometricAuthHelper"]
+        WidgetUpdater["WidgetUpdater"]
+        Recovery["TaskReminderRecovery"]
+    end
+
+    %% ────────────────────────────────────────────────────────────────────────
+    %% 4. TẦNG LƯU TRỮ VẬT LÝ & ĐÁM MÂY (DATA SOURCES)
+    %% ────────────────────────────────────────────────────────────────────────
+    subgraph DATA ["4. Tầng Nguồn Dữ Liệu (Data Sources Layer)"]
+        direction TB
+        subgraph ROOM ["Cơ Sở Dữ Liệu Cục Bộ (Room SQLite)"]
+            AppDb["AppDatabase (v4)"]
+            TaskDao["TaskDao"]
+            PomoDao["PomodoroDao"]
+            TaskEntity[("Entity: tasks")]
+            PomoEntity[("Entity: pomodoro_sessions")]
+        end
+
+        subgraph PREFS ["Bộ Nhớ Cấu Hình Cục Bộ (SharedPreferences)"]
+            StreakPrefs["taskflow_streak_prefs"]
+            PinPrefs["taskflow_pin_prefs"]
+            PomoPrefs["pomodoro_settings"]
+        end
+
+        subgraph CLOUD ["Nền Tảng Điện Toán Đám Mây (Firebase Cloud)"]
+            FirebaseAuth["Firebase Authentication"]
+            FirebaseAi["Firebase AI Logic (Gemini 4 Hydrogen / 3.8 Flash)"]
+            FirebaseAppCheck["Firebase App Check Debug Provider"]
+            FirebaseAnalytics["Firebase Analytics"]
+        end
+    end
+
+    %% ────────────────────────────────────────────────────────────────────────
+    %% LUỒNG LIÊN KẾT GIỮA CÁC TẦNG (DATA FLOW ARROWS)
+    %% ────────────────────────────────────────────────────────────────────────
+    SCREENS -- "User Events (Click, Input, Toggle)" --> VM
+    VM -- "StateFlow / UiState (Emit to UI)" --> SCREENS
+
+    WIDGETS -- "Broadcast / PendingIntent Actions" --> DOMAIN
+    DOMAIN -- "Trigger Widget Data Invalidation" --> WidgetUpdater
+    WidgetUpdater --> AppWidget
+
+    VM --> TaskRepo
+    VM --> PomoRepo
+    VM --> PomoSettingsRepo
+    VM --> PinMgr
+    VM --> StreakMgr
+
+    AiSheet -- "User Prompts" --> AiService
+    AiService -- "Structured Actions" --> AiExecutor
+    AiExecutor -- "Insert / Update / Delete Task" --> TaskDao
+    AiExecutor --> AlarmSched
+    AiExecutor --> WidgetUpdater
+
+    PomodoroVM --> PomoService
+    PomoService --> PomoEngine
+    PomoEngine --> PomoDao
+
+    TaskRepo --> TaskDao
+    TaskRepo --> RecurHelper
+    TaskRepo --> AlarmSched
+    RecurHelper --> TaskCompletionHelper
+
+    StreakVM --> StreakMgr
+    StreakMgr --> AlarmSched
+    StreakMgr --> StreakPrefs
+
+    PinScreen --> PinMgr
+    SettingsScreen --> PinMgr
+    PinMgr --> PinPrefs
+
+    BackupScreen --> BackupMgr
+    BackupMgr --> TaskRepo
+
+    AlarmSched --> TaskDao
+    Recovery --> AlarmSched
+
+    AppDb --> TaskDao
+    AppDb --> PomoDao
+    TaskDao --> TaskEntity
+    PomoDao --> PomoEntity
+    PomoEntity -. "Foreign Key (CASCADE)" .-> TaskEntity
+
+    AuthVM --> FirebaseAuth
+    AiService --> FirebaseAi
+    AiService --> FirebaseAppCheck
+```
 
 ---
 
 ## 3. Bảng Tổng Hợp Các Tính Năng Chính
 
-Dưới đây là chi tiết các tính năng nghiệp vụ đã được xây dựng và xác thực 100% trong mã nguồn dự án:
-
-| STT | Tên tính năng | Tệp mã nguồn phụ trách | Mô tả chi tiết luồng hoạt động dựa trên mã nguồn |
-| :---: | :--- | :--- | :--- |
-| **01** | **Xác thực người dùng (Authentication)** | `ui/auth/AuthViewModel.kt`<br>`ui/auth/LoginScreen.kt`<br>`ui/auth/RegisterScreen.kt` | - Đăng nhập/Đăng ký tài khoản qua **Firebase Authentication** bằng Email/Password.<br>- Hỗ trợ đăng nhập nhanh một chạm qua **Google Sign-In** (`GoogleAuthProvider`).<br>- Lắng nghe trạng thái đăng nhập tự động (`AuthStateListener`), cập nhật StateFlow thời gian thực.<br>- Ghi nhận sự kiện chuyển đổi người dùng lên Firebase Analytics. |
-| **02** | **Quản lý công việc (Task CRUD)** | `ui/screens/CreateTaskScreen.kt`<br>`ui/activity/AddEditTaskActivity.kt`<br>`ui/detail/TaskDetailContent.kt` | - Tạo mới, xem chi tiết, chỉnh sửa và xóa task (có hộp thoại xác nhận an toàn).<br>- Hỗ trợ nhập liệu tiếng Việt chuẩn có dấu với `TextFieldValue` bảo toàn con trỏ.<br>- Các trường nghiệp vụ: Tiêu đề, Mô tả, Hạn chót (DueDate), Giờ nhắc (DueTime), Mức độ ưu tiên (`URGENT`, `HIGH`, `MEDIUM`, `LOW`), Trạng thái (`TODO`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED`). |
-| **03** | **Công việc lặp lại (Recurring Tasks)** | `util/RecurrenceHelper.kt`<br>`util/TaskCompletionHelper.kt` | - Hỗ trợ các chu kỳ: Hằng ngày (DAILY), Hằng tuần (WEEKLY), Hằng tháng (MONTHLY), Hằng năm (YEARLY).<br>- Tùy chọn giới hạn ngày kết thúc (`repeatEndDate`) hoặc giới hạn số lần lặp (`repeatLimitCount`).<br>- Khi người dùng tick hoàn thành task cha, `TaskCompletionHelper` tự động tính toán mốc thời gian kỳ tiếp theo và insert một bản ghi Task mới độc lập vào Room DB. |
-| **04** | **Báo thức & Nhắc việc chính xác (Exact Alarms)** | `util/AlarmScheduler.kt`<br>`receiver/AlarmReceiver.kt`<br>`util/TaskReminderTiming.kt` | - Sử dụng Android `AlarmManager.setExactAndAllowWhileIdle()` để đánh thức thiết bị và phát thông báo chuẩn xác từng phút.<br>- Hỗ trợ các mốc nhắc trước: 5 phút, 10 phút, 15 phút, 30 phút, 1 giờ hoặc đúng giờ.<br>- Kênh thông báo Notification Channel ưu tiên cao kèm cờ báo rung (`VIBRATE`) và âm thanh thông báo. |
-| **05** | **Khôi phục báo thức tự động (Alarm Recovery)** | `receiver/BootReceiver.kt`<br>`receiver/TimeChangeReceiver.kt`<br>`util/TaskReminderRecovery.kt` | - Đón nhận các Intent hệ thống: `ACTION_BOOT_COMPLETED` (sau khi khởi động lại máy), `TIME_SET` và `TIMEZONE_CHANGED` (thay đổi ngày giờ/múi giờ hệ thống).<br>- Tự động truy vấn lại danh sách task chưa hoàn thành từ Database và tái đăng ký lại toàn bộ lịch hẹn giờ báo thức. |
-| **06** | **Đồng hồ tập trung Pomodoro (Focus Timer)** | `ui/pomodoro/PomodoroScreen.kt`<br>`pomodoro/PomodoroService.kt`<br>`pomodoro/PomodoroTimerEngine.kt` | - Đồng hồ kỹ thuật Pomodoro chuẩn: 25 phút tập trung (Focus), 5 phút nghỉ ngắn (Short Break), 15 phút nghỉ dài (Long Break).<br>- Chạy nền dưới dạng **Foreground Service** (`specialUse` FGS Type) với thanh điều khiển Notification tương tác liên tục.<br>- Thuật toán đếm giờ chuẩn dựa trên `SystemClock.elapsedRealtime()`, loại bỏ triệt để sai số giật lag khi CPU ngủ.<br>- Tự động tích lũy số phút tập trung và lưu phiên vào `pomodoro_sessions`. |
-| **07** | **Lịch biểu trực quan (Calendar Schedule)** | `ui/calendar/CalendarScreen.kt`<br>`ui/calendar/CalendarViewModel.kt`<br>`ui/calendar/CalendarDateHelper.kt` | - Lưới hiển thị lịch tháng 7 cột trực quan.<br>- Đánh dấu chỉ báo chấm màu (**Event Dots**) tại các ngày có công việc tương ứng.<br>- Cho phép chọn từng ngày để duyệt danh sách các task trong ngày theo trình tự thời gian. |
-| **08** | **Thống kê năng suất (Productivity Stats)** | `ui/stats/StatsScreen.kt`<br>`ui/stats/StatsViewModel.kt` | - Trực quan hóa số liệu theo mô hình Bento Grid Dashboard.<br>- Hiển thị tỷ lệ hoàn thành (Completion Rate) dạng vòng tròn xoay sinh động.<br>- Thống kê biểu đồ cột năng suất 7 ngày trong tuần và phân bổ task theo 4 cấp độ ưu tiên.<br>- Tổng hợp tổng số phút và số phiên Pomodoro đã hoàn thành. |
-| **09** | **Chuỗi thói quen & 21 Huy hiệu (Streak & Badges)** | `ui/streak/StreakViewModel.kt`<br>`ui/badges/BadgesViewModel.kt`<br>`ui/badges/BadgesScreen.kt` | - Tự động tính chuỗi ngày liên tục hoàn thành công việc (`Current Streak`, `Best Streak`).<br>- Hệ thống **21 Huy hiệu danh hiệu** chia làm 3 nhóm:<br>  + *7 Mốc chuỗi ngày (Streak Milestones):* Starter (3d), Sparkstarter (7d), Streaker (30d), Achiever (50d), Champion (100d), Legend (200d), Master (365d).<br>  + *7 Mốc số lượng task (Task Done Milestones):* Novice (10), Doer (30), Achiever (50), Executor (100), Expert (250), Champion (500), Master (1000).<br>  + *7 Huy hiệu thói quen đặc biệt:* Early Bird, Night Owl, Weekend Warrior, Pomodoro Master, Century Club, Consistency King, Speed Demon. |
-| **10** | **Bảo mật mã PIN đa lớp (App PIN Security)** | `util/PinManager.kt`<br>`ui/pin/SetPinScreen.kt` | - Bảo vệ ứng dụng bằng mã PIN 4 chữ số độc lập.<br>- Lưu mật mã băm dưới dạng **SHA-256 kèm chuỗi Salt ngẫu nhiên** trong SharedPreferences.<br>- Thuật toán chống dò mã (Anti-Brute Force): Tự động đếm số lần nhập sai liên tiếp và áp đặt thời gian khóa (Cooldown Lockout). |
-| **11** | **Sao lưu & Thẩm định dữ liệu (Backup & Restore)** | `util/BackupManager.kt`<br>`data/validator/BackupValidator.kt`<br>`ui/data/DataManagementScreen.kt`<br>`ui/data/RestoreTasksScreen.kt` | - Xuất/Nhập file JSON qua Android Storage Access Framework (SAF) chuẩn hóa.<br>- Bộ thẩm định **BackupValidator** 5 bước: Kiểm tra cú pháp JSON, kiểm tra version schema, phát hiện payload rỗng, thẩm định kiểu dữ liệu từng trường và đối soát xung đột khóa.<br>- Cung cấp 2 chế độ khôi phục dữ liệu: **Ghi đè hoàn toàn (Overwrite)** hoặc **Hợp nhất thông minh (Merge)**. |
-| **12** | **Trợ lý ảo phân tích NLP (AI Task Assistant)** | `ui/AiAssistantBottomSheet.kt` | - Màn hình nhập liệu thông minh dạng BottomSheet.<br>- Tích hợp bộ bóc tách ngôn ngữ tự nhiên (NLP Regex Parser) cho phép nhập câu lệnh tự do (VD: *"Học Kotlin lúc 20:00 tối mai mức Urgent"*) để tự động trích xuất tiêu đề, ngày giờ và độ ưu tiên.<br>- Cung cấp sẵn các danh thiếp gợi ý (Quick Prompt Pills) thao tác nhanh. |
+| STT | Tên tính năng | Mô tả chi tiết luồng hoạt động dựa trên source code thực tế |
+| :---: | :--- | :--- |
+| **01** | **Xác thực Đa hình thức (Firebase Auth)** | Quản lý phiên đăng nhập qua Email/Password và Google Sign-In. Lắng nghe trạng thái đăng nhập tự động (`AuthStateListener`) trong `HomeViewModel` để hiển thị lời chào cá nhân hóa theo tên người dùng. |
+| **02** | **Bảo mật Sinh trắc học & Khóa PIN** | Khởi tạo qua `PinManager`. Khi khởi chạy app, `TaskFlowApp` kiểm tra trạng thái khóa (`isAppLocked`). Người dùng mở khóa nhanh bằng cảm biến vân tay qua `BiometricAuthHelper` hoặc nhập mã PIN 4-6 số được mã hóa SHA-256 kèm Salt ngẫu nhiên. |
+| **03** | **Quản lý Vòng đời Công việc (CRUD)** | Tạo, đọc, cập nhật và xóa công việc vào bảng `tasks` trong Room DB. Hỗ trợ 4 mức độ ưu tiên (`LOW`, `MEDIUM`, `HIGH`, `URGENT`), phân loại trạng thái (`TODO`, `IN_PROGRESS`, `COMPLETED`, `OVERDUE`) với giao diện thẻ Material 3 hiện đại. |
+| **04** | **Xử lý Công việc Lặp lại (Recurring Logic)** | Quản lý bởi `RecurrenceHelper` & `TaskCompletionHelper`. Hỗ trợ chu kỳ Daily, Weekly, Monthly, Yearly. Khi hoàn thành task lặp, hệ thống tự động kiểm tra giới hạn lặp (`repeatLimitCount`, `repeatEndDate`) để tự sinh ra công việc kỳ hạn tiếp theo; khi mở lại (reopen) thì tự thu hồi instance tương lai. |
+| **05** | **Nhắc nhở & Báo thức (Alarm Manager)** | `AlarmScheduler` tính toán thời gian nhắc nhở chính xác theo phút trước giờ hẹn (`reminderMinutes`). Tự động khôi phục lại toàn bộ lịch hẹn sau khi điện thoại reboot hoặc đổi múi giờ thông qua `BootReceiver`, `TimeChangeReceiver` và `TaskReminderRecovery`. |
+| **06** | **Trợ lý Ảo AI Assistant (Firebase AI Logic)** | Tích hợp trong `FirebaseAiService` sử dụng model `gemini-4-hydrogen` (với fallback tự động sang `gemini-3.8-flash`) và App Check. Khi người dùng yêu cầu bằng ngôn ngữ tự nhiên (VD: *"Tạo task học AI lúc 14:00 thứ 6"*), `AiActionExecutor` sẽ bóc tách JSON action và **trực tiếp ghi task vào Room DB**, lập lịch chuông và cập nhật Widget tức thì. |
+| **07** | **Đồng hồ Pomodoro Tập trung (Foreground Service)** | Vận hành bởi `PomodoroService` (loại `specialUse`) độc lập với vòng đời UI. Quản lý trạng thái FOCUS, SHORT BREAK, LONG BREAK; phát chuông báo `ToneGenerator`, rung và lưu vết lịch sử phiên vào bảng `pomodoro_sessions` để phục vụ thống kê. |
+| **08** | **Thống kê Năng suất Chuyên sâu (Stats)** | `StatsViewModel` tổng hợp dữ liệu thực từ `taskDao` và `pomodoroDao` theo 3 mốc thời gian (*This Week*, *This Month*, *All Time*). Biểu diễn tỷ lệ hoàn thành (`CircularCompletionRateView`) và biểu đồ năng suất theo ngày (`WeeklyProductivityChartView`). |
+| **09** | **Chuỗi Streak & Bảo vệ Streak (Streak Protection)** | `StreakCalculator` tính toán chuỗi ngày liên tiếp hoàn thành việc. Tính năng **Streak Protection** lưu giờ nhắc vào `SharedPreferences` bằng `commit()` đồng bộ; đúng giờ hẹn, `AlarmReceiver` kiểm tra nếu người dùng đang có streak mà hôm nay chưa hoàn thành việc nào sẽ tự động bắn Notification nhắc nhở. |
+| **10** | **Hệ thống 28 Huy hiệu Thành tích (Badges)** | `BadgesViewModel` tính toán và tự động mở khóa 28 huy hiệu chia làm 4 nhóm: *Streak Badges* (3 đến 365 ngày), *Task Completion Badges* (10 đến 1000 tasks), *Speed Badges* (hoàn thành trước 12:00 trưa), *Priority Badges* (hoàn thành việc High/Urgent). |
+| **11** | **Lịch biểu Trực quan (Calendar Schedule)** | `CalendarViewModel` biểu diễn lịch tháng và danh sách công việc theo từng ngày cụ thể, tự động nhận diện múi giờ hệ thống `ZoneId.systemDefault()` và làm mới trạng thái qua đêm. |
+| **12** | **Tiện ích Màn hình chính (HomeScreen Widget)** | Cung cấp widget danh sách công việc `TaskWidgetProvider` sử dụng `RemoteViewsService`. Cho phép đánh dấu hoàn thành trực tiếp bằng checkbox, chạm để mở chi tiết công việc hoặc bấm nút "+" để mở màn hình thêm việc mới. |
+| **13** | **Sao lưu & Khôi phục Dữ liệu (Backup & Restore)** | `BackupManager` xuất dữ liệu ra file JSON vào bộ nhớ thiết bị. Quy trình khôi phục được bảo vệ bởi `BackupValidator` (5 bước kiểm tra: cú pháp, schema, version, task constraints, status/priority) với 2 chế độ: Gộp dữ liệu (Merge) hoặc Ghi đè (Replace). |
 
 ---
 
-## 4. Bảng Công Nghệ Sử Dụng (Tech Stack)
+## 4. Danh Sách Thành Viên Nhóm
 
-```
-+--------------------------------------------------------------------------------+
-|                               TaskFlow Tech Stack                              |
-+--------------------------------------------------------------------------------+
-|  Mobile Client   : Kotlin 2.0.21, Jetpack Compose M3, Coroutines, StateFlow    |
-|  Local Storage   : Android Room ORM 2.6.1, SQLite, SharedPreferences           |
-|  Cloud Backend   : Firebase Auth, Firebase Realtime Database, Analytics        |
-|  Core Services   : Foreground Service (Pomodoro), AlarmManager (Exact Alarm)   |
-|  Build & Tooling : Gradle 8.9, AGP 8.7.3, KSP 2.0.21, Target SDK 35 (Android 15) |
-+--------------------------------------------------------------------------------+
-```
+| STT | Họ và Tên | Mã Số Sinh Viên | Vai Trò Đảm Nhiệm |
+| :---: | :--- | :---: | :--- |
+| **1** | **Trần Phát Tài** | `086206011804` | **Team Leader** & Full-stack Mobile Dev |
+| **2** | **Nguyễn Quốc Thái** | `087206004822` | **Core Member** & QA / Mobile Developer |
 
-| Thành phần kiến trúc | Công nghệ / Thư viện | Phiên bản | Mục đích & Chức năng trong hệ thống |
+---
+
+## 5. Tiến Độ Triển Khai Dự Án
+
+Toàn bộ các module tính năng đã được hiện thực, kiểm thử và đồng bộ hoàn chỉnh trên hệ thống nhánh Git:
+
+- [x] **`feature/ltdd-6-7-enum-roomdtb-taskdao`**: Thiết lập Room Database v1, Entity `Task`, TypeConverters, TaskDao. *(Đã hoàn thành)*
+- [x] **`feature/ltdd-8-task-repository`**: Xây dựng tầng TaskRepository, Unit test CRUD và bộ lọc. *(Đã hoàn thành)*
+- [x] **`feature/s1-09-form-add-edit-task`**: Thiết kế màn hình tạo/chỉnh sửa công việc, Date/Time Picker. *(Đã hoàn thành)*
+- [x] **`feature/s2-02-complete-reopen-delete`**: Logic hoàn thành, mở lại và xóa công việc kèm Dialog xác nhận. *(Đã hoàn thành)*
+- [x] **`feature/s2-calculate-next-due-date-recurring-task`**: Thuật toán tính ngày đến hạn cho việc lặp lại định kỳ. *(Đã hoàn thành)*
+- [x] **`feature/s2-recurring-task-generation-and-limits`**: Tự động sinh công việc tiếp theo và kiểm soát giới hạn lặp. *(Đã hoàn thành)*
+- [x] **`feature/ui-auth-figma`**: Giao diện đăng nhập, đăng ký, tích hợp Firebase Authentication. *(Đã hoàn thành - PR #25 & #26)*
+- [x] **`feature/ui-home-dashboard-figma`**: Màn hình Home Dashboard, thống kê nhanh, phân loại việc cần làm. *(Đã hoàn thành)*
+- [x] **`feature/ui-calendar-figma`**: Giao diện lịch biểu tháng/ngày, liên kết dữ liệu theo thời gian thực. *(Đã hoàn thành)*
+- [x] **`feature/ui-stats-figma`**: Màn hình thống kê năng suất, biểu đồ tuần/tháng, tỷ lệ hoàn thành. *(Đã hoàn thành)*
+- [x] **`feature/ui-badges-figma`**: Bộ sưu tập 28 huy hiệu danh hiệu Gamification. *(Đã hoàn thành)*
+- [x] **`feature/ui-streak-figma`**: Hệ thống tính chuỗi ngày Streak liên tiếp. *(Đã hoàn thành)*
+- [x] **`feature/fix-streak-protection`**: Tính năng Streak Protection lưu giờ SharedPreferences & nhắc nhở qua AlarmManager. *(Đã hoàn thành - PR #32)*
+- [x] **`feature/fix-home-widget`**: Tiện ích màn hình chính Widget tương tác hai chiều (Xem, Sửa, Toggle). *(Đã hoàn thành - PR #31)*
+- [x] **`feat/ai-assistant`**: Trợ lý AI Assistant thông minh kết nối Firebase AI Logic (Gemini 4 Hydrogen / 3.8 Flash), tự động tạo task vào database theo khẩu lệnh. *(Đã hoàn thành)*
+
+---
+
+## 6. Bảng Công Nghệ Sử Dụng (Tech Stack)
+
+| Phân loại | Công nghệ / Thư viện | Phiên bản | Mục đích sử dụng |
 | :--- | :--- | :---: | :--- |
-| **Ngôn ngữ lập trình** | **Kotlin** | `2.0.21` | Ngôn ngữ phát triển ứng dụng di động chính thức, an toàn kiểu dữ liệu (null-safety), hỗ trợ Coroutines. |
-| **Giao diện người dùng** | **Jetpack Compose Material 3** | BOM `2024.10.01` | Khung giao diện lập trình khai báo (Declarative UI) hiện đại nhất của Google, hỗ trợ animations, adaptive theme. |
-| **Điều hướng ứng dụng** | **Navigation Compose** | `2.8.9` | Điều hướng giữa các Composable Screens thông qua hệ thống định tuyến (Routes & Destinations). |
-| **Quản lý vòng đời** | **AndroidX Lifecycle & ViewModel** | `2.8.7` | Quản lý trạng thái màn hình độc lập với chu kỳ xoay máy, tích hợp `viewModelScope`. |
-| **Xử lý bất đồng bộ** | **Kotlinx Coroutines & Flow** | `1.8.1` | Lập trình phản ứng bất đồng bộ (Reactive Programming), quản lý tác vụ ngầm non-blocking. |
-| **Cơ sở dữ liệu cục bộ** | **Android Room ORM** | `2.6.1` | Tầng trừu tượng hóa trên nền SQLite; hỗ trợ Transaction, TypeConverters và Reactive Flow Queries. |
-| **Trình xử lý Annotation** | **Google KSP (Kotlin Symbol Processing)**| `2.0.21-1.0.27`| Trình phân tích cú pháp mã nguồn hiệu năng cao thay thế cho KAPT, dùng cho Room Database Compiler. |
-| **Xác thực đám mây** | **Firebase Authentication** | BOM `33.1.0` | Quản lý định danh người dùng qua Email/Mật khẩu và Google Sign-In. |
-| **Cơ sở dữ liệu đám mây** | **Firebase Realtime Database** | BOM `33.1.0` | Lưu trữ dữ liệu đám mây và đồng bộ trạng thái tài khoản. |
-| **Phân tích hành vi** | **Firebase Analytics** | BOM `33.1.0` | Theo dõi tần suất đăng nhập, tính năng sử dụng và luồng thao tác của người dùng. |
-| **Đăng nhập Google** | **Play Services Auth** | `21.2.0` | SDK tích hợp giao diện Google One-Tap Sign-In và lấy OAuth ID Token. |
-| **Tuần hoàn dữ liệu JSON**| **Google Gson** | `2.10.1` | Đọc/ghi và chuyển đổi thực thể sang chuỗi JSON phục vụ tính năng Backup & Restore. |
-| **Kiểm thử tự động** | **JUnit 4, Espresso, Compose Test**| `4.13.2` / `3.6.1`| Kiểm thử đơn vị (Unit Tests), kiểm thử logic Repository và kiểm thử giao diện Compose. |
-| **Hệ thống Build** | **Android Gradle Plugin (AGP)** | `8.7.3` | Trình biên dịch mã nguồn, tích hợp R8/Proguard và đóng gói tệp APK/AAB. |
+| **Ngôn ngữ & Nền tảng** | **Kotlin** | `2.1.10` | Ngôn ngữ phát triển chính cho toàn bộ ứng dụng |
+| | **Android SDK** | Min 26 / Target 35 | Tương thích từ Android 8.0 Oreo đến Android 15 Vanilla Ice Cream |
+| | **Java Compatibility** | JDK 17 | Nền tảng JVM tiêu chuẩn hỗ trợ build hiện đại |
+| **Giao diện & UI Tooling** | **Jetpack Compose BOM** | `2024.10.01` | Bộ công cụ xây dựng giao diện khai báo hiện đại (Declarative UI) |
+| | **Material Design 3** | BOM | Thư viện thiết kế chuẩn Material You của Google |
+| | **Material Icons Extended** | BOM | Hệ thống icon Material mở rộng |
+| | **Navigation Compose** | `2.8.9` | Điều hướng Single Activity SPA giữa các Composable Screens |
+| **Kiến trúc & Bất đồng bộ** | **Lifecycle & ViewModel Compose** | `2.8.7` | Quản lý vòng đời màn hình và StateFlow theo mô hình MVVM/UDF |
+| | **Kotlinx Coroutines** | `1.8.1` | Xử lý các tác vụ bất đồng bộ đa luồng (Dispatchers.IO, Main, Default) |
+| **Cơ sở dữ liệu Cục bộ** | **Room Database (SQLite)** | `2.6.1` | Hệ thống ORM quản lý dữ liệu cục bộ an toàn kiểu (Type-safe) |
+| | **Kotlin Symbol Processing (KSP)** | `2.1.10-1.0.30` | Trình biên dịch mã nguồn sinh tự động cho Room DAO |
+| | **Google Gson** | `2.10.1` | Parse / Serialize JSON phục vụ Sao lưu & Phục hồi dữ liệu |
+| **Bảo mật & Xác thực** | **AndroidX Biometric** | `1.2.0-alpha05` | Xác thực sinh trắc học vân tay an toàn bằng phần cứng |
+| | **Firebase Authentication** | BoM `34.0.0` | Quản lý tài khoản người dùng (Email/Password & Google OAuth) |
+| | **Play Services Auth** | `21.2.0` | Hỗ trợ Google Sign-In một chạm |
+| **Trí Tuệ Nhân Tạo & Cloud** | **Firebase AI Logic (`firebase-ai`)** | BoM `34.0.0` | Tích hợp mô hình Gemini (`gemini-4-hydrogen`, `gemini-3.8-flash`) |
+| | **Firebase App Check Debug** | BoM `34.0.0` | Bảo vệ tài nguyên Firebase Backend chống lạm dụng |
+| | **Firebase Analytics & Database** | BoM `34.0.0` | Giám sát đo lường hành vi và đồng bộ dữ liệu |
+| **Tác vụ Nền & Tiện ích** | **Foreground Service** | Android 14+ | Duy trì bộ đếm thời gian Pomodoro không gián đoạn |
+| | **AlarmManager & Receivers** | Android SDK | Hẹn giờ chính xác cho nhắc việc và Streak Protection |
+| | **AppWidgetProvider** | Android SDK | Cung cấp tiện ích danh sách công việc trên màn hình chính |
+| **Kiểm thử (Testing)** | **JUnit 4** | `4.13.2` | Bộ framework chạy Unit test |
+| | **Coroutines Test** | `1.8.1` | Kiểm thử luồng Coroutine & Flow bất đồng bộ |
+| | **AndroidX Core Testing** | `2.2.0` | Hỗ trợ InstantTaskExecutorRule cho Architecture Components |
 
 ---
 
-## 5. Quản Lý Database & Cấu Trúc Dữ Liệu
+## 7. Quản Lý Database & Cấu Trúc Dữ Liệu
 
-### 5.1. Cơ sở dữ liệu cục bộ (Room ORM / SQLite)
-Cơ sở dữ liệu cục bộ của TaskFlow mang tên `task_database` (phiên bản schema hiện tại: `5`), gồm 2 bảng quan hệ chặt chẽ:
+Ứng dụng sử dụng **Room Database** (phiên bản `v4`, tên file `taskflow_database`) lưu trữ độc lập trên thiết bị.
 
-#### 1. Bảng `tasks` (Quản lý thông tin công việc)
-```sql
-CREATE TABLE IF NOT EXISTS `tasks` (
-    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-    `title` TEXT NOT NULL,
-    `description` TEXT NOT NULL,
-    `dueDate` INTEGER NOT NULL,
-    `dueTime` INTEGER NOT NULL,
-    `priority` TEXT NOT NULL,             -- URGENT, HIGH, MEDIUM, LOW
-    `status` TEXT NOT NULL,               -- TODO, IN_PROGRESS, COMPLETED, CANCELLED
-    `isComplete` INTEGER NOT NULL,        -- 0: Chưa hoàn thành, 1: Đã hoàn thành
-    `isRecurring` INTEGER NOT NULL,       -- 0: Không lặp, 1: Có lặp lại
-    `recurrenceType` TEXT NOT NULL,       -- NONE, DAILY, WEEKLY, MONTHLY, YEARLY
-    `recurrenceInterval` INTEGER NOT NULL DEFAULT 1,
-    `reminderMinutes` INTEGER NOT NULL DEFAULT 0,
-    `repeatEndDate` INTEGER NOT NULL DEFAULT 0,
-    `repeatLimitCount` INTEGER NOT NULL DEFAULT 0,
-    `currentOccurrence` INTEGER NOT NULL DEFAULT 1,
-    `isPaused` INTEGER NOT NULL DEFAULT 0,
-    `createdAt` INTEGER NOT NULL,
-    `updatedAt` INTEGER NOT NULL,
-    `estimatedPomodoros` INTEGER NOT NULL DEFAULT 0,
-    `completedPomodoros` INTEGER NOT NULL DEFAULT 0,
-    `totalFocusTimeMinutes` INTEGER NOT NULL DEFAULT 0,
-    `completedAt` INTEGER                 -- Timestamp khi hoàn thành, dùng cho Streak & Badges
-);
-```
+### 7.1. Bảng `tasks` (Công việc)
+Bảng lưu trữ thông tin chi tiết về từng nhiệm vụ của người dùng:
 
-#### 2. Bảng `pomodoro_sessions` (Lịch sử các phiên tập trung)
-```sql
-CREATE TABLE IF NOT EXISTS `pomodoro_sessions` (
-    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-    `taskId` INTEGER NOT NULL,
-    `startTime` INTEGER NOT NULL,
-    `endTime` INTEGER NOT NULL,
-    `durationInMinutes` INTEGER NOT NULL,
-    `sessionType` TEXT NOT NULL,          -- FOCUS, SHORT_BREAK, LONG_BREAK
-    `isCompleted` INTEGER NOT NULL,       -- 1: Hoàn thành trọn vẹn, 0: Bị ngắt quãng
-    FOREIGN KEY(`taskId`) REFERENCES `tasks`(`id`) ON DELETE CASCADE
-);
-CREATE INDEX IF NOT EXISTS `index_pomodoro_sessions_taskId` ON `pomodoro_sessions` (`taskId`);
-CREATE INDEX IF NOT EXISTS `index_pomodoro_sessions_startTime` ON `pomodoro_sessions` (`startTime`);
-```
+| Tên trường (Column) | Kiểu dữ liệu | Ràng buộc | Mô tả chức năng |
+| :--- | :--- | :--- | :--- |
+| `id` | `INTEGER` | `PRIMARY KEY AUTOINCREMENT` | Mã định danh duy nhất của công việc |
+| `title` | `TEXT` | `NOT NULL` | Tiêu đề công việc |
+| `description` | `TEXT` | `NOT NULL` | Nội dung mô tả chi tiết |
+| `dueDate` | `INTEGER` | `NOT NULL` | Ngày hết hạn (Timestamp mili-giây tính từ đầu ngày) |
+| `dueTime` | `INTEGER` | `NOT NULL` | Giờ hết hạn (Timestamp mili-giây) |
+| `priority` | `TEXT` | `NOT NULL` | Mức ưu tiên: `LOW`, `MEDIUM`, `HIGH`, `URGENT` |
+| `status` | `TEXT` | `NOT NULL DEFAULT 'TODO'` | Trạng thái: `TODO`, `IN_PROGRESS`, `COMPLETED`, `OVERDUE` |
+| `isComplete` | `INTEGER` | `NOT NULL DEFAULT 0` | Cờ nhị phân đánh dấu hoàn thành (`1: true`, `0: false`) |
+| `isRecurring` | `INTEGER` | `NOT NULL DEFAULT 0` | Đánh dấu công việc có lặp lại định kỳ hay không |
+| `recurrenceType` | `TEXT` | `NOT NULL DEFAULT 'NONE'` | Loại lặp: `NONE`, `DAILY`, `WEEKLY`, `MONTHLY`, `YEARLY` |
+| `recurrenceInterval`| `INTEGER` | `NOT NULL DEFAULT 1` | Bước lặp (VD: mỗi 2 tuần, mỗi 3 ngày) |
+| `reminderMinutes` | `INTEGER` | `NOT NULL DEFAULT 0` | Số phút nhắc nhở trước giờ đến hạn |
+| `repeatEndDate` | `INTEGER` | `NOT NULL DEFAULT 0` | Ngày kết thúc chu kỳ lặp (0 nếu không giới hạn ngày) |
+| `repeatLimitCount` | `INTEGER` | `NOT NULL DEFAULT 0` | Số lần lặp tối đa (0 nếu lặp vô hạn) |
+| `currentOccurrence`| `INTEGER` | `NOT NULL DEFAULT 1` | Đếm số lần đã lặp hiện tại |
+| `isPaused` | `INTEGER` | `NOT NULL DEFAULT 0` | Cờ tạm dừng chu kỳ lặp |
+| `createdAt` | `INTEGER` | `NOT NULL` | Thời điểm tạo task (mili-giây) |
+| `updatedAt` | `INTEGER` | `NOT NULL` | Thời điểm cập nhật task lần cuối |
+| `completedAt` | `INTEGER` | `NULLABLE` | Thời điểm đánh dấu hoàn thành (dùng tính Streak chính xác) |
+| `estimatedPomodoros`| `INTEGER` | `NOT NULL DEFAULT 0` | Số phiên Pomodoro dự kiến cần để hoàn thành task |
+| `completedPomodoros`| `INTEGER` | `NOT NULL DEFAULT 0` | Số phiên Pomodoro đã thực hiện cho task |
+| `totalFocusTimeMinutes`| `INTEGER` | `NOT NULL DEFAULT 0` | Tổng số phút tập trung tích lũy từ các phiên Pomodoro |
 
-### 5.2. Cấu trúc SharedPreferences
-Dùng để lưu trữ cấu hình bảo mật và cài đặt hệ thống nhanh:
-- **`app_pin_preferences`:**
-  - `pin_hash`: Chuỗi băm SHA-256 của mã PIN kèm Salt ngẫu nhiên.
-  - `pin_salt`: Chuỗi Salt sinh ngẫu nhiên theo thiết bị.
-  - `failed_attempts`: Số lần nhập sai mã PIN liên tiếp.
-  - `lockout_until_timestamp`: Mốc thời gian kết thúc khóa ứng dụng do nhập sai quá 5 lần.
-  - `is_pin_enabled`: Cờ bật/tắt tính năng khóa ứng dụng.
-- **`pomodoro_settings`:**
-  - `focus_duration`: Thời gian làm việc sâu (mặc định: 25 phút).
-  - `short_break_duration`: Thời gian nghỉ ngắn (mặc định: 5 phút).
-  - `long_break_duration`: Thời gian nghỉ dài (mặc định: 15 phút).
-  - `auto_start_breaks`: Tự động bắt đầu giờ nghỉ ngơi.
+### 7.2. Bảng `pomodoro_sessions` (Phiên tập trung)
+Bảng ghi nhận lịch sử đếm giờ của đồng hồ Pomodoro, có liên kết khóa ngoại với bảng `tasks`:
 
-### 5.3. Lưu trữ & Đồng bộ Đám mây (Firebase Cloud)
-- **Firebase Authentication:** Lưu trữ User UID, Email, Display Name, Photo URL, Provider Data (Google / Password).
-- **Firebase Realtime Database:** Đồng bộ dữ liệu sao lưu đám mây theo nút người dùng `/users/{uid}/backups/`.
-- **Firebase Analytics:** Thu thập các sự kiện người dùng (`login`, `task_create`, `task_complete`, `pomodoro_finish`).
+| Tên trường (Column) | Kiểu dữ liệu | Ràng buộc | Mô tả chức năng |
+| :--- | :--- | :--- | :--- |
+| `id` | `INTEGER` | `PRIMARY KEY AUTOINCREMENT` | Mã định danh phiên tập trung |
+| `taskId` | `INTEGER` | `NOT NULL, FOREIGN KEY (tasks.id) ON DELETE CASCADE` | ID công việc liên kết (Xóa task sẽ tự xóa phiên liên quan) |
+| `startTime` | `INTEGER` | `NOT NULL, INDEXED` | Thời điểm bắt đầu phiên tập trung (mili-giây) |
+| `endTime` | `INTEGER` | `NOT NULL` | Thời điểm kết thúc phiên |
+| `durationInMinutes` | `INTEGER` | `NOT NULL` | Thời lượng phiên tính bằng phút (VD: 25) |
+| `sessionType` | `TEXT` | `NOT NULL DEFAULT 'FOCUS'` | Loại phiên: `FOCUS`, `SHORT_BREAK`, `LONG_BREAK` |
+| `isCompleted` | `INTEGER` | `NOT NULL DEFAULT 0` | Phiên hoàn thành trọn vẹn (`1`) hay bị dừng sớm (`0`) |
+
+### 7.3. Lưu trữ Cấu hình Cục bộ (SharedPreferences)
+- **`taskflow_streak_prefs`**: Lưu trạng thái bật/tắt nhắc Streak (`streak_protection_enabled`), giờ nhắc (`streak_reminder_hour`, mặc định 20h) và phút nhắc (`streak_reminder_minute`, mặc định 0). Sử dụng phương thức `commit()` đảm bảo ghi tức thì xuống bộ nhớ đĩa.
+- **`taskflow_pin_prefs`**: Lưu trữ chuỗi Hash mã PIN (SHA-256 kèm Salt), trạng thái bật khóa PIN và cờ cho phép xác thực sinh trắc học vân tay.
+- **`pomodoro_settings`**: Lưu cấu hình thời lượng đếm giờ (Focus: 25p, Short Break: 5p, Long Break: 15p), số chu kỳ trước khi nghỉ dài, tự động chuyển phiên và tùy chọn âm thanh/rung.
 
 ---
 
-## 6. Cấu Trúc Thư Mục (Project Structure)
+## 8. Cấu Trúc Thư Mục (Project Structure)
 
-Dưới đây là sơ đồ cây cấu trúc thư mục thực tế của dự án kèm chú thích chức năng từng gói:
-
-```
+```text
 LTMobile-TaskFlow/
-│
-├── .gitignore                          # Cấu hình bỏ qua các file build tạm thời, IDE và keys
-├── README.md                           # Tài liệu kỹ thuật chi tiết của toàn bộ dự án
-│
-└── Code/                               # Thư mục gốc của dự án Android Studio
-    ├── build.gradle.kts                # Cấu hình Gradle Root (KSP, Google Services, Plugins)
-    ├── settings.gradle.kts             # Định nghĩa module và khai báo kho lưu trữ Maven/Google
-    ├── gradle/
-    │   └── libs.versions.toml          # Quản lý phiên bản tập trung (Version Catalog)
-    │
-    └── app/                            # Module ứng dụng chính (Application Module)
-        ├── build.gradle.kts            # Cấu hình dependencies, SDK 35, Jetpack Compose, Room
-        ├── proguard-rules.pro          # Quy tắc làm gọn và bảo vệ mã nguồn khi build Release
-        │
-        └── src/
-            ├── main/
-            │   ├── AndroidManifest.xml # Khai báo quyền, Activities, Receivers, Foreground Services
-            │   │
-            │   ├── java/com/team/taskmanagementapp/
-            │   │   ├── MainActivity.kt         # Single-Activity làm điểm neo khởi chạy Compose UI
-            │   │   ├── TaskApplication.kt      # Application Class khởi tạo Database & Notification Channels
-            │   │   │
-            │   │   ├── data/                   # TẦNG DỮ LIỆU (DATA LAYER)
-            │   │   │   ├── local/
-            │   │   │   │   ├── dao/            # Data Access Objects (TaskDao, PomodoroDao)
-            │   │   │   │   ├── db/             # Room Database & TypeConverters (Enums, Dates)
-            │   │   │   │   └── entity/         # Room Entities (Task, PomodoroSession)
-            │   │   │   ├── model/              # Data Models, Enums (Priority, Status, Recurrence)
-            │   │   │   ├── repository/         # Repository Pattern (TaskRepository, PomodoroRepository)
-            │   │   │   └── validator/          # Bộ thẩm định tính toàn vẹn dữ liệu (BackupValidator)
-            │   │   │
-            │   │   ├── pomodoro/               # MODULE POMODORO FOCUS ENGINE
-            │   │   │   ├── PomodoroService.kt          # Android Foreground Service đếm giờ ngầm
-            │   │   │   ├── PomodoroTimerEngine.kt      # Máy trạng thái tính giờ chuẩn bằng elapsedRealtime
-            │   │   │   ├── PomodoroTimerController.kt  # Interface giao tiếp giữa UI và Background Service
-            │   │   │   └── PomodoroCompletionTracker.kt# Ghi nhận và lưu phiên tập trung vào Database
-            │   │   │
-            │   │   ├── receiver/               # BROADCAST RECEIVERS
-            │   │   │   ├── AlarmReceiver.kt            # Đón Intent phát báo thức và tạo Notification
-            │   │   │   ├── BootReceiver.kt             # Khôi phục lịch hẹn sau khi máy khởi động lại
-            │   │   │   └── TimeChangeReceiver.kt       # Khôi phục lịch hẹn sau khi đổi ngày giờ hệ thống
-            │   │   │
-            │   │   ├── ui/                     # TẦNG GIAO DIỆN (JETPACK COMPOSE UI)
-            │   │   │   ├── TaskFlowApp.kt              # Scaffold trung tâm & Navigation Host
-            │   │   │   ├── AiAssistantBottomSheet.kt   # Trợ lý ảo AI & Phân tích ngôn ngữ NLP
-            │   │   │   ├── activity/                   # Các màn hình dạng Activity độc lập
-            │   │   │   ├── auth/                       # Màn hình Chào mừng, Đăng nhập & Đăng ký
-            │   │   │   ├── badges/                     # Màn hình & ViewModel hệ thống 21 Huy hiệu
-            │   │   │   ├── calendar/                   # Màn hình Lịch biểu & Lưới sự kiện theo tháng
-            │   │   │   ├── components/                 # Các Composable dùng chung (BottomBar, Dialogs)
-            │   │   │   ├── data/                       # Màn hình Quản lý dữ liệu, Xuất & Phục hồi JSON
-            │   │   │   ├── detail/                     # Màn hình xem chi tiết công việc
-            │   │   │   ├── home/                       # Dashboard chính, Thống kê nhanh & Danh sách task
-            │   │   │   ├── navigation/                 # Định nghĩa Routes & Destinations
-            │   │   │   ├── pin/                        # Màn hình bàn phím số thiết lập & nhập mã PIN
-            │   │   │   ├── pomodoro/                   # Giao diện đồng hồ đếm ngược Pomodoro & Cài đặt
-            │   │   │   ├── screens/                    # Màn hình Tạo mới công việc (CreateTaskScreen)
-            │   │   │   ├── settings/                   # Màn hình Cài đặt cá nhân, Bảo mật, Dữ liệu
-            │   │   │   ├── stats/                      # Màn hình Bento Grid thống kê năng suất 7 ngày
-            │   │   │   ├── streak/                     # Màn hình theo dõi chuỗi hoàn thành (Streak)
-            │   │   │   ├── theme/                      # Hệ thống Design Tokens (Màu sắc, Typography, Shapes)
-            │   │   │   └── viewmodel/                  # ViewModels quản lý trạng thái từng phân hệ
-            │   │   │
-            │   │   └── util/                   # TIỆN ÍCH HỆ THỐNG (UTILITIES)
-            │   │       ├── AlarmScheduler.kt           # Tiện ích tương tác với Android AlarmManager
-            │   │       ├── BackupManager.kt            # Xuất/Nhập dữ liệu JSON qua Storage Access Framework
-            │   │       ├── DateTimeUtils.kt            # Định dạng và chuẩn hóa mốc ngày giờ
-            │   │       ├── NotificationHelper.kt       # Tạo và hiển thị các kênh Notification
-            │   │       ├── PinManager.kt               # Quản lý mã hóa SHA-256 & Khóa chống Brute-force
-            │   │       ├── RecurrenceHelper.kt         # Thuật toán tính ngày đến hạn của task lặp
-            │   │       └── TaskCompletionHelper.kt     # Xử lý hoàn thành task và sinh task chu kỳ mới
-            │   │
-            │   └── res/                        # TÀI NGUYÊN (RESOURCES)
-            │       ├── drawable/               # Icons vector và hình minh họa XML
-            │       ├── mipmap/                 # App Launcher Icons đa kích thước (hdpi -> xxxhdpi)
-            │       └── values/                 # Chuỗi văn bản đa ngôn ngữ, Styles và Màu sắc
-            │
-            └── test/                           # BỘ KIỂM THỬ ĐƠN VỊ (UNIT TESTS)
-                └── java/com/team/taskmanagementapp/
-                    ├── BackupValidatorTest.kt          # Kiểm thử bộ thẩm định dữ liệu sao lưu
-                    ├── RecurrenceHelperTest.kt         # Kiểm thử thuật toán tính chu kỳ lặp
-                    └── PomodoroTimerEngineTest.kt      # Kiểm thử máy trạng thái đồng hồ tập trung
+├── Code/                                       # Thư mục gốc chứa dự án Android
+│   ├── app/                                    # Module ứng dụng Android chính
+│   │   ├── google-services.json                # Cấu hình kết nối Firebase BaaS (Project ID: taskflow-a9903)
+│   │   ├── proguard-rules.pro                  # Quy tắc tối ưu và bảo vệ mã nguồn ProGuard/R8
+│   │   ├── build.gradle.kts                    # Cấu hình build, plugins, dependencies của module app
+│   │   └── src/
+│   │       ├── main/
+│   │       │   ├── AndroidManifest.xml         # File Manifest định nghĩa quyền hạn, Activities, Services, Receivers
+│   │       │   ├── java/com/team/taskmanagementapp/
+│   │       │   │   ├── MainActivity.kt         # Single Activity điều phối giao diện Jetpack Compose SPA
+│   │       │   │   ├── TaskApplication.kt      # Class Application khởi tạo Firebase, Alarms và phục hồi nhắc nhở
+│   │       │   │   ├── ai/                     # Module Trí tuệ nhân tạo (Firebase AI Logic)
+│   │       │   │   │   ├── FirebaseAiService.kt      # Kết nối Gemini 4 Hydrogen / 3.8 Flash, quản lý prompt
+│   │       │   │   │   ├── AiActionExecutor.kt       # Bóc tách JSON action và trực tiếp CRUD Task vào Room DB
+│   │       │   │   │   └── AiChatHistoryManager.kt   # Lưu trữ và nạp lịch sử trò chuyện AI
+│   │       │   │   ├── data/                   # Tầng Quản lý Dữ liệu (Room & Repositories)
+│   │       │   │   │   ├── local/
+│   │       │   │   │   │   ├── dao/                  # Data Access Objects (TaskDao, PomodoroDao)
+│   │       │   │   │   │   ├── db/                   # Room Database (AppDatabase, TypeConverters, Migrations)
+│   │       │   │   │   │   └── entity/               # Room Entities (Task, PomodoroSession)
+│   │       │   │   │   ├── model/                # Data Models & Enums (Priority, TaskStatus, RecurrenceType...)
+│   │       │   │   │   ├── repository/           # Tầng Repository (TaskRepository, PomodoroRepository...)
+│   │       │   │   │   └── validator/            # Trình kiểm định sao lưu dữ liệu (BackupValidator 5 bước)
+│   │       │   │   ├── pomodoro/               # Module Đồng hồ Pomodoro Focus
+│   │       │   │   │   ├── PomodoroService.kt        # Foreground Service chạy ngầm độc lập
+│   │       │   │   │   ├── PomodoroTimerEngine.kt    # Động cơ đếm giờ chính xác mili-giây
+│   │       │   │   │   └── PomodoroSnapshot.kt       # Mô hình trạng thái đếm giờ
+│   │       │   │   ├── receiver/               # Bộ thu tín hiệu hệ thống BroadcastReceiver
+│   │       │   │   │   ├── AlarmReceiver.kt          # Bắn thông báo nhắc task & Streak Protection khi chuông reo
+│   │       │   │   │   ├── BootReceiver.kt           # Nhận tín hiệu khởi động lại máy BOOT_COMPLETED
+│   │       │   │   │   └── TimeChangeReceiver.kt     # Nhận tín hiệu đổi giờ / đổi múi giờ hệ thống
+│   │       │   │   ├── ui/                     # Tầng Giao diện Jetpack Compose & ViewModels
+│   │       │   │   │   ├── TaskFlowApp.kt            # Điều phối điều hướng chính (Scaffold, BottomBar, DeepLinks)
+│   │       │   │   │   ├── AiAssistantBottomSheet.kt # Giao diện BottomSheet chat với AI Assistant
+│   │       │   │   │   ├── activity/                 # AddEditTaskActivity (Màn hình form tạo/sửa việc)
+│   │       │   │   │   ├── auth/                     # Màn hình Đăng nhập / Đăng ký (AuthScreen, AuthViewModel)
+│   │       │   │   │   ├── badges/                   # Màn hình 28 Huy hiệu (BadgesScreen, BadgesViewModel)
+│   │       │   │   │   ├── calendar/                 # Màn hình Lịch biểu (CalendarScreen, CalendarViewModel)
+│   │       │   │   │   ├── data/                     # Màn hình Xuất/Nhập dữ liệu (DataManagement, RestoreTasks)
+│   │       │   │   │   ├── detail/                   # Màn hình Chi tiết công việc (TaskDetailRoute, ViewModel)
+│   │       │   │   │   ├── home/                     # Màn hình Home Dashboard (HomeScreen, HomeViewModel)
+│   │       │   │   │   ├── pin/                      # Màn hình Nhập & Đặt mã PIN (SetPinScreen)
+│   │       │   │   │   ├── pomodoro/                 # Màn hình Pomodoro Focus & Cài đặt thời lượng
+│   │       │   │   │   ├── settings/                 # Màn hình Cài đặt hệ thống (SettingsScreen)
+│   │       │   │   │   ├── stats/                    # Màn hình Thống kê năng suất (StatsScreen, ViewModel)
+│   │       │   │   │   ├── streak/                   # Màn hình Chuỗi ngày Streak (StreakScreen, ViewModel)
+│   │       │   │   │   └── theme/                    # Cấu hình màu sắc, kiểu chữ Material Design 3
+│   │       │   │   ├── util/                   # Các tiện ích bổ trợ hệ thống
+│   │       │   │   │   ├── AlarmScheduler.kt         # Lập lịch chuông báo thức qua Android AlarmManager
+│   │       │   │   │   ├── BackupManager.kt          # Xuất/Nhập file JSON sao lưu
+│   │       │   │   │   ├── BiometricAuthHelper.kt    # Quản lý xác thực sinh trắc học vân tay
+│   │       │   │   │   ├── NotificationHelper.kt     # Tạo kênh thông báo (NotificationChannel) & gửi thông báo
+│   │       │   │   │   ├── PinManager.kt             # Quản lý băm SHA-256 mã PIN và lưu trữ SharedPreferences
+│   │       │   │   │   ├── RecurrenceHelper.kt       # Tính toán chu kỳ lặp lại cho công việc
+│   │       │   │   │   ├── StreakCalculator.kt       # Thuật toán tính chuỗi ngày Streak liên tiếp
+│   │       │   │   │   ├── StreakProtectionManager.kt# Lưu giờ và lên lịch bảo vệ Streak
+│   │       │   │   │   └── TaskReminderRecovery.kt   # Tự động lập lịch lại toàn bộ nhắc nhở sau khi reboot
+│   │       │   │   └── widget/                 # HomeScreen App Widget
+│   │       │   │       ├── TaskWidgetProvider.kt     # AppWidgetProvider xử lý sự kiện tương tác trên Widget
+│   │       │   │       ├── TaskWidgetService.kt      # RemoteViewsFactory cung cấp dữ liệu danh sách task
+│   │       │   │       └── WidgetUpdater.kt          # Bắn tín hiệu làm mới Widget khi DB có thay đổi
+│   │       │   └── res/                        # Tài nguyên ứng dụng (Drawables, Layouts, Strings, XMLs)
+│   │       └── test/java/com/team/taskmanagementapp/ # Hệ thống kiểm thử tự động Unit Tests
+│   ├── gradle/
+│   │   └── libs.versions.toml                  # Version Catalog quản lý tập trung toàn bộ thư viện & phiên bản
+│   ├── build.gradle.kts                        # Cấu hình Gradle root
+│   ├── settings.gradle.kts                     # Cấu hình repositories và modules của dự án
+│   └── gradlew.bat / gradlew                   # Gradle Wrapper thực thi build đa nền tảng
+└── README.md                                   # Tài liệu kỹ thuật chi tiết của dự án TaskFlow
 ```
 
 ---
 
-## 7. Hướng Dẫn Cài Đặt & Khởi Chạy (How to Run)
+## 9. Hướng Dẫn Cài Đặt & Cách Chạy (How to Run)
 
-### 7.1. Yêu cầu môi trường phát triển
-Để đảm bảo dự án biên dịch mượt mà không gặp lỗi không tương thích, máy tính của bạn cần đáp ứng:
-- **Hệ điều hành:** Windows 10/11 (64-bit), macOS (Apple Silicon M-series hoặc Intel) hoặc Linux Ubuntu 20.04+.
-- **Java Development Kit (JDK):** **JDK 17** (Temurin 17, Oracle JDK 17 hoặc Android Studio Embedded JDK 17).
-- **Môi trường phát triển tích hợp (IDE):** **Android Studio Ladybug (2024.2.1+)** hoặc **Koala**.
+### 9.1. Yêu cầu môi trường
+Trước khi bắt đầu, hãy đảm bảo máy tính của bạn đã cài đặt các công cụ sau:
+- **Hệ điều hành:** Windows 10/11, macOS (Intel hoặc Apple Silicon M1/M2/M3), hoặc Linux (Ubuntu 20.04+).
+- **Java Development Kit (JDK):** **JDK 17** (Khuyên dùng Eclipse Temurin 17 hoặc Amazon Corretto 17).
+- **Android Studio:** Phiên bản **Android Studio Ladybug (2024.2.1+)** hoặc **Koala** trở lên.
 - **Android SDK:**
   - `compileSdk`: **35** (Android 15)
-  - `minSdk`: **26** (Android 8.0 Oreo - tương thích 95%+ thiết bị hiện nay)
   - `targetSdk`: **35**
-- **Thiết bị chạy:**
-  - *Máy ảo (Android Emulator):* Google Pixel 7/8/9 chạy hệ điều hành từ Android 10.0 (API 29) đến Android 15 (API 35), đã cài đặt Google Play Services.
-  - *Thiết bị thật:* Bật chế độ Nhà phát triển (**Developer Options**) và **USB Debugging**.
+  - `minSdk`: **26** (Android 8.0 Oreo trở lên)
+  - Cài đặt đầy đủ: Android SDK Build-Tools 35.0.0, Android SDK Platform 35.
 
-### 7.2. Các bước Clone & Mở dự án
-Mở terminal (Git Bash, Command Prompt hoặc PowerShell) và chạy lệnh:
-
+### 9.2. Clone source code
+Mở Terminal hoặc PowerShell và chạy câu lệnh sau:
 ```bash
-# 1. Clone mã nguồn từ GitHub Repository chính thức
+# Clone source code từ GitHub repository chính thức
 git clone https://github.com/phattai-gif/LTMobile-TaskFlow.git
 
-# 2. Di chuyển vào thư mục dự án
-cd LTMobile-TaskFlow
-
-# 3. Kiểm tra nhánh làm việc mới nhất
-git checkout feature/ui-auth-figma
+# Điều hướng vào thư mục dự án
+cd LTMobile-TaskFlow/Code
 ```
 
-Mở IDE **Android Studio**:
-- Chọn **File** -> **Open...**
-- Điều hướng và chọn thư mục `Code/` bên trong thư mục vừa clone (Đảm bảo mở đúng thư mục `Code` - nơi chứa file `settings.gradle.kts`).
-- Chờ IDE tải các dependencies và hoàn tất tiến trình **Gradle Sync**.
+### 9.3. Cấu hình biến môi trường & Firebase
+1. **Mở dự án trong Android Studio:**
+   - Khởi động Android Studio > Chọn **Open**.
+   - Trỏ đường dẫn đến thư mục `LTMobile-TaskFlow/Code` (nơi chứa file `settings.gradle.kts`) và bấm **OK**.
+   - Đợi Android Studio hoàn tất quá trình **Gradle Sync** và tải các dependencies.
 
-### 7.3. Cấu hình biến môi trường & Firebase Services
+2. **File cấu hình Firebase (`google-services.json`):**
+   - File cấu hình `google-services.json` chuẩn của dự án đã được tích hợp sẵn tại đường dẫn: `Code/app/google-services.json` kết nối với Firebase Project `taskflow-a9903`.
+   - Nếu bạn muốn dùng Firebase Project riêng của mình: Tải file `google-services.json` từ Firebase Console và ghi đè vào thư mục `Code/app/`.
 
-#### 1. Cấu hình đường dẫn Android SDK (`local.properties`)
-Nếu Android Studio chưa tự sinh, hãy tạo file `local.properties` tại thư mục `Code/local.properties`:
+3. **Cấu hình `local.properties`:**
+   - Đảm bảo file `Code/local.properties` trỏ đúng đường dẫn thư mục Android SDK trên máy của bạn:
+     ```properties
+     sdk.dir=C\:\\Users\\<Your-Username>\\AppData\\Local\\Android\\Sdk
+     ```
 
-*Trên Windows:*
-```properties
-sdk.dir=C\:\\Users\\<Ten_User_Cua_Ban>\\AppData\\Local\\Android\\Sdk
-```
+### 9.4. Khởi chạy trên Máy ảo (Emulator) & Thiết bị thật
 
-*Trên macOS:*
-```properties
-sdk.dir=/Users/<Ten_User_Cua_Ban>/Library/Android/sdk
-```
+#### Cách 1: Khởi chạy trên Máy ảo (Android Emulator)
+1. Trong Android Studio, mở **Device Manager** (Tools > Device Manager).
+2. Tạo một máy ảo Android Virtual Device (AVD):
+   - **Device Definition:** Pixel 7 / Pixel 8 / Pixel 9.
+   - **System Image:** Android 14 (API 34) hoặc Android 15 (API 35) (Google Play System Image).
+3. Khởi động máy ảo.
+4. Trên thanh công cụ Android Studio, chọn thiết bị máy ảo vừa bật và bấm nút **Run 'app' (Shift + F10)**.
 
-#### 2. Cấu hình Firebase (`google-services.json`)
-Dự án sử dụng Firebase cho xác thực và đo lường. File `google-services.json` cần được đặt tại:
-```
-LTMobile-TaskFlow/Code/app/google-services.json
-```
-> [!NOTE]
-> Dự án đã tích hợp sẵn file cấu hình `google-services.json` của Firebase dự án TaskFlow liên kết với package `com.team.taskmanagementapp`. Nếu bạn muốn dùng dự án Firebase cá nhân, hãy tải file từ **Firebase Console -> Project Settings -> General -> Your Apps** và thay thế vào thư mục trên.
+#### Cách 2: Khởi chạy trên Thiết bị thật (Physical Device)
+1. Trên điện thoại Android (Android 8.0+):
+   - Vào **Cài đặt > Thông tin điện thoại > Chạm 7 lần vào "Số hiệu bản dựng" (Build Number)** để mở khóa *Tùy chọn cho nhà phát triển (Developer Options)*.
+   - Vào **Tùy chọn cho nhà phát triển > Bật "Gỡ lỗi USB" (USB Debugging)**.
+2. Kết nối điện thoại với máy tính qua cáp USB (chọn xác nhận *Allow USB Debugging* trên màn hình điện thoại) hoặc dùng tính năng **Pair Devices Using Wi-Fi** trên Android Studio.
+3. Chọn tên thiết bị thật của bạn trên Android Studio và bấm **Run 'app' (Shift + F10)**.
 
-### 7.4. Biên dịch & Khởi chạy ứng dụng
-
-#### Cách 1: Chạy trực tiếp từ giao diện Android Studio
-1. Chọn thiết bị chạy trên thanh công cụ (chọn máy ảo Pixel hoặc điện thoại thật đã cắm cáp USB).
-2. Chọn configuration là **`app`**.
-3. Nhấn nút **Run** (biểu tượng tam giác xanh ▶️) hoặc phím tắt `Shift + F10` (Windows) / `Control + R` (macOS).
-
-#### Cách 2: Biên dịch và chạy bằng dòng lệnh Gradle Wrapper
-Mở Terminal tại thư mục `Code/`:
-
-*Trên Windows:*
-```cmd
-# Kiểm tra biên dịch mã nguồn Kotlin
-gradlew.bat compileDebugKotlin
-
-# Đóng gói file cài đặt Debug APK
+#### Cách 3: Biên dịch qua dòng lệnh (CLI Gradle)
+Nếu muốn build file APK cài đặt trực tiếp:
+```bash
+# Trên Windows (PowerShell / CMD):
+cd Code
 gradlew.bat assembleDebug
 
-# Cài đặt trực tiếp lên thiết bị đang kết nối
-gradlew.bat installDebug
-```
-
-*Trên macOS / Linux:*
-```bash
-chmod +x gradlew
-./gradlew compileDebugKotlin
+# Trên macOS / Linux:
+cd Code
 ./gradlew assembleDebug
-./gradlew installDebug
 ```
-*Tệp tin APK sau khi build thành công sẽ nằm tại: `Code/app/build/outputs/apk/debug/app-debug.apk`.*
+File APK đầu ra sẽ được tạo tại: `Code/app/build/outputs/apk/debug/app-debug.apk`. Cài đặt vào máy bằng câu lệnh:
+```bash
+adb install -r Code/app/build/outputs/apk/debug/app-debug.apk
+```
 
-### 7.5. Xử lý các lỗi thường gặp (Troubleshooting)
+### 9.5. Lưu ý xử lý lỗi thường gặp (Troubleshooting)
 
-1. **Lỗi `JDK Version Mismatch` hoặc `Unsupported class file major version`:**
-   - *Nguyên nhân:* Dự án yêu cầu **Java 17**. Nếu máy tính đang trỏ vào Java 8, 11 hoặc Java 21, Gradle sẽ báo lỗi.
-   - *Khắc phục:* Trong Android Studio, vào **Settings (Preferences)** -> **Build, Execution, Deployment** -> **Build Tools** -> **Gradle** -> Mục **Gradle JDK**, chọn đúng **`Embedded JDK version 17`** hoặc **`jbr-17`**.
-
-2. **Lỗi `Missing google-services.json`:**
-   - *Nguyên nhân:* File `google-services.json` bị thiếu hoặc đặt sai vị trí.
-   - *Khắc phục:* Đảm bảo file nằm chính xác tại `Code/app/google-services.json` (ngang hàng với `Code/app/build.gradle.kts`).
-
-3. **Lỗi không hiện thông báo hoặc báo thức trên Android 13+ (API 33+):**
-   - *Nguyên nhân:* Android 13 trở lên yêu cầu quyền hiển thị thông báo thời gian thực (`POST_NOTIFICATIONS`) và quyền hẹn giờ chính xác (`SCHEDULE_EXACT_ALARM`).
-   - *Khắc phục:* Khi ứng dụng vừa khởi động, hãy chọn **Allow** (Cho phép) khi hộp thoại hệ thống xin quyền hiển thị. Nếu lỡ từ chối, vào **Cài đặt thiết bị** -> **Ứng dụng** -> **TaskFlow** -> **Quyền (Permissions)** -> Bật quyền **Thông báo (Notifications)** và **Báo thức & Lời nhắc (Alarms & Reminders)**.
-
-4. **Lỗi `Gradle sync failed: Connection timed out`:**
-   - *Nguyên nhân:* Kết nối mạng không ổn định khi tải các thư viện từ Google Maven / Maven Central.
-   - *Khắc phục:* Nhấn **File** -> **Sync Project with Gradle Files**, hoặc kiểm tra lại kết nối mạng / tắt proxy / VPN nếu đang bật.
+| Lỗi thường gặp | Nguyên nhân | Cách khắc phục |
+| :--- | :--- | :--- |
+| `JDK version incompatible` hoặc `Unsupported class file major version` | Android Studio đang trỏ sai phiên bản Java (dưới Java 17). | Vào **Settings (Preferences) > Build, Execution, Deployment > Build Tools > Gradle**. Tại mục **Gradle JDK**, chọn đúng **JDK 17**. |
+| `Access is denied / index.lock` khi chạy lệnh Git trên Windows | Windows OneDrive đồng bộ giữ file lock của thư mục `.git`. | Tạm dừng đồng bộ OneDrive cho thư mục chứa code, hoặc xóa file `.git/index.lock` nếu có. |
+| Không nhận thông báo nhắc việc hoặc Streak Protection | Ứng dụng chưa được cấp quyền Notification trên Android 13+ (API 33+). | Vào màn hình **Settings** trong app > Bấm vào dòng thông báo hệ thống, hoặc vào Cài đặt máy > Ứng dụng > TaskFlow > **Bật Cho phép Thông báo (Allow Notifications)**. |
+| Không mở khóa được bằng Vân tay trên Emulator | Máy ảo chưa thiết lập vân tay giả lập. | Trong máy ảo: Vào **Settings > Security > Fingerprint**, thiết lập mã PIN và vân tay. Trong cửa sổ điều khiển máy ảo (Extended Controls `...`) > Chọn **Fingerprint** > Bấm **Touch the sensor** để mô phỏng chạm vân tay. |
 
 ---
-
-## 📜 Giấy Phép & Bản Quyền (License)
-Dự án được phát triển phục vụ mục đích học tập và nghiên cứu trong khuôn khổ môn học **Lập Trình Thiết Bị Di Động**. Mọi quyền sở hữu trí tuệ thuộc về nhóm phát triển **TaskFlow**. Mọi hành vi tái sử dụng mã nguồn vui lòng trích dẫn nguồn tác giả.
+*© 2026 LTMobile-TaskFlow Team. Tài liệu dự án được xây dựng và duy trì bởi Trần Phát Tài & Nguyễn Quốc Thái.*

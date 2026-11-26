@@ -15,19 +15,14 @@
   - [2.2. Sơ đồ Kiến trúc Chi tiết (Architecture Diagram)](#22-sơ-đồ-kiến-trúc-chi-tiết-architecture-diagram)
 - [3. Bảng Tổng Hợp Các Tính Năng Chính](#3-bảng-tổng-hợp-các-tính-năng-chính)
 - [4. Danh Sách Thành Viên Nhóm](#4-danh-sách-thành-viên-nhóm)
-- [5. Tiến Độ Triển Khai Dự Án](#5-tiến-độ-triển-khai-dự-án)
-- [6. Bảng Công Nghệ Sử Dụng (Tech Stack)](#6-bảng-công-nghệ-sử-dụng-tech-stack)
-- [7. Quản Lý Database & Cấu Trúc Dữ Liệu](#7-quản-lý-database--cấu-trúc-dữ-liệu)
-  - [7.1. Bảng `tasks` (Công việc)](#71-bảng-tasks-công-việc)
-  - [7.2. Bảng `pomodoro_sessions` (Phiên tập trung)](#72-bảng-pomodoro_sessions-phiên-tập-trung)
-  - [7.3. Lưu trữ Cấu hình Cục bộ (SharedPreferences)](#73-lưu-trữ-cấu-hình-cục-bộ-sharedpreferences)
-- [8. Cấu Trúc Thư Mục (Project Structure)](#8-cấu-trúc-thư-mục-project-structure)
-- [9. Hướng Dẫn Cài Đặt & Cách Chạy (How to Run)](#9-hướng-dẫn-cài-đặt--cách-chạy-how-to-run)
-  - [9.1. Yêu cầu môi trường](#91-yêu-cầu-môi-trường)
-  - [9.2. Clone source code](#92-clone-source-code)
-  - [9.3. Cấu hình biến môi trường & Firebase](#93-cấu-hình-biến-môi-trường--firebase)
-  - [9.4. Khởi chạy trên Máy ảo (Emulator) & Thiết bị thật](#94-khởi-chạy-trên-máy-ảo-emulator--thiết-bị-thật)
-  - [9.5. Lưu ý xử lý lỗi thường gặp (Troubleshooting)](#95-lưu-ý-xử-lý-lỗi-thường-gặp-troubleshooting)
+- [5. Bảng Công Nghệ Sử Dụng (Tech Stack)](#5-bảng-công-nghệ-sử-dụng-tech-stack)
+- [6. Cấu Trúc Thư Mục (Project Structure)](#6-cấu-trúc-thư-mục-project-structure)
+- [7. Hướng Dẫn Cài Đặt & Cách Chạy (How to Run)](#7-hướng-dẫn-cài-đặt--cách-chạy-how-to-run)
+  - [7.1. Yêu cầu môi trường](#71-yêu-cầu-môi-trường)
+  - [7.2. Clone source code](#72-clone-source-code)
+  - [7.3. Cấu hình biến môi trường & Firebase](#73-cấu-hình-biến-môi-trường--firebase)
+  - [7.4. Khởi chạy trên Máy ảo (Emulator) & Thiết bị thật](#74-khởi-chạy-trên-máy-ảo-emulator--thiết-bị-thật)
+  - [7.5. Lưu ý xử lý lỗi thường gặp (Troubleshooting)](#75-lưu-ý-xử-lý-lỗi-thường-gặp-troubleshooting)
 
 ---
 
@@ -261,29 +256,7 @@ flowchart TB
 
 ---
 
-## 5. Tiến Độ Triển Khai Dự Án
-
-Toàn bộ các module tính năng đã được hiện thực, kiểm thử và đồng bộ hoàn chỉnh trên hệ thống nhánh Git:
-
-- [x] **`feature/ltdd-6-7-enum-roomdtb-taskdao`**: Thiết lập Room Database v1, Entity `Task`, TypeConverters, TaskDao. *(Đã hoàn thành)*
-- [x] **`feature/ltdd-8-task-repository`**: Xây dựng tầng TaskRepository, Unit test CRUD và bộ lọc. *(Đã hoàn thành)*
-- [x] **`feature/s1-09-form-add-edit-task`**: Thiết kế màn hình tạo/chỉnh sửa công việc, Date/Time Picker. *(Đã hoàn thành)*
-- [x] **`feature/s2-02-complete-reopen-delete`**: Logic hoàn thành, mở lại và xóa công việc kèm Dialog xác nhận. *(Đã hoàn thành)*
-- [x] **`feature/s2-calculate-next-due-date-recurring-task`**: Thuật toán tính ngày đến hạn cho việc lặp lại định kỳ. *(Đã hoàn thành)*
-- [x] **`feature/s2-recurring-task-generation-and-limits`**: Tự động sinh công việc tiếp theo và kiểm soát giới hạn lặp. *(Đã hoàn thành)*
-- [x] **`feature/ui-auth-figma`**: Giao diện đăng nhập, đăng ký, tích hợp Firebase Authentication. *(Đã hoàn thành - PR #25 & #26)*
-- [x] **`feature/ui-home-dashboard-figma`**: Màn hình Home Dashboard, thống kê nhanh, phân loại việc cần làm. *(Đã hoàn thành)*
-- [x] **`feature/ui-calendar-figma`**: Giao diện lịch biểu tháng/ngày, liên kết dữ liệu theo thời gian thực. *(Đã hoàn thành)*
-- [x] **`feature/ui-stats-figma`**: Màn hình thống kê năng suất, biểu đồ tuần/tháng, tỷ lệ hoàn thành. *(Đã hoàn thành)*
-- [x] **`feature/ui-badges-figma`**: Bộ sưu tập 28 huy hiệu danh hiệu Gamification. *(Đã hoàn thành)*
-- [x] **`feature/ui-streak-figma`**: Hệ thống tính chuỗi ngày Streak liên tiếp. *(Đã hoàn thành)*
-- [x] **`feature/fix-streak-protection`**: Tính năng Streak Protection lưu giờ SharedPreferences & nhắc nhở qua AlarmManager. *(Đã hoàn thành - PR #32)*
-- [x] **`feature/fix-home-widget`**: Tiện ích màn hình chính Widget tương tác hai chiều (Xem, Sửa, Toggle). *(Đã hoàn thành - PR #31)*
-- [x] **`feat/ai-assistant`**: Trợ lý AI Assistant thông minh kết nối Firebase AI Logic (Gemini 4 Hydrogen / 3.8 Flash), tự động tạo task vào database theo khẩu lệnh. *(Đã hoàn thành)*
-
----
-
-## 6. Bảng Công Nghệ Sử Dụng (Tech Stack)
+## 5. Bảng Công Nghệ Sử Dụng (Tech Stack)
 
 | Phân loại | Công nghệ / Thư viện | Phiên bản | Mục đích sử dụng |
 | :--- | :--- | :---: | :--- |
@@ -314,59 +287,7 @@ Toàn bộ các module tính năng đã được hiện thực, kiểm thử và
 
 ---
 
-## 7. Quản Lý Database & Cấu Trúc Dữ Liệu
-
-Ứng dụng sử dụng **Room Database** (phiên bản `v4`, tên file `taskflow_database`) lưu trữ độc lập trên thiết bị.
-
-### 7.1. Bảng `tasks` (Công việc)
-Bảng lưu trữ thông tin chi tiết về từng nhiệm vụ của người dùng:
-
-| Tên trường (Column) | Kiểu dữ liệu | Ràng buộc | Mô tả chức năng |
-| :--- | :--- | :--- | :--- |
-| `id` | `INTEGER` | `PRIMARY KEY AUTOINCREMENT` | Mã định danh duy nhất của công việc |
-| `title` | `TEXT` | `NOT NULL` | Tiêu đề công việc |
-| `description` | `TEXT` | `NOT NULL` | Nội dung mô tả chi tiết |
-| `dueDate` | `INTEGER` | `NOT NULL` | Ngày hết hạn (Timestamp mili-giây tính từ đầu ngày) |
-| `dueTime` | `INTEGER` | `NOT NULL` | Giờ hết hạn (Timestamp mili-giây) |
-| `priority` | `TEXT` | `NOT NULL` | Mức ưu tiên: `LOW`, `MEDIUM`, `HIGH`, `URGENT` |
-| `status` | `TEXT` | `NOT NULL DEFAULT 'TODO'` | Trạng thái: `TODO`, `IN_PROGRESS`, `COMPLETED`, `OVERDUE` |
-| `isComplete` | `INTEGER` | `NOT NULL DEFAULT 0` | Cờ nhị phân đánh dấu hoàn thành (`1: true`, `0: false`) |
-| `isRecurring` | `INTEGER` | `NOT NULL DEFAULT 0` | Đánh dấu công việc có lặp lại định kỳ hay không |
-| `recurrenceType` | `TEXT` | `NOT NULL DEFAULT 'NONE'` | Loại lặp: `NONE`, `DAILY`, `WEEKLY`, `MONTHLY`, `YEARLY` |
-| `recurrenceInterval`| `INTEGER` | `NOT NULL DEFAULT 1` | Bước lặp (VD: mỗi 2 tuần, mỗi 3 ngày) |
-| `reminderMinutes` | `INTEGER` | `NOT NULL DEFAULT 0` | Số phút nhắc nhở trước giờ đến hạn |
-| `repeatEndDate` | `INTEGER` | `NOT NULL DEFAULT 0` | Ngày kết thúc chu kỳ lặp (0 nếu không giới hạn ngày) |
-| `repeatLimitCount` | `INTEGER` | `NOT NULL DEFAULT 0` | Số lần lặp tối đa (0 nếu lặp vô hạn) |
-| `currentOccurrence`| `INTEGER` | `NOT NULL DEFAULT 1` | Đếm số lần đã lặp hiện tại |
-| `isPaused` | `INTEGER` | `NOT NULL DEFAULT 0` | Cờ tạm dừng chu kỳ lặp |
-| `createdAt` | `INTEGER` | `NOT NULL` | Thời điểm tạo task (mili-giây) |
-| `updatedAt` | `INTEGER` | `NOT NULL` | Thời điểm cập nhật task lần cuối |
-| `completedAt` | `INTEGER` | `NULLABLE` | Thời điểm đánh dấu hoàn thành (dùng tính Streak chính xác) |
-| `estimatedPomodoros`| `INTEGER` | `NOT NULL DEFAULT 0` | Số phiên Pomodoro dự kiến cần để hoàn thành task |
-| `completedPomodoros`| `INTEGER` | `NOT NULL DEFAULT 0` | Số phiên Pomodoro đã thực hiện cho task |
-| `totalFocusTimeMinutes`| `INTEGER` | `NOT NULL DEFAULT 0` | Tổng số phút tập trung tích lũy từ các phiên Pomodoro |
-
-### 7.2. Bảng `pomodoro_sessions` (Phiên tập trung)
-Bảng ghi nhận lịch sử đếm giờ của đồng hồ Pomodoro, có liên kết khóa ngoại với bảng `tasks`:
-
-| Tên trường (Column) | Kiểu dữ liệu | Ràng buộc | Mô tả chức năng |
-| :--- | :--- | :--- | :--- |
-| `id` | `INTEGER` | `PRIMARY KEY AUTOINCREMENT` | Mã định danh phiên tập trung |
-| `taskId` | `INTEGER` | `NOT NULL, FOREIGN KEY (tasks.id) ON DELETE CASCADE` | ID công việc liên kết (Xóa task sẽ tự xóa phiên liên quan) |
-| `startTime` | `INTEGER` | `NOT NULL, INDEXED` | Thời điểm bắt đầu phiên tập trung (mili-giây) |
-| `endTime` | `INTEGER` | `NOT NULL` | Thời điểm kết thúc phiên |
-| `durationInMinutes` | `INTEGER` | `NOT NULL` | Thời lượng phiên tính bằng phút (VD: 25) |
-| `sessionType` | `TEXT` | `NOT NULL DEFAULT 'FOCUS'` | Loại phiên: `FOCUS`, `SHORT_BREAK`, `LONG_BREAK` |
-| `isCompleted` | `INTEGER` | `NOT NULL DEFAULT 0` | Phiên hoàn thành trọn vẹn (`1`) hay bị dừng sớm (`0`) |
-
-### 7.3. Lưu trữ Cấu hình Cục bộ (SharedPreferences)
-- **`taskflow_streak_prefs`**: Lưu trạng thái bật/tắt nhắc Streak (`streak_protection_enabled`), giờ nhắc (`streak_reminder_hour`, mặc định 20h) và phút nhắc (`streak_reminder_minute`, mặc định 0). Sử dụng phương thức `commit()` đảm bảo ghi tức thì xuống bộ nhớ đĩa.
-- **`taskflow_pin_prefs`**: Lưu trữ chuỗi Hash mã PIN (SHA-256 kèm Salt), trạng thái bật khóa PIN và cờ cho phép xác thực sinh trắc học vân tay.
-- **`pomodoro_settings`**: Lưu cấu hình thời lượng đếm giờ (Focus: 25p, Short Break: 5p, Long Break: 15p), số chu kỳ trước khi nghỉ dài, tự động chuyển phiên và tùy chọn âm thanh/rung.
-
----
-
-## 8. Cấu Trúc Thư Mục (Project Structure)
+## 6. Cấu Trúc Thư Mục (Project Structure)
 
 ```text
 LTMobile-TaskFlow/
@@ -443,9 +364,9 @@ LTMobile-TaskFlow/
 
 ---
 
-## 9. Hướng Dẫn Cài Đặt & Cách Chạy (How to Run)
+## 7. Hướng Dẫn Cài Đặt & Cách Chạy (How to Run)
 
-### 9.1. Yêu cầu môi trường
+### 7.1. Yêu cầu môi trường
 Trước khi bắt đầu, hãy đảm bảo máy tính của bạn đã cài đặt các công cụ sau:
 - **Hệ điều hành:** Windows 10/11, macOS (Intel hoặc Apple Silicon M1/M2/M3), hoặc Linux (Ubuntu 20.04+).
 - **Java Development Kit (JDK):** **JDK 17** (Khuyên dùng Eclipse Temurin 17 hoặc Amazon Corretto 17).
@@ -456,7 +377,7 @@ Trước khi bắt đầu, hãy đảm bảo máy tính của bạn đã cài đ
   - `minSdk`: **26** (Android 8.0 Oreo trở lên)
   - Cài đặt đầy đủ: Android SDK Build-Tools 35.0.0, Android SDK Platform 35.
 
-### 9.2. Clone source code
+### 7.2. Clone source code
 Mở Terminal hoặc PowerShell và chạy câu lệnh sau:
 ```bash
 # Clone source code từ GitHub repository chính thức
@@ -466,7 +387,7 @@ git clone https://github.com/phattai-gif/LTMobile-TaskFlow.git
 cd LTMobile-TaskFlow/Code
 ```
 
-### 9.3. Cấu hình biến môi trường & Firebase
+### 7.3. Cấu hình biến môi trường & Firebase
 1. **Mở dự án trong Android Studio:**
    - Khởi động Android Studio > Chọn **Open**.
    - Trỏ đường dẫn đến thư mục `LTMobile-TaskFlow/Code` (nơi chứa file `settings.gradle.kts`) và bấm **OK**.
@@ -482,7 +403,7 @@ cd LTMobile-TaskFlow/Code
      sdk.dir=C\:\\Users\\<Your-Username>\\AppData\\Local\\Android\\Sdk
      ```
 
-### 9.4. Khởi chạy trên Máy ảo (Emulator) & Thiết bị thật
+### 7.4. Khởi chạy trên Máy ảo (Emulator) & Thiết bị thật
 
 #### Cách 1: Khởi chạy trên Máy ảo (Android Emulator)
 1. Trong Android Studio, mở **Device Manager** (Tools > Device Manager).
@@ -515,7 +436,7 @@ File APK đầu ra sẽ được tạo tại: `Code/app/build/outputs/apk/debug/
 adb install -r Code/app/build/outputs/apk/debug/app-debug.apk
 ```
 
-### 9.5. Lưu ý xử lý lỗi thường gặp (Troubleshooting)
+### 7.5. Lưu ý xử lý lỗi thường gặp (Troubleshooting)
 
 | Lỗi thường gặp | Nguyên nhân | Cách khắc phục |
 | :--- | :--- | :--- |

@@ -22,6 +22,7 @@ object FirebaseAiService {
     private const val TAG = "FirebaseAiService"
     private const val MODEL_NAME = "gemini-4-hydrogen"
     private const val FALLBACK_MODEL_NAME = "gemini-3.8-flash"
+    private const val SECONDARY_FALLBACK_MODEL_NAME = "gemini-1.5-flash"
 
     private val generativeModel: GenerativeModel by lazy {
         Firebase.ai(backend = GenerativeBackend.googleAI())
@@ -31,6 +32,11 @@ object FirebaseAiService {
     private val fallbackModel: GenerativeModel by lazy {
         Firebase.ai(backend = GenerativeBackend.googleAI())
             .generativeModel(FALLBACK_MODEL_NAME)
+    }
+
+    private val secondaryFallbackModel: GenerativeModel by lazy {
+        Firebase.ai(backend = GenerativeBackend.googleAI())
+            .generativeModel(SECONDARY_FALLBACK_MODEL_NAME)
     }
 
     /**
@@ -48,7 +54,7 @@ object FirebaseAiService {
         val tasksContext = buildTasksContext(context)
 
         val systemInstruction = """
-            You are TaskFlow AI, the proactive personal assistant directly integrated inside the TaskFlow Android app.
+            You are TaskFlow AI, an intelligent, empathetic, witty, and highly capable personal assistant integrated directly inside the TaskFlow Android app.
             
             CURRENT TIME & CALENDAR:
             - Current Date & Time: $currentDateTimeStr (Today: $todayIso).
@@ -59,11 +65,11 @@ object FirebaseAiService {
             NEVER tell the user that you are not connected to TaskFlow storage or cannot save tasks, because the app automatically executes your action blocks into the local database!
             
             RULES FOR ACTIONS:
-            1. CREATE TASKS (SINGLE OR MULTIPLE):
-               When the user asks to create or schedule one or multiple tasks (e.g., "Tạo cho mình 1 task...", "Tạo task ngẫu nhiên cho từng ngày...", "Lên lịch từ hôm nay đến hết tháng..."):
-               - Calculate exact target date(s) (in YYYY-MM-DD format) based on current date $todayIso and requested range.
-               - Determine target time (in HH:mm 24-hour format, e.g. "09:00", "14:00", "17:30").
-               - Determine priority: "URGENT", "HIGH", "MEDIUM", or "LOW".
+            1. CREATE TASKS (SINGLE OR MULTIPLE / RANDOM TASKS):
+               - When the user asks to create random tasks (e.g. "Tạo task ngẫu nhiên cho ngày 28, 30 và toàn bộ các ngày trong tháng 12", "Bạn tự tạo ngẫu nhiên đi", "Lên lịch giúp mình cả tuần ngẫu nhiên"):
+                 DO NOT ask the user for details or parameters!
+                 PROACTIVELY and CREATIVELY invent realistic, diverse daily tasks (e.g. "Chạy bộ buổi sáng", "Ôn tập bài học", "Đọc 20 trang sách", "Dọn dẹp góc làm việc", "Mua sắm nhu yếu phẩm", "Nấu ăn tối", "Học từ vựng mới", "Thư giãn nghe nhạc").
+                 Spread tasks across the requested days, assign appropriate realistic times (e.g. 07:00, 09:30, 14:00, 18:00, 20:30) and priorities ("LOW", "MEDIUM", "HIGH", "URGENT").
                - For single task, output an action block:
                ```action
                {
@@ -119,16 +125,16 @@ object FirebaseAiService {
             4. GENERAL QUERIES & LISTING TASKS:
                When the user asks about their tasks or schedule, reference the User Tasks Context below to provide a helpful answer.
                
-            5. HANDLING OFF-TOPIC OR UNRELATED TOPICS (FOOD, CHIT-CHAT, TRIVIA, LIFE, ETC.):
-               If the user asks about topics outside task management (for example: asking for food like "Bạn có món phở bò không?", weather, small talk, casual jokes, or random questions):
-               - NEVER give a rigid, robotic refusal or say "I am only a task assistant".
-               - Be witty, warm, conversational, and charming. Respond naturally to their question first.
-               - THEN, smoothly and cleverly steer them back to TaskFlow's mission: task planning, reminders, Pomodoro focus, or scheduling.
-               - For instance, if asked "Bạn có món phở bò không?":
-                 Respond playfully: "Haha, mình là trợ lý ảo nên tiếc là không nấu phở bò phục vụ bạn được rồi! 🍜 Nhưng nếu bạn muốn thưởng thức, mình có thể tạo ngay một task \"Đi ăn phở bò\" hoặc hẹn giờ nhắc ăn trưa để bạn không bỏ bữa nhé. Bạn có muốn mình lên lịch ngay không?"
-               - Always be adaptive, natural, and never sound like a template.
+            5. CHIT-CHAT, LIFE QUESTIONS, COMPLIMENTS & EMOTIONAL ADAPTATION:
+               - If the user asks casual, humorous, or personal questions (e.g., "Bạn thấy tôi đẹp trai không?", "Bạn ăn phở bò không?", "Hôm nay tôi mệt quá", "Bạn có người yêu chưa?"):
+                 ALWAYS respond with wit, warmth, humor, and empathy like a true companion!
+                 For example:
+                 - "Bạn thấy tôi đẹp trai không?": Reply charmingly and playfully (e.g., "Người vừa chăm chỉ vừa có chí hướng dùng TaskFlow để hoàn thiện bản thân mỗi ngày thì độ phong độ chắc chắn phải là 10/10 rồi nhé! 😎✨").
+                 - "Bạn ăn phở bò không?": Reply playfully and suggest a dining/eating reminder task!
+                 - "Hôm nay mệt quá": Give empathetic words of comfort and suggest taking a relaxing break.
+               - NEVER give robotic, rigid, or template refusals. You can converse freely and supportively about any life situation.
                
-            Keep your conversational message concise, friendly, and helpful. Always respond in the user's language (Vietnamese or English).
+            Keep your conversational message concise, friendly, and helpful. Always respond naturally and warmly in the user's language (Vietnamese or English).
         """.trimIndent()
 
         val fullPrompt = buildString {
@@ -148,7 +154,12 @@ object FirebaseAiService {
                 generativeModel.generateContent(fullPrompt)
             } catch (primaryError: Exception) {
                 Log.w(TAG, "Primary model $MODEL_NAME error, trying fallback $FALLBACK_MODEL_NAME", primaryError)
-                fallbackModel.generateContent(fullPrompt)
+                try {
+                    fallbackModel.generateContent(fullPrompt)
+                } catch (fallbackError: Exception) {
+                    Log.w(TAG, "Fallback model $FALLBACK_MODEL_NAME error, trying secondary fallback $SECONDARY_FALLBACK_MODEL_NAME", fallbackError)
+                    secondaryFallbackModel.generateContent(fullPrompt)
+                }
             }
             val rawOutput = response.text?.trim() ?: ""
             if (rawOutput.isBlank()) {

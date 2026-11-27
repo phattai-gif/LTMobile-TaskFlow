@@ -97,25 +97,15 @@ object AiChatHistoryManager {
                     )
                 )
             } catch (e: Exception) {
-                val lower = trimmed.lowercase()
-                val fallbackReply = when {
-                    lower.contains("create") || lower.contains("add task") || lower.contains("tạo") -> {
-                        "Tôi có thể hỗ trợ bạn tạo task ngay. Bạn hãy cho tôi biết tên công việc, thời gian và mức độ ưu tiên nhé!"
-                    }
-                    lower.contains("today") || lower.contains("hôm nay") -> {
-                        "Các công việc hôm nay đã sẵn sàng trên màn hình chính. Bạn hãy hoàn thành các task ưu tiên cao trước nhé!"
-                    }
-                    lower.contains("progress") || lower.contains("update") || lower.contains("tiến độ") -> {
-                        "Để cập nhật tiến độ, bạn có thể cho tôi biết task nào cần đánh dấu In Progress hoặc Completed."
-                    }
-                    lower.contains("ăn") || lower.contains("phở") || lower.contains("cơm") || lower.contains("uống") -> {
-                        "Haha, nghe hấp dẫn quá! Mình là trợ lý số nên chưa nấu được món này cho bạn rồi, nhưng mình có thể tạo ngay task nhắc nhở bạn đi ăn uống đúng giờ nhé. Bạn có muốn mình tạo task không?"
-                    }
-                    else -> {
-                        "Mình đã lắng nghe câu hỏi của bạn! Với bất kỳ dự định hay ý tưởng nào, mình luôn sẵn sàng giúp bạn lên lịch, tạo task và quản lý mục tiêu trong TaskFlow thật hiệu quả. Bạn có muốn bắt đầu bằng một công việc cụ thể không?"
-                    }
+                android.util.Log.e("AiChatHistoryManager", "Error calling Firebase AI Service", e)
+                val errorMessage = if (e.message?.contains("network", ignoreCase = true) == true ||
+                    e.message?.contains("connect", ignoreCase = true) == true ||
+                    e.message?.contains("timeout", ignoreCase = true) == true) {
+                    "Không thể kết nối đến máy chủ AI. Vui lòng kiểm tra lại kết nối mạng của bạn và thử lại nhé!"
+                } else {
+                    "Đã xảy ra sự cố khi xử lý phản hồi từ AI (${e.localizedMessage ?: "Vui lòng thử lại"}). Bạn thử gửi lại yêu cầu nhé!"
                 }
-                addMessage(context, AiChatMessage(text = fallbackReply, isFromUser = false))
+                addMessage(context, AiChatMessage(text = errorMessage, isFromUser = false))
             } finally {
                 isThinking = false
             }

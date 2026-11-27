@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Tune
@@ -28,6 +29,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,7 +38,10 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -163,6 +169,17 @@ private fun HomeDashboardSuccessView(
         }
     }
 
+    var filterPriority by remember { mutableStateOf<HomeTaskPriority?>(null) }
+    var isFilterMenuExpanded by remember { mutableStateOf(false) }
+
+    val displayedTodayTasks = remember(todayTasks, filterPriority) {
+        if (filterPriority == null) {
+            todayTasks
+        } else {
+            todayTasks.filter { it.priority == filterPriority }
+        }
+    }
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -243,26 +260,111 @@ private fun HomeDashboardSuccessView(
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
-                // Filter icon button
-                Box(
-                    modifier = Modifier
-                        .size(34.dp)
-                        .clip(CircleShape)
-                        .border(1.dp, TaskFlowOutlineVariant.copy(alpha = 0.5f), CircleShape)
-                        .clickable(onClick = onFilterClick),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Tune,
-                        contentDescription = "Filter",
-                        tint = TaskFlowOutline,
-                        modifier = Modifier.size(18.dp)
-                    )
+                // Filter icon button with priority dropdown menu
+                Box {
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (filterPriority != null) TaskFlowPrimary.copy(alpha = 0.12f)
+                                else Color.Transparent
+                            )
+                            .border(
+                                1.dp,
+                                if (filterPriority != null) TaskFlowPrimary
+                                else TaskFlowOutlineVariant.copy(alpha = 0.5f),
+                                CircleShape
+                            )
+                            .clickable {
+                                onFilterClick()
+                                isFilterMenuExpanded = true
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Tune,
+                            contentDescription = "Filter",
+                            tint = if (filterPriority != null) TaskFlowPrimary else TaskFlowOutline,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = isFilterMenuExpanded,
+                        onDismissRequest = { isFilterMenuExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = "All Priorities",
+                                    fontWeight = if (filterPriority == null) FontWeight.Bold else FontWeight.Normal
+                                )
+                            },
+                            onClick = {
+                                filterPriority = null
+                                isFilterMenuExpanded = false
+                            },
+                            trailingIcon = {
+                                if (filterPriority == null) {
+                                    Icon(
+                                        imageVector = Icons.Default.Check,
+                                        contentDescription = null,
+                                        tint = TaskFlowPrimary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        )
+
+                        HomeTaskPriority.values().forEach { priority ->
+                            val (label, dotColor) = when (priority) {
+                                HomeTaskPriority.URGENT -> "Urgent" to Color(0xFFE53935)
+                                HomeTaskPriority.HIGH -> "High" to Color(0xFFFB8C00)
+                                HomeTaskPriority.MEDIUM -> "Medium" to Color(0xFF1E88E5)
+                                HomeTaskPriority.LOW -> "Low" to Color(0xFF43A047)
+                            }
+
+                            DropdownMenuItem(
+                                text = {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(8.dp)
+                                                .clip(CircleShape)
+                                                .background(dotColor)
+                                        )
+                                        Text(
+                                            text = label,
+                                            fontWeight = if (filterPriority == priority) FontWeight.Bold else FontWeight.Normal
+                                        )
+                                    }
+                                },
+                                onClick = {
+                                    filterPriority = priority
+                                    isFilterMenuExpanded = false
+                                },
+                                trailingIcon = {
+                                    if (filterPriority == priority) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = null,
+                                            tint = TaskFlowPrimary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }
 
-        if (todayTasks.isEmpty()) {
+        if (displayedTodayTasks.isEmpty()) {
             item(key = "today_tasks_empty") {
                 Card(
                     modifier = Modifier
@@ -278,26 +380,42 @@ private fun HomeDashboardSuccessView(
                         )
                     )
                 ) {
-                    Box(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(24.dp),
-                        contentAlignment = Alignment.Center
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = stringResource(R.string.home_today_empty),
+                            text = if (filterPriority != null) "No tasks with this priority"
+                                else stringResource(R.string.home_today_empty),
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 fontSize = 13.sp,
                                 color = TaskFlowOutline
                             ),
                             textAlign = TextAlign.Center
                         )
+                        if (filterPriority != null) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Show all tasks",
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = TaskFlowPrimary
+                                ),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .clickable { filterPriority = null }
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
                     }
                 }
             }
         } else {
             items(
-                items = todayTasks,
+                items = displayedTodayTasks,
                 key = { "today_${it.id}" }
             ) { task ->
                 Box(modifier = Modifier.padding(horizontal = 16.dp)) {

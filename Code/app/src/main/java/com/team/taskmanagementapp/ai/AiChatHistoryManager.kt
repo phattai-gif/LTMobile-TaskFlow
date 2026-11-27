@@ -92,6 +92,7 @@ object AiChatHistoryManager {
                         text = result.cleanText,
                         isFromUser = false,
                         actionTask = result.executedTask,
+                        actionTasks = result.executedTasks,
                         actionType = result.actionType
                     )
                 )

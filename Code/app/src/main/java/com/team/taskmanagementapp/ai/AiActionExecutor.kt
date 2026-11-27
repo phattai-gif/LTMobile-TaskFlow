@@ -12,6 +12,7 @@ import com.team.taskmanagementapp.util.TaskReminderTiming
 import com.team.taskmanagementapp.widget.WidgetUpdater
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -21,32 +22,39 @@ import java.util.Locale
 data class AiParsedActionResult(
     val cleanText: String,
     val executedTask: Task? = null,
+    val executedTasks: List<Task> = emptyList(),
     val actionType: String? = null // "CREATED", "COMPLETED", "DELETED"
 )
 
 object AiActionExecutor {
     private const val TAG = "AiActionExecutor"
 
-    private val ACTION_REGEX = Regex("```(?:action|json:action)?\\s*(\\{[\\s\\S]*?\\})\\s*```", RegexOption.IGNORE_CASE)
+    private val ACTION_REGEX = Regex("```(?:action|json:action)?\\s*([\\{\\[][\\s\\S]*?[\\}\\]])\\s*```", RegexOption.IGNORE_CASE)
 
     /**
-     * Parses and executes any action embedded in the AI response.
+     * Parses and executes any actions embedded in the AI response (supports single and multiple task creation).
      */
     suspend fun parseAndExecute(context: Context, rawResponse: String): AiParsedActionResult = withContext(Dispatchers.IO) {
-        val match = ACTION_REGEX.find(rawResponse)
-        if (match == null) {
+        val matches = ACTION_REGEX.findAll(rawResponse).toList()
+        if (matches.isEmpty()) {
             return@withContext AiParsedActionResult(cleanText = rawResponse.trim())
         }
 
-        val jsonStr = match.groupValues[1]
-        val cleanText = rawResponse.replace(match.value, "").trim()
+        var cleanText = rawResponse
+        for (match in matches) {
+            cleanText = cleanText.replace(match.value, "")
+        }
+        cleanText = cleanText.trim()
 
-        try {
-            val json = JSONObject(jsonStr)
+        val database = AppDatabase.getInstance(context)
+        val taskDao = database.taskDao()
+
+        val createdTasks = mutableListOf<Task>()
+        var lastUpdatedOrDeletedTask: Task? = null
+        var detectedActionType: String? = null
+
+        suspend fun processJsonAction(json: JSONObject) {
             val action = json.optString("action", "").uppercase()
-            val database = AppDatabase.getInstance(context)
-            val taskDao = database.taskDao()
-
             when (action) {
                 "CREATE_TASK" -> {
                     val title = json.optString("title", "").trim()
@@ -78,30 +86,12 @@ object AiActionExecutor {
                     val newId = taskDao.insertTask(newTask)
                     val createdTask = newTask.copy(id = newId.toInt())
 
-                    // Schedule alarm if applicable
                     val reminderAt = TaskReminderTiming.reminderAt(createdTask)
                     if (reminderAt != null && reminderAt > System.currentTimeMillis()) {
                         AlarmScheduler.schedule(context, createdTask.id, reminderAt)
                     }
-
-                    // Update widgets
-                    try {
-                        WidgetUpdater.updateAllWidgets(context)
-                    } catch (e: Exception) {
-                        Log.w(TAG, "Failed to update widgets after AI task creation", e)
-                    }
-
-                    val responseText = if (cleanText.isNotBlank()) {
-                        cleanText
-                    } else {
-                        "Mình đã trực tiếp tạo và lưu task vào danh sách công việc của bạn:"
-                    }
-
-                    return@withContext AiParsedActionResult(
-                        cleanText = responseText,
-                        executedTask = createdTask,
-                        actionType = "CREATED"
-                    )
+                    createdTasks.add(createdTask)
+                    detectedActionType = "CREATED"
                 }
 
                 "COMPLETE_TASK" -> {
@@ -120,21 +110,8 @@ object AiActionExecutor {
                             updatedAt = now
                         )
                         taskDao.updateTask(updated)
-                        try {
-                            WidgetUpdater.updateAllWidgets(context)
-                        } catch (_: Exception) {}
-
-                        val responseText = if (cleanText.isNotBlank()) {
-                            cleanText
-                        } else {
-                            "Đã đánh dấu hoàn thành task \"${targetTask.title}\"!"
-                        }
-
-                        return@withContext AiParsedActionResult(
-                            cleanText = responseText,
-                            executedTask = updated,
-                            actionType = "COMPLETED"
-                        )
+                        lastUpdatedOrDeletedTask = updated
+                        detectedActionType = "COMPLETED"
                     }
                 }
 
@@ -148,29 +125,74 @@ object AiActionExecutor {
                     if (targetTask != null) {
                         AlarmScheduler.cancel(context, targetTask.id)
                         taskDao.deleteTask(targetTask)
-                        try {
-                            WidgetUpdater.updateAllWidgets(context)
-                        } catch (_: Exception) {}
-
-                        val responseText = if (cleanText.isNotBlank()) {
-                            cleanText
-                        } else {
-                            "Đã xóa task \"${targetTask.title}\" khỏi danh sách."
-                        }
-
-                        return@withContext AiParsedActionResult(
-                            cleanText = responseText,
-                            executedTask = targetTask,
-                            actionType = "DELETED"
-                        )
+                        lastUpdatedOrDeletedTask = targetTask
+                        detectedActionType = "DELETED"
                     }
                 }
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error executing AI action: $jsonStr", e)
         }
 
-        AiParsedActionResult(cleanText = cleanText.ifBlank { rawResponse.trim() })
+        for (match in matches) {
+            val jsonStr = match.groupValues[1].trim()
+            try {
+                if (jsonStr.startsWith("[")) {
+                    val jsonArray = JSONArray(jsonStr)
+                    for (i in 0 until jsonArray.length()) {
+                        val obj = jsonArray.optJSONObject(i)
+                        if (obj != null) {
+                            processJsonAction(obj)
+                        }
+                    }
+                } else if (jsonStr.startsWith("{")) {
+                    val jsonObject = JSONObject(jsonStr)
+                    if (jsonObject.has("tasks")) {
+                        val tasksArray = jsonObject.optJSONArray("tasks")
+                        if (tasksArray != null) {
+                            for (i in 0 until tasksArray.length()) {
+                                val obj = tasksArray.optJSONObject(i)
+                                if (obj != null) {
+                                    if (!obj.has("action")) obj.put("action", "CREATE_TASK")
+                                    processJsonAction(obj)
+                                }
+                            }
+                        }
+                    } else {
+                        processJsonAction(jsonObject)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error executing AI action block: $jsonStr", e)
+            }
+        }
+
+        if (createdTasks.isNotEmpty() || detectedActionType == "COMPLETED" || detectedActionType == "DELETED") {
+            try {
+                WidgetUpdater.updateAllWidgets(context)
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to update widgets after AI task execution", e)
+            }
+        }
+
+        val responseText = if (cleanText.isNotBlank()) {
+            cleanText
+        } else if (createdTasks.size > 1) {
+            "Mình đã tạo và lên lịch xong ${createdTasks.size} task vào TaskFlow cho bạn:"
+        } else if (createdTasks.size == 1) {
+            "Mình đã trực tiếp tạo và lưu task vào danh sách công việc của bạn:"
+        } else if (detectedActionType == "COMPLETED" && lastUpdatedOrDeletedTask != null) {
+            "Đã đánh dấu hoàn thành task \"${lastUpdatedOrDeletedTask.title}\"!"
+        } else if (detectedActionType == "DELETED" && lastUpdatedOrDeletedTask != null) {
+            "Đã xóa task \"${lastUpdatedOrDeletedTask.title}\" khỏi danh sách."
+        } else {
+            rawResponse.trim()
+        }
+
+        return@withContext AiParsedActionResult(
+            cleanText = responseText,
+            executedTask = createdTasks.firstOrNull() ?: lastUpdatedOrDeletedTask,
+            executedTasks = createdTasks,
+            actionType = detectedActionType
+        )
     }
 
     private fun parseDateTime(dateStr: String, timeStr: String): Pair<Long, Long> {

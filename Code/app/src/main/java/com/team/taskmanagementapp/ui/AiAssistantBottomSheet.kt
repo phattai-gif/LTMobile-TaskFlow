@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -25,10 +26,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.CheckCircle
@@ -69,6 +72,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.team.taskmanagementapp.R
@@ -88,6 +92,7 @@ data class AiChatMessage(
     val isFromUser: Boolean,
     val timestamp: Long = System.currentTimeMillis(),
     val actionTask: Task? = null,
+    val actionTasks: List<Task> = emptyList(),
     val actionType: String? = null
 )
 
@@ -305,8 +310,140 @@ fun AiAssistantBottomSheet(
                                         lineHeight = 21.sp
                                     )
 
-                                    if (message.actionTask != null && message.actionType == "CREATED") {
-                                        val task = message.actionTask
+                                    val createdTaskList = if (message.actionTasks.isNotEmpty()) message.actionTasks
+                                                          else listOfNotNull(message.actionTask)
+
+                                    if (createdTaskList.size > 1 && message.actionType == "CREATED") {
+                                        Spacer(modifier = Modifier.height(10.dp))
+                                        Surface(
+                                            shape = RoundedCornerShape(14.dp),
+                                            color = Color.White,
+                                            border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Column(modifier = Modifier.padding(12.dp)) {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    modifier = Modifier.fillMaxWidth()
+                                                ) {
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                                    ) {
+                                                        Icon(
+                                                            imageVector = Icons.Default.CheckCircle,
+                                                            contentDescription = "Success",
+                                                            tint = Color(0xFF16A34A),
+                                                            modifier = Modifier.size(16.dp)
+                                                        )
+                                                        Text(
+                                                            text = "Đã lưu ${createdTaskList.size} task vào TaskFlow",
+                                                            fontSize = 12.5.sp,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = Color(0xFF16A34A)
+                                                        )
+                                                    }
+                                                }
+
+                                                Spacer(modifier = Modifier.height(8.dp))
+
+                                                Column(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .heightIn(max = 220.dp)
+                                                        .verticalScroll(rememberScrollState()),
+                                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                                ) {
+                                                    createdTaskList.forEach { task ->
+                                                        Surface(
+                                                            shape = RoundedCornerShape(8.dp),
+                                                            color = Color(0xFFF8FAFC),
+                                                            border = BorderStroke(0.5.dp, Color(0xFFE2E8F0)),
+                                                            modifier = Modifier
+                                                                .fillMaxWidth()
+                                                                .clickable {
+                                                                    onNavigateToTaskDetail?.invoke(task.id.toLong())
+                                                                }
+                                                        ) {
+                                                            Row(
+                                                                modifier = Modifier
+                                                                    .fillMaxWidth()
+                                                                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                                                                verticalAlignment = Alignment.CenterVertically,
+                                                                horizontalArrangement = Arrangement.SpaceBetween
+                                                            ) {
+                                                                Column(
+                                                                    modifier = Modifier
+                                                                        .weight(1f)
+                                                                        .padding(end = 6.dp)
+                                                                ) {
+                                                                    Text(
+                                                                        text = task.title,
+                                                                        fontSize = 13.sp,
+                                                                        fontWeight = FontWeight.SemiBold,
+                                                                        color = Color(0xFF0F172A),
+                                                                        maxLines = 1,
+                                                                        overflow = TextOverflow.Ellipsis
+                                                                    )
+                                                                    val dueCombined = DateTimeUtils.getCombinedDueTimestamp(task.dueDate, task.dueTime)
+                                                                    if (dueCombined > 0L) {
+                                                                        val formattedDue = DateTimeUtils.formatTimestamp(dueCombined, "HH:mm - EEEE, dd/MM/yyyy")
+                                                                        Text(
+                                                                            text = "⏰ $formattedDue",
+                                                                            fontSize = 11.sp,
+                                                                            color = Color(0xFF2563EB)
+                                                                        )
+                                                                    }
+                                                                }
+
+                                                                val (badgeBg, badgeText) = when (task.priority) {
+                                                                    Priority.URGENT, Priority.HIGH -> Pair(Color(0xFFFEE2E2), Color(0xFFDC2626))
+                                                                    Priority.MEDIUM -> Pair(Color(0xFFFEF3C7), Color(0xFFD97706))
+                                                                    Priority.LOW -> Pair(Color(0xFFE0E7FF), Color(0xFF4F46E5))
+                                                                }
+                                                                Surface(
+                                                                    shape = RoundedCornerShape(4.dp),
+                                                                    color = badgeBg
+                                                                ) {
+                                                                    Text(
+                                                                        text = task.priority.name,
+                                                                        fontSize = 9.5.sp,
+                                                                        fontWeight = FontWeight.Bold,
+                                                                        color = badgeText,
+                                                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                                                                    )
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+
+                                                if (onNavigateToTodayTasks != null) {
+                                                    Spacer(modifier = Modifier.height(10.dp))
+                                                    Surface(
+                                                        onClick = onNavigateToTodayTasks,
+                                                        shape = RoundedCornerShape(8.dp),
+                                                        color = TaskFlowPrimary.copy(alpha = 0.08f),
+                                                        border = BorderStroke(1.dp, TaskFlowPrimary.copy(alpha = 0.25f)),
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .height(36.dp)
+                                                    ) {
+                                                        Box(contentAlignment = Alignment.Center) {
+                                                            Text(
+                                                                text = "Xem danh sách công việc",
+                                                                fontSize = 12.5.sp,
+                                                                fontWeight = FontWeight.SemiBold,
+                                                                color = TaskFlowPrimary
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } else if (createdTaskList.size == 1 && message.actionType == "CREATED") {
+                                        val task = createdTaskList.first()
                                         Spacer(modifier = Modifier.height(10.dp))
                                         Surface(
                                             shape = RoundedCornerShape(14.dp),

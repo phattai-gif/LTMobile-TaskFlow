@@ -59,12 +59,12 @@ object FirebaseAiService {
             NEVER tell the user that you are not connected to TaskFlow storage or cannot save tasks, because the app automatically executes your action blocks into the local database!
             
             RULES FOR ACTIONS:
-            1. CREATE A TASK:
-               When the user asks to create or schedule a task (e.g., "Tạo cho mình 1 task...", "Thêm việc...", "Nhắc mình...", "Lên lịch..."):
-               - Calculate the exact target date (in YYYY-MM-DD format) based on current date $todayIso and user's intent (e.g. "thứ 6", "ngày mai", "tuần sau").
-               - Determine target time (in HH:mm 24-hour format, e.g. "12:00", "09:00", "15:30").
+            1. CREATE TASKS (SINGLE OR MULTIPLE):
+               When the user asks to create or schedule one or multiple tasks (e.g., "Tạo cho mình 1 task...", "Tạo task ngẫu nhiên cho từng ngày...", "Lên lịch từ hôm nay đến hết tháng..."):
+               - Calculate exact target date(s) (in YYYY-MM-DD format) based on current date $todayIso and requested range.
+               - Determine target time (in HH:mm 24-hour format, e.g. "09:00", "14:00", "17:30").
                - Determine priority: "URGENT", "HIGH", "MEDIUM", or "LOW".
-               - You MUST output an action block formatted exactly like this:
+               - For single task, output an action block:
                ```action
                {
                  "action": "CREATE_TASK",
@@ -75,7 +75,28 @@ object FirebaseAiService {
                  "priority": "HIGH"
                }
                ```
-               - Then write a brief, polite confirmation message in the user's language confirming that you have directly created and scheduled the task.
+               - For multiple tasks (e.g. for multiple days or entire week/month), you can output multiple action blocks OR a single action block containing a JSON array of task objects:
+               ```action
+               [
+                 {
+                   "action": "CREATE_TASK",
+                   "title": "<Task 1>",
+                   "description": "<Description>",
+                   "date": "YYYY-MM-DD",
+                   "time": "09:00",
+                   "priority": "MEDIUM"
+                 },
+                 {
+                   "action": "CREATE_TASK",
+                   "title": "<Task 2>",
+                   "description": "<Description>",
+                   "date": "YYYY-MM-DD",
+                   "time": "15:00",
+                   "priority": "HIGH"
+                 }
+               ]
+               ```
+               - Then write a clear, polite confirmation message in Vietnamese confirming that all tasks have been scheduled and saved into TaskFlow.
                
             2. COMPLETE A TASK:
                When the user says they finished a task or asks to complete one (e.g., "Đánh dấu hoàn thành...", "Xong task X rồi"):

@@ -49,6 +49,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.team.taskmanagementapp.R
@@ -196,7 +197,11 @@ private fun HomeDashboardSuccessView(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 12.dp)
+                ) {
                     Text(
                         text = dateText,
                         style = MaterialTheme.typography.bodySmall.copy(
@@ -211,22 +216,33 @@ private fun HomeDashboardSuccessView(
                         text = greetingText,
                         style = MaterialTheme.typography.headlineMedium.copy(
                             fontWeight = FontWeight.Bold,
-                            fontSize = 24.sp
+                            fontSize = 22.sp
                         ),
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
-                // Clock icon in top right
-                IconButton(
-                    onClick = onClockClick,
-                    modifier = Modifier.size(36.dp)
+                // Clock icon in top right (Pomodoro shortcut)
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .background(TaskFlowPrimary.copy(alpha = 0.08f))
+                        .border(
+                            1.dp,
+                            TaskFlowOutlineVariant.copy(alpha = 0.4f),
+                            CircleShape
+                        )
+                        .clickable(onClick = onClockClick),
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.AccessTime,
-                        contentDescription = "Clock",
+                        contentDescription = "Pomodoro Timer",
                         tint = TaskFlowPrimary,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(22.dp)
                     )
                 }
             }

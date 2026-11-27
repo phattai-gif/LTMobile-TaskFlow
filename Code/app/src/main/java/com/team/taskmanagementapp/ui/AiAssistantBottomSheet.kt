@@ -92,7 +92,7 @@ data class AiChatMessage(
     val isFromUser: Boolean,
     val timestamp: Long = System.currentTimeMillis(),
     val actionTask: Task? = null,
-    val actionTasks: List<Task> = emptyList(),
+    val actionTasks: List<Task>? = emptyList(),
     val actionType: String? = null
 )
 
@@ -119,11 +119,13 @@ fun AiAssistantBottomSheet(
 
     LaunchedEffect(messages.size, isThinking) {
         if (messages.isNotEmpty() || isThinking) {
-            delay(60)
-            val totalItems = messages.size + if (isThinking) 1 else 0
-            if (totalItems > 0) {
-                listState.animateScrollToItem(totalItems - 1, scrollOffset = 10000)
-            }
+            delay(100)
+            try {
+                val totalItems = messages.size + if (isThinking) 1 else 0
+                if (totalItems > 0) {
+                    listState.animateScrollToItem(totalItems - 1)
+                }
+            } catch (_: Exception) {}
         }
     }
 
@@ -315,7 +317,7 @@ fun AiAssistantBottomSheet(
                                         lineHeight = 21.sp
                                     )
 
-                                    val createdTaskList = if (message.actionTasks.isNotEmpty()) message.actionTasks
+                                    val createdTaskList = if (!message.actionTasks.isNullOrEmpty()) message.actionTasks!!
                                                           else listOfNotNull(message.actionTask)
 
                                     if (createdTaskList.size > 1 && message.actionType == "CREATED") {
@@ -641,10 +643,12 @@ fun AiAssistantBottomSheet(
                 Surface(
                     onClick = {
                         coroutineScope.launch {
-                            val totalItems = messages.size + if (isThinking) 1 else 0
-                            if (totalItems > 0) {
-                                listState.animateScrollToItem(totalItems - 1, scrollOffset = 10000)
-                            }
+                            try {
+                                val totalItems = messages.size + if (isThinking) 1 else 0
+                                if (totalItems > 0) {
+                                    listState.animateScrollToItem(totalItems - 1, scrollOffset = 10000)
+                                }
+                            } catch (_: Exception) {}
                         }
                     },
                     shape = CircleShape,

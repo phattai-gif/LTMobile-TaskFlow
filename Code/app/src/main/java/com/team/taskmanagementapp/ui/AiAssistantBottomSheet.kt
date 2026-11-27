@@ -117,9 +117,13 @@ fun AiAssistantBottomSheet(
     val messages = AiChatHistoryManager.messages
     val isThinking = AiChatHistoryManager.isThinking
 
-    LaunchedEffect(messages.size) {
-        if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(messages.size - 1)
+    LaunchedEffect(messages.size, isThinking) {
+        if (messages.isNotEmpty() || isThinking) {
+            delay(60)
+            val totalItems = messages.size + if (isThinking) 1 else 0
+            if (totalItems > 0) {
+                listState.animateScrollToItem(totalItems - 1, scrollOffset = 10000)
+            }
         }
     }
 
@@ -133,8 +137,9 @@ fun AiAssistantBottomSheet(
         inputTextValue = TextFieldValue("")
         AiChatHistoryManager.sendUserMessage(context, trimmed) {
             coroutineScope.launch {
-                delay(100)
-                listState.animateScrollToItem(messages.size)
+                delay(60)
+                val totalItems = messages.size + 1
+                listState.animateScrollToItem(totalItems - 1, scrollOffset = 10000)
             }
         }
     }
@@ -636,8 +641,9 @@ fun AiAssistantBottomSheet(
                 Surface(
                     onClick = {
                         coroutineScope.launch {
-                            if (messages.isNotEmpty()) {
-                                listState.animateScrollToItem(messages.size - 1)
+                            val totalItems = messages.size + if (isThinking) 1 else 0
+                            if (totalItems > 0) {
+                                listState.animateScrollToItem(totalItems - 1, scrollOffset = 10000)
                             }
                         }
                     },

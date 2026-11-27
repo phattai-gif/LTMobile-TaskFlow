@@ -20,8 +20,9 @@ import java.util.Locale
  */
 object FirebaseAiService {
     private const val TAG = "FirebaseAiService"
-    private const val MODEL_NAME = "gemini-1.5-flash"
-    private const val FALLBACK_MODEL_NAME = "gemini-2.0-flash"
+    private const val MODEL_NAME = "gemini-4-hydrogen"
+    private const val FALLBACK_MODEL_NAME = "gemini-3.8-flash"
+    private const val SECONDARY_FALLBACK_MODEL_NAME = "gemini-1.5-flash"
 
     private val generativeModel: GenerativeModel by lazy {
         Firebase.ai(backend = GenerativeBackend.googleAI())
@@ -31,6 +32,11 @@ object FirebaseAiService {
     private val fallbackModel: GenerativeModel by lazy {
         Firebase.ai(backend = GenerativeBackend.googleAI())
             .generativeModel(FALLBACK_MODEL_NAME)
+    }
+
+    private val secondaryFallbackModel: GenerativeModel by lazy {
+        Firebase.ai(backend = GenerativeBackend.googleAI())
+            .generativeModel(SECONDARY_FALLBACK_MODEL_NAME)
     }
 
     /**
@@ -148,7 +154,12 @@ object FirebaseAiService {
                 generativeModel.generateContent(fullPrompt)
             } catch (primaryError: Exception) {
                 Log.w(TAG, "Primary model $MODEL_NAME error, trying fallback $FALLBACK_MODEL_NAME", primaryError)
-                fallbackModel.generateContent(fullPrompt)
+                try {
+                    fallbackModel.generateContent(fullPrompt)
+                } catch (fallbackError: Exception) {
+                    Log.w(TAG, "Fallback model $FALLBACK_MODEL_NAME error, trying secondary fallback $SECONDARY_FALLBACK_MODEL_NAME", fallbackError)
+                    secondaryFallbackModel.generateContent(fullPrompt)
+                }
             }
             val rawOutput = response.text?.trim() ?: ""
             if (rawOutput.isBlank()) {

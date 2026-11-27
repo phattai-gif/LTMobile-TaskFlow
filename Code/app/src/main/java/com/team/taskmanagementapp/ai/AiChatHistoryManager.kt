@@ -51,7 +51,9 @@ object AiChatHistoryManager {
                 val savedList: List<AiChatMessage>? = gson.fromJson(json, type)
                 if (!savedList.isNullOrEmpty()) {
                     messages.clear()
-                    messages.addAll(savedList)
+                    messages.addAll(savedList.map { msg ->
+                        msg.copy(actionTasks = msg.actionTasks ?: emptyList())
+                    })
                     return
                 }
             }

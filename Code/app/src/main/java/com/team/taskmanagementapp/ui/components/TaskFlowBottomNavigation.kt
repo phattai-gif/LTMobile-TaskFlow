@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.ripple.rememberRipple
@@ -97,7 +98,7 @@ fun TaskFlowBottomNavigation(
                 // Center Big Blue (+) Button
                 Box(
                     modifier = Modifier
-                        .weight(1.2f)
+                        .weight(1f)
                         .height(64.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -145,9 +146,9 @@ private fun TaskFlowNavItemView(
 
     Column(
         modifier = modifier
-            .clip(CircleShape)
+            .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
-            .padding(vertical = 6.dp),
+            .padding(vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -161,8 +162,9 @@ private fun TaskFlowNavItemView(
         Text(
             text = stringResource(item.labelRes),
             style = MaterialTheme.typography.labelSmall.copy(
-                fontSize = 10.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                fontSize = 9.5.sp,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                letterSpacing = (-0.2).sp
             ),
             color = contentColor,
             maxLines = 1,
